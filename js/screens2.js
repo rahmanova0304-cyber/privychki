@@ -1,12 +1,12 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=59';
+import * as S from './store.js?v=60';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=59';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip } from './screens.js?v=59';
-import { aiBreakdownGoal } from './ai.js?v=59';
+  MONTHS_NOM, WD } from './util.js?v=60';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip } from './screens.js?v=60';
+import { aiBreakdownGoal } from './ai.js?v=60';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
-const menu = (items) => `<button class="ib" data-act="menu">⋯</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
+const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
 const menuAct = (el) => { const m = el.nextElementSibling; m.hidden = !m.hidden; };
 const money = (n) => Number(n).toLocaleString('ru-RU') + ' ₽';
 const PIN = '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
@@ -41,13 +41,13 @@ export function goalEditScreen(id, params) {
   const f = g ? JSON.parse(JSON.stringify({ title: g.title, description: g.description, deadline: g.deadline, dreamId: g.dreamId, stages: g.stages }))
     : { title: params.get('title') || '', description: '', deadline: '', dreamId: params.get('dream') || '', stages: [{ id: uid(), title: 'Этап 1', steps: [{ id: uid(), title: '', duration: null }] }] };
   if (!g && f.dreamId && !f.title) f.title = (S.dreamById(f.dreamId) || {}).title || '';
-  const durSel = (si, ti, v) => `<select class="inp sdur${v ? "" : " empty"}" onchange="this.classList.toggle('empty',!this.value)" data-sd="${si}:${ti}">${[[null, 'Время'], [15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']].map(([x, l]) => `<option value="${x ?? ''}"${(v ?? null) === x ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+  const durSel = (si, ti, v) => `<select class="inp sdur${v ? "" : " empty"}" onchange="this.classList.toggle('empty',!this.value)" data-sd="${si}:${ti}">${[[null, 'Время'], ...S.DURATIONS].map(([x, l]) => `<option value="${x ?? ''}"${(v ?? null) === x ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
   const form = () => `${field('Название', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Найти новую работу">`)}
     ${field('Описание · необязательно', `<textarea class="inp area" rows="1" data-f="description">${esc(f.description)}</textarea>`)}
     ${field('Срок · необязательно', `<input class="inp" type="date" data-f="deadline" value="${esc(f.deadline || '')}">`)}
     ${S.state.dreams.length ? field('Из мечты · необязательно', `<select class="inp" data-f="dreamId"><option value="">Не связана</option>${S.state.dreams.map((d) => `<option value="${d.id}"${f.dreamId === d.id ? ' selected' : ''}>${esc(d.title)}</option>`).join('')}</select>`) : ''}
     ${f.stages.map((st, si) => `<div class="blk goals"><div class="bh"><input class="inp" style="min-height:30px;font-weight:500" data-st="${si}" value="${esc(st.title)}">${f.stages.length > 1 ? `<span class="dr-del" data-act="delstage" data-i="${si}">✕</span>` : ''}</div>
-      <div class="rows">${st.steps.map((x, ti) => `<div class="row" style="gap:6px"><input class="inp" style="min-height:32px" data-stp="${si}:${ti}" value="${esc(x.title)}" placeholder="Шаг" enterkeyhint="next">${durSel(si, ti, x.duration)}${x.done ? '<span class="chip acc">✓</span>' : `<span class="dr-del" data-act="delstep" data-i="${si}:${ti}">✕</span>`}</div>`).join('')}
+      <div class="rows">${st.steps.map((x, ti) => `<div class="row" style="gap:6px"><input class="inp" style="min-height:32px" data-stp="${si}:${ti}" value="${esc(x.title)}" placeholder="Шаг" enterkeyhint="next">${durSel(si, ti, x.duration)}${x.done ? '<span class="dr-del"><span class="ck done" style="--c:var(--g);cursor:default"></span></span>' : `<span class="dr-del" data-act="delstep" data-i="${si}:${ti}">✕</span>`}</div>`).join('')}
       <div class="addrow" style="--c:var(--accent)" data-act="addstep" data-i="${si}"><i></i>Добавить шаг</div></div></div>`).join('')}
     <div class="addcard" style="--c:var(--accent)" data-act="addstage"><div class="addrow"><i></i>Добавить этап</div></div>
     ${S.state.ai && S.state.ai.key ? '<button class="btn" style="flex:none" data-act="ai">✦ Разбить на этапы с ИИ</button>' : ''}`;
@@ -60,7 +60,7 @@ export function goalEditScreen(id, params) {
   };
   const rerender = () => { rootEl.querySelector('[data-form]').innerHTML = form(); autoGrow(rootEl); };
   return {
-    html: `<section class="scr">${top(g ? 'Изменить цель' : 'Новая цель')}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить цель</button></div></section>`,
+    html: `<section class="scr">${top(g ? 'Изменить цель' : 'Новая цель')}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить</button></div></section>`,
     mount(root) {
       rootEl = root; autoGrow(root);
       // «Ввод» в шаге — новый шаг сразу под ним; в названии этапа — переход к первому шагу.
@@ -161,7 +161,7 @@ export function habitCardScreen(id) {
   const notes = [];
   for (const [date, d] of Object.entries(S.state.days)) { const mk = d.items['h:' + h.id]; if (mk && mk.comment) notes.push({ date, text: mk.comment, fact: mk.fact }); }
   notes.sort((a, b) => b.date.localeCompare(a.date));
-  const html = `<section class="scr">${top(esc(h.title), { right: `<button class="ib" data-go="#/habit/${h.id}" title="Изменить">✎</button>` })}<div class="body">
+  const html = `<section class="scr">${top(esc(h.title), { right: menu([['arch', h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив', h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется']]) })}<div class="body">
     ${goal ? `<div class="hb-goal" data-go="#/goalcard/${goal.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Ведёт к цели</small><b>${esc(goal.title)}</b><div class="hb-gbar"><i style="width:${S.goalProgress(goal).pct}%"></i></div><span>${S.goalProgress(goal).done} из ${S.goalProgress(goal).total} шагов${goal.deadline ? ' · до ' + fmtDM(goal.deadline) : ''}</span></div><span class="chev">›</span></div>` : ''}
     <div class="hb-stats"><div><b>${S.streak(h)}</b><small>${plural(S.streak(h), 'день', 'дня', 'дней')} подряд</small></div><div><b>${st30.pct}<span>%</span></b><small>за 30 дней</small></div><div><b>${avg || allSt.done}</b><small>${avg ? 'в среднем' : 'всего раз'}</small></div></div>
     <div class="card" data-cal>${cal()}</div>
@@ -174,6 +174,8 @@ export function habitCardScreen(id) {
     actions: {
       mon: (el) => { const [y, m] = month.split('-').map(Number); const d = new Date(y, m - 1 + Number(el.dataset.d), 1); month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); rootEl.querySelector('[data-cal]').innerHTML = cal(); },
       pause: (el, go, render) => { S.setHabitStatus(h.id, 'paused'); render(); },
+      menu: menuAct,
+      arch: (el, go) => { S.setHabitStatus(h.id, h.status === 'archived' ? 'active' : 'archived'); go('back'); },
     },
   };
 }
@@ -356,7 +358,7 @@ export function memoriesScreen(params) {
     const title = m.kind === 'event' ? m.event.title : m.title;
     const src = m.kind === 'event' ? (m.event.type === 'trip' ? 'Поездка' : m.event.kind || 'Событие') : 'Воспоминание';
     if (m.photos.length) {
-      html += `<div class="mm-card" data-go="${go}"><div class="mm-cover ph" data-photo="${m.photos[0]}" data-size="full"><span class="mm-date">${m.kind === 'event' && m.event.end ? fmtDMshort(m.event.start) + '–' + fmtDMshort(m.event.end) : fmtDMshort(m.date)}</span>${m.significant ? '<span class="mm-star">★</span>' : ''}${m.photos.length > 1 ? `<span class="mm-count">+${m.photos.length - 1} фото</span>` : ''}</div><div class="mm-body">${m.kind !== 'day' ? `<div class="mm-src" style="color:var(--e)">${esc(src)}</div>` : ''}${title ? `<b>${esc(title)}</b>` : ''}${m.text ? `<p>${esc(m.text)}</p>` : ''}</div></div>`;
+      html += `<div class="mm-card" data-go="${go}"><div class="mm-cover ph" data-photo="${m.photos[0]}" data-size="full"><span class="mm-date">${m.kind === 'event' && m.event.end ? fmtDMshort(m.event.start) + '–' + fmtDMshort(m.event.end) : fmtDMshort(m.date)}</span>${m.significant ? `<span class="mm-star">${ICON.star}</span>` : ''}${m.photos.length > 1 ? `<span class="mm-count">+${m.photos.length - 1} фото</span>` : ''}</div><div class="mm-body">${m.kind !== 'day' ? `<div class="mm-src" style="color:var(--e)">${esc(src)}</div>` : ''}${title ? `<b>${esc(title)}</b>` : ''}${m.text ? `<p>${esc(m.text)}</p>` : ''}</div></div>`;
     } else if (m.kind === 'day') {
       html += `<div class="mm-quote" data-go="${go}"><p>«${esc(m.text)}»</p><small>Что запомнилось · ${fmtShort(m.date)}</small></div>`;
     } else {
@@ -365,7 +367,7 @@ export function memoriesScreen(params) {
   }
   return {
     html: `<section class="scr">${top('Воспоминания', { right: `<button class="ib ibplus" data-go="#/entry/memory/new">+</button>` })}<div class="body">
-      <div class="opts">${years.map((x) => `<span class="${x === y && !star ? 'on' : ''}" data-go="#/memories?y=${x}">${x}</span>`).join('')}<span class="${star ? 'on' : ''}" data-go="#/memories?y=${y}&star=${star ? 0 : 1}">★ Значимые</span></div>
+      <div class="opts">${years.map((x) => `<span class="${x === y && !star ? 'on' : ''}" data-go="#/memories?y=${x}">${x}</span>`).join('')}<span class="${star ? 'on' : ''}" data-go="#/memories?y=${y}&star=${star ? 0 : 1}">${ICON.star}Значимые</span></div>
       ${html || '<p class="small">Здесь соберутся «Что запомнилось» из дней, мысли из событий и поездок. Прошлые годы можно дописать через «+».</p>'}
     </div></section>`,
     mount(root) { root.querySelectorAll('[data-photo]').forEach(async (el) => { const u = await S.photoUrl(el.dataset.photo, el.dataset.size || 'thumb'); if (u) el.style.background = `url(${u}) center / cover`; }); },
@@ -406,7 +408,7 @@ export function dreamScreen(id) {
 // ---------- ИТОГИ: неделя · месяц · год ----------
 
 const VERDICT_P = (p, w) => p >= 90 ? 'Отличн' + w : p >= 70 ? 'Хорош' + w : p >= 40 ? 'Неплох' + w : 'Трудн' + w;
-const HL_IC = { goal: ['var(--g-bg)', 'var(--g)', '◎'], habit: ['var(--h-bg)', 'var(--h)', '♪'], star: ['var(--soft)', 'var(--accent)', '★'], trip: ['var(--e-bg)', 'var(--e)', '✈'], dream: ['var(--soft)', 'var(--accent)', '✦'], own: ['var(--soft)', 'var(--accent)', '•'] };
+const HL_IC = { goal: ['var(--g-bg)', 'var(--g)', ICON.goal], habit: ['var(--h-bg)', 'var(--h)', ICON.habit], star: ['var(--soft)', 'var(--accent)', ICON.star], trip: ['var(--e-bg)', 'var(--e)', ICON.plane], dream: ['var(--soft)', 'var(--accent)', ICON.dream], own: ['var(--soft)', 'var(--accent)', ICON.star] };
 const lv = (p) => p >= 85 ? 4 : p >= 70 ? 3 : p >= 50 ? 2 : 1;
 
 export function summaryScreen(period, key) {
@@ -447,7 +449,7 @@ export function summaryScreen(period, key) {
   const habits = S.state.habits.filter((h) => (h.createdAt || '') <= to && (h.status !== 'archived' || (h.archivedAt || '') >= from));
   let hRows = '';
   for (const h of habits) {
-    if (period === 'y') { const st = S.habitStats(h, from, to); hRows += `<div class="row"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h).split(' · ')[0])} · ${st.done} из ${st.plan} дней${st.minutes >= 60 ? ' · ' + Math.round(st.minutes / 60) + ' ч' : ''}</small><div class="ybar"><i style="width:${st.pct}%"></i></div></div><span class="fact">${st.pct}%</span></div>`; continue; }
+    if (period === 'y') { const st = S.habitStats(h, from, to); hRows += `<div class="row"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h).split(' · ')[0])} · ${st.done} из ${st.plan} дней${st.minutes >= 60 ? ' · ' + Math.round(st.minutes / 60) + ' ч' : ''}</small><div class="ybar"><i style="width:${st.pct}%"></i></div></div><span class="hpct">${st.pct}%</span></div>`; continue; }
     let segs = '', done = 0, plan = 0;
     for (let d = from; d <= to; d = addDays(d, 1)) {
       const sch = S.habitScheduled(h, d), mk = S.habitMark(h, d);
@@ -455,8 +457,8 @@ export function summaryScreen(period, key) {
       if (sch && d <= t) plan++; if (mk.s === 'done' && sch) done++;
       segs += `<i class="${c}"></i>`;
     }
-    if (period === 'w') hRows += `<div class="wrow" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b></div><div class="wcells">${segs}</div><span class="wcnt${done === plan && plan ? ' full' : ''}">${done}/${plan}</span></div>`;
-    else hRows += `<div class="mrow" data-go="#/habitcard/${h.id}"><div class="mrow-h"><b>${esc(h.title)}</b><small>${esc(scheduleText(h).split(' · ')[0])}</small><span>${plan ? Math.round(done / plan * 100) : 0}%</span></div><div class="mdots" style="grid-template-columns:repeat(${Math.round((parse(to) - parse(from)) / 864e5) + 1},1fr)">${segs}</div><small class="mrow-s">${done} из ${plan} · пропущено ${plan - done}</small></div>`;
+    if (period === 'w') hRows += `<div class="wrow" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b></div><div class="wcells">${segs}</div><span class="hpct">${plan ? Math.round(done / plan * 100) : 0}%</span></div>`;
+    else hRows += `<div class="mrow" data-go="#/habitcard/${h.id}"><div class="mrow-h"><b>${esc(h.title)}</b><small>${esc(scheduleText(h).split(' · ')[0])}</small><span class="hpct">${plan ? Math.round(done / plan * 100) : 0}%</span></div><div class="mdots" style="grid-template-columns:repeat(${Math.round((parse(to) - parse(from)) / 864e5) + 1},1fr)">${segs}</div><small class="mrow-s">${done} из ${plan} · пропущено ${plan - done}</small></div>`;
   }
   const hHtml = hRows ? `<div class="blk habits"><div class="bh">${ICON.habit}<b>Привычки</b></div><div class="rows">${hRows}</div></div>` : '';
   const tDone = S.state.tasks.filter((x) => x.doneAt && x.doneAt >= from && x.doneAt <= to).length;
@@ -496,11 +498,11 @@ export function yearPastScreen(y) {
   const lvl = (n) => n === 0 ? 'l0' : n <= 1 ? 'l1' : n <= 3 ? 'l2' : n <= 5 ? 'l3' : 'l4';
   const tiles = cnt.map((n, i) => `<div class="yt ${lvl(n)}"><small>${MONTHS_NOM[i].slice(0, 3)}</small><b>${n || '—'}</b></div>`).join('');
   const html = `<section class="scr">${top('Прошлый год')}<div class="body">
-    <div class="card yc"><div class="yc-top"><div><small>Год до приложения</small><b>${y}</b></div>${a != null ? `<div class="yc-age"><b>${a}</b><small>${plural(a, 'год', 'года', 'лет')}</small></div>` : ''}</div>
+    <div class="card yc"><div class="yc-top"><div><small>Год до приложения${a != null ? ' · тебе ' + a : ''}</small><b>${y}</b></div></div>
       <div class="yc-word">Слово года — <input class="inp" data-word value="${esc(ym.word)}" placeholder="одно слово" style="display:inline-block;width:150px;min-height:30px;padding:4px 8px"></div>
       <div class="h3" style="font-size:13px;color:var(--muted);font-weight:400">Воспоминания по месяцам · ${mem.length}<span class="link" data-go="#/memories?y=${y}">Раскрыть все</span></div><div class="yt-grid">${tiles}</div></div>
-    <div class="card"><div class="h3">Главное за год</div>${ym.manual.map((m) => `<div class="hl"><span class="hl-i" style="background:var(--soft);color:var(--accent)">★</span><div class="t"><b>${esc(m.title)}</b></div><span class="dr-del" data-act="delm" data-id="${m.id}">✕</span></div>`).join('')}<div class="addrow" style="--c:var(--accent)" data-act="own"><i></i>Добавить своё</div></div>
-  </div><div class="foot"><button class="btn pri" data-go="#/entry/memory/new?date=${y}-06-01">+ Воспоминание</button></div></section>`;
+    <div class="card"><div class="h3">Главное за год</div>${ym.manual.map((m) => `<div class="hl"><span class="hl-i" style="background:var(--soft);color:var(--accent)">${ICON.star}</span><div class="t"><b>${esc(m.title)}</b></div><span class="dr-del" data-act="delm" data-id="${m.id}">✕</span></div>`).join('')}<div class="addrow" style="--c:var(--accent)" data-act="own"><i></i>Добавить своё</div></div>
+  </div><div class="foot"><button class="btn pri" data-go="#/entry/memory/new?date=${y}-06-01">Добавить воспоминание</button></div></section>`;
   return {
     html,
     mount(root) { const w = root.querySelector('[data-word]'); w.addEventListener('change', () => { ym.word = w.value.trim(); S.save(); }); },

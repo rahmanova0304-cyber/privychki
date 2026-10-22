@@ -1,5 +1,8 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin } from './util.js?v=59';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=60';
+
+// Варианты длительности — одни для шагов целей, задач и времени шага на день.
+export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
 
 const DB_NAME = 'privychki', STORE = 'kv', PHOTOS = 'photos', KEY = 'state';
 
@@ -607,10 +610,10 @@ export function setReflection(k, v) { state.reflections[k] = v; save(); }
 export function highlights(from, to, yearKey) {
   const hidden = yearKey ? yearMeta(yearKey).hidden : [];
   const out = [];
-  for (const g of state.goals) if (g.status === 'achieved' && g.achievedAt >= from && g.achievedAt <= to) out.push({ id: 'g:' + g.id, icon: 'goal', title: g.title, small: 'цель достигнута · ' + g.achievedAt });
-  for (const e of state.events) if (e.significant && e.start >= from && e.start <= to) out.push({ id: 'e:' + e.id, icon: e.type === 'trip' ? 'trip' : 'star', title: e.title, small: (e.type === 'trip' ? 'поездка · ' : 'значимый момент · ') + e.start });
-  for (const en of state.entries) if (!en.eventId && en.significant && en.date >= from && en.date <= to) out.push({ id: 'm:' + en.id, icon: 'star', title: en.title || en.text.slice(0, 60), small: 'воспоминание · ' + en.date });
-  for (const d of state.dreams) if (d.cameTrue && d.cameTrue.date >= from && d.cameTrue.date <= to) out.push({ id: 'd:' + d.id, icon: 'dream', title: d.title, small: 'мечта сбылась · ' + d.cameTrue.date });
+  for (const g of state.goals) if (g.status === 'achieved' && g.achievedAt >= from && g.achievedAt <= to) out.push({ id: 'g:' + g.id, icon: 'goal', title: g.title, small: 'цель достигнута · ' + fmtDMshort(g.achievedAt) });
+  for (const e of state.events) if (e.significant && e.start >= from && e.start <= to) out.push({ id: 'e:' + e.id, icon: e.type === 'trip' ? 'trip' : 'star', title: e.title, small: (e.type === 'trip' ? 'поездка · ' : 'значимый момент · ') + fmtDMshort(e.start) });
+  for (const en of state.entries) if (!en.eventId && en.significant && en.date >= from && en.date <= to) out.push({ id: 'm:' + en.id, icon: 'star', title: en.title || en.text.slice(0, 60), small: 'воспоминание · ' + fmtDMshort(en.date) });
+  for (const d of state.dreams) if (d.cameTrue && d.cameTrue.date >= from && d.cameTrue.date <= to) out.push({ id: 'd:' + d.id, icon: 'dream', title: d.title, small: 'мечта сбылась · ' + fmtDMshort(d.cameTrue.date) });
   for (const h of state.habits) {
     const st = habitStats(h, from, to);
     if (st.plan >= 3 && st.pct >= 70) {

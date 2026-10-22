@@ -1,9 +1,13 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=59';
+import * as S from './store.js?v=60';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=59';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=60';
 
 export const ICON = {
+  more: '<svg viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.8z"/></svg>',
+  repeat: '<svg viewBox="0 0 24 24"><path d="M4 11a7 7 0 0 1 12.2-4.7L19 9M19 4v5h-5M20 13a7 7 0 0 1-12.2 4.7L5 15M5 20v-5h5"/></svg>',
+  plane: '<svg viewBox="0 0 24 24"><path d="M10.5 13.5L3 11l1.5-1.5 8 .5 4-4.5a2 2 0 0 1 3 3l-4.5 4 .5 8L14 21l-2.5-7.5L8 17v3l-1.5 1L5 18l-3-1.5 1-1.5h3z"/></svg>',
   goal: '<svg><use href="#i-goal"/></svg>', habit: '<svg><use href="#i-habit"/></svg>',
   task: '<svg><use href="#i-task"/></svg>', event: '<svg><use href="#i-event"/></svg>', dream: '<svg><use href="#i-dream"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
@@ -109,7 +113,7 @@ export function bindPhotoInput(root, onAdd) {
 // ---------- строка дела в дне ----------
 
 function itemRow(it, date) {
-  const r = it.ref, cls = ['row'], title = S.itemTitle(it);
+  const r = it.ref, cls = ['row', 'it'], title = S.itemTitle(it);
   let ck = 'ck', small = '', right = '';
   if (it.s === 'done') { ck = 'ck done'; cls.push('is-done'); }
   else if (it.s === 'partial') ck = 'ck part';
@@ -121,7 +125,7 @@ function itemRow(it, date) {
     const k = S.kindOf(it), tgt = it.type === 'h' ? S.habitTargetText(r) : S.targetOf(it) ? fmtMin(S.targetOf(it)) : '';
     if (it.type === 's' && !small) {
       const plan = S.stepPlan(r.goal.id, r.step.id);
-      small = r.goal.title + (plan.length > 1 ? ' · день ' + (plan.findIndex((x) => x.date === date) + 1) + ' из ' + plan.length : '');
+      small = (plan.length > 1 ? 'день ' + (plan.findIndex((x) => x.date === date) + 1) + ' из ' + plan.length + ' · ' : '') + r.goal.title;
     }
     if (it.fact != null && (it.s === 'done' || it.s === 'partial')) {
       if (k === 'duration') {
@@ -317,7 +321,7 @@ export function markScreen(date, key) {
     return '';
   };
   // шаг цели: своё время на этот день
-  const planPanel = () => !isStep ? '' : `<div class="card">${field('Время на этот день', `<div class="opts">${[[0, 'Без времени'], [15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']].map(([v, l]) => `<span class="${(tgt0 || 0) === v ? 'on' : ''}" data-act="pdur" data-v="${v}">${l}</span>`).join('')}</div>`)}${future ? '<p class="small" style="margin:0">Отметить, сколько получилось, можно будет в сам день.</p>' : ''}</div>`;
+  const planPanel = () => !isStep ? '' : `<div class="card">${field('Время на этот день', `<div class="opts">${[[0, 'Без времени'], ...S.DURATIONS].map(([v, l]) => `<span class="${(tgt0 || 0) === v ? 'on' : ''}" data-act="pdur" data-v="${v}">${l}</span>`).join('')}</div>`)}${future ? '<p class="small" style="margin:0">Отметить, сколько получилось, можно будет в сам день.</p>' : ''}</div>`;
   const donePanel = () => {
     if (isStep && future) return '';
     if (kind === 'duration' || kind === 'count') {
@@ -437,7 +441,7 @@ export function listScreen() {
   const evSmall = (e) => (e.type === 'trip' ? 'Поездка · ' + fmtDMshort(e.start) + '–' + fmtDMshort(e.end) : (e.kind || 'Событие') + ' · ' + (e.repeat ? repeatText(e) : fmtShort(e.start))) + (e.time ? ' · ' + e.time : '');
   const erows = evs.map((e) => `<div class="row" data-go="#/eventcard/${e.id}"><div class="t"><b>${esc(e.title)}</b><small>${esc(evSmall(e))}</small></div><span class="chev">›</span></div>`).join('');
   const hrows = habits.map((h) => `<div class="row" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h))}${h.pausedFrom ? ' · на паузе' : ''}</small></div><span class="chev">›</span></div>`).join('');
-  const trows = open.map((t) => `<div class="row" data-go="#/task/${t.id}"><div class="t"><b>${esc(t.title)}</b><small${t.date && t.date < today() ? ' style="color:var(--warn)"' : ''}>${esc(taskSmall(t))}</small></div>${t.repeat ? '<span class="chip">↻</span>' : t.duration ? `<span class="chip">${fmtMin(t.duration)}</span>` : ''}</div>`).join('');
+  const trows = open.map((t) => `<div class="row" data-go="#/task/${t.id}"><div class="t"><b>${esc(t.title)}</b><small${t.date && t.date < today() ? ' style="color:var(--warn)"' : ''}>${esc(taskSmall(t))}</small></div>${t.repeat ? `<span class="chip ic">${ICON.repeat}</span>` : t.duration ? `<span class="chip">${fmtMin(t.duration)}</span>` : ''}</div>`).join('');
   const arch = (label, rows) => rows.length ? `<div class="arch" data-act="arch">${label} · ${rows.length}<span>›</span></div><div class="rows" hidden>${rows.join('')}</div>` : '';
   const html = `<section class="scr">
   ${top('Список · ' + y, { back: false, right: S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : '' })}
@@ -488,7 +492,7 @@ export function habitScreen(id, params) {
       <div class="row" data-act="arch"><div class="t"><b>${h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив'}</b><small>${h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется'}</small></div></div>
       <div class="row" data-act="del"><div class="t"><b style="color:var(--warn)">Удалить совсем</b><small>сотрёт вместе с историей</small></div></div>
     </div></div>` : ''}`;
-  const html = `<section class="scr">${top(h ? 'Привычка' : 'Новая привычка')}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить привычку</button></div></section>`;
+  const html = `<section class="scr">${top(h ? 'Привычка' : 'Новая привычка')}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить</button></div></section>`;
   let rootEl;
   const sync = () => rootEl.querySelectorAll('[data-f]').forEach((i) => { f[i.dataset.f] = i.value; });
   const rerender = () => { sync(); rootEl.querySelector('[data-form]').innerHTML = form(); };
@@ -531,7 +535,7 @@ export function taskScreen(id, params) {
     ${f.every === 'year' ? field('Какого числа', `<input class="inp" type="date" data-f="yearFull" value="${new Date().getFullYear()}-${f.yearDate}">`) : ''}
     ${!f.every ? field('Дата', `<div class="seg"><span class="${!f.hasDate ? 'on' : ''}" data-act="hasdate" data-v="0">Без даты</span><span class="${f.hasDate ? 'on' : ''}" data-act="hasdate" data-v="1">Выбрать день</span></div>${f.hasDate ? `<input class="inp" type="date" data-f="date" value="${f.date || today()}">` : ''}`) : ''}
     ${!f.every ? field('Срок до · необязательно', `<input class="inp" type="date" data-f="deadline" value="${f.deadline || ''}">`) : ''}
-    ${field('Длительность · необязательно', `<div class="opts">${[[null, 'Нет'], [15, '15 мин'], [30, '30 мин'], [60, '1 ч'], [120, '2 ч']].map(([v, l]) => `<span class="${f.duration === v ? 'on' : ''}" data-act="dur" data-v="${v ?? ''}">${l}</span>`).join('')}</div>`)}`;
+    ${field('Длительность · необязательно', `<div class="opts">${[[null, 'Нет'], ...S.DURATIONS].map(([v, l]) => `<span class="${f.duration === v ? 'on' : ''}" data-act="dur" data-v="${v ?? ''}">${l}</span>`).join('')}</div>`)}`;
   const right = t ? `<button class="ib ibdel" data-act="del" title="Удалить задачу">${ICON.trash}</button>` : '';
   const html = `<section class="scr">${top(t ? 'Задача' : 'Новая задача', { right })}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить</button></div></section>`;
   let rootEl;
@@ -644,7 +648,7 @@ export function settingsScreen() {
     <div class="card plain"><div class="h3">Данные</div><div class="rows">
       <div class="row" data-go="#/backup"><div class="t"><b>Резервная копия</b><small${ago > 7 ? ' style="color:var(--warn)"' : ''}>${S.state.backup.lastAt ? 'последняя: ' + fmtDM(S.state.backup.lastAt.slice(0, 10)) + ' · ' + ago + ' ' + plural(ago, 'день', 'дня', 'дней') + ' назад' : 'ещё не делалась'}</small></div><span class="chev">›</span></div>
     </div></div>
-    ${field('Ключ помощника (Claude API) · необязательно', `<input class="inp" type="password" data-ai="key" value="${esc((S.state.ai || {}).key || '')}" placeholder="sk-ant-…" autocomplete="off"><small class="small">Хранится только на телефоне. Без ключа помощник скрыт. Когда спрашиваешь помощника, нужные записи отправляются в Anthropic.</small>`)}
+    <div class="card plain"><div class="h3">Помощник</div>${field('Ключ Claude API · необязательно', `<input class="inp" type="password" data-ai="key" value="${esc((S.state.ai || {}).key || '')}" placeholder="sk-ant-…" autocomplete="off"><small class="small">Хранится только на телефоне. Без ключа помощник скрыт. Когда спрашиваешь помощника, нужные записи отправляются в Anthropic.</small>`)}</div>
     <p class="small" style="text-align:center;margin:0">Версия ${new URL(import.meta.url).searchParams.get('v') || '—'}</p>
   </div></section>`;
   return {

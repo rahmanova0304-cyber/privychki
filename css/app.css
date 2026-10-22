@@ -14,9 +14,8 @@ html, body { height: 100%; margin: 0 }
 body { background: linear-gradient(170deg, var(--scr1), var(--scr2)); color: var(--ink); font: 14px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
 button { font: inherit; color: inherit }
 #app { height: 100%; max-width: 520px; margin: 0 auto; position: relative; overflow: hidden }
-.scr { position: absolute; inset: 0; padding-top: env(safe-area-inset-top, 0px) }
-.scr { height: 100%; display: flex; flex-direction: column }
-.top { padding: 16px 16px 8px; min-height: 60px; box-sizing: border-box; display: flex; align-items: center; gap: 10px }
+.scr { position: absolute; inset: 0; padding-top: env(safe-area-inset-top, 0px); height: 100%; display: flex; flex-direction: column }
+.top { position: relative; padding: 16px 16px 8px; min-height: 60px; box-sizing: border-box; display: flex; align-items: center; gap: 10px }
 .top .ttl { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .ib { width: 36px; height: 36px; border-radius: 50%; background: var(--card); border: 0; box-shadow: var(--shadow); display: grid; place-items: center; cursor: pointer; flex: none; font-size: 18px; line-height: 1; font-weight: 400 }
 .aib { border-radius: 99px; width: auto; padding: 0 12px; color: var(--accent); font-size: 13px; font-weight: 500 }
@@ -31,6 +30,7 @@ button { font: inherit; color: inherit }
 .weekhead span { cursor: pointer; padding: 0 8px; font-size: 18px; color: var(--muted); font-weight: 400 }
 .week { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--card); border-radius: 12px; padding: 8px 4px; box-shadow: var(--shadow) }
 .day { text-align: center; font-size: 12px; color: var(--muted); position: relative; padding: 4px 0 6px; border-radius: 10px; cursor: pointer }
+.day.off { opacity: .35; pointer-events: none }
 .day + .day::before { content: ""; position: absolute; left: 0; top: 30%; bottom: 20%; width: 1px; background: var(--line) }
 .day b { display: grid; place-items: center; width: 34px; height: 34px; margin: 2px auto 0; border-radius: 50%; font-size: 15px; font-weight: 400; color: var(--ink) }
 .day i { display: block; width: 26px; height: 3px; margin: 5px auto 0; border-radius: 2px; background: var(--line); overflow: hidden }
@@ -38,7 +38,6 @@ button { font: inherit; color: inherit }
 .day.now { color: var(--accent); font-weight: 500 }
 .day.now b { box-shadow: inset 0 0 0 1.5px var(--accent); color: var(--accent) }
 .day.on { background: var(--soft) }
-.day.off { opacity: .35; pointer-events: none }
 .card .week { box-shadow: none; padding: 4px 0; background: transparent }
 .card .weekhead span:first-child { padding-left: 0 }
 .day.on b { background: var(--accent); color: var(--on-accent) }
@@ -72,6 +71,8 @@ button { font: inherit; color: inherit }
 .t { flex: 1; min-width: 0 }
 .t b { font-weight: 400; display: block; font-size: 14px }
 .t small { color: var(--muted); font-size: 12px; display: block }
+.row.it .t { min-width: 0 }
+.row.it .t small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .chev { color: var(--muted); font-size: 20px; line-height: 1 }
 .ck { width: 24px; height: 24px; border: 1.5px solid var(--c, var(--accent)); border-radius: 50%; flex: none; cursor: pointer; position: relative; background: var(--card) }
 .ck.sq { border-radius: 7px; width: 22px; height: 22px }
@@ -111,7 +112,6 @@ button { font: inherit; color: inherit }
 .addrow i::before, .addrow i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 1.5px; background: currentColor; transform: translate(-50%, -50%) }
 .addrow i::after { transform: translate(-50%, -50%) rotate(90deg) }
 .addcard { border: 1.5px dashed color-mix(in srgb, var(--c, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--c, var(--accent)) 6%, transparent); border-radius: 12px; padding: 0 14px; flex: none }
-.top { position: relative }
 .menu { position: absolute; right: 16px; top: 56px; z-index: 5; min-width: 220px; background: var(--card); border-radius: 12px; box-shadow: 0 12px 32px -10px rgba(60, 40, 140, .3); padding: 4px 0; display: flex; flex-direction: column }
 .menu span { padding: 10px 16px; font-size: 14px; cursor: pointer; display: flex; flex-direction: column }
 .menu span + span { border-top: 1px solid var(--line) }
@@ -122,6 +122,7 @@ button { font: inherit; color: inherit }
 .kinds span b { font-size: 13px; font-weight: 500 }
 .kinds span small { font-size: 12px; color: var(--muted) }
 .kinds span.on { border-color: var(--h); background: var(--h-bg) }
+.ibmore svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round }
 .ibgear svg { width: 21px; height: 21px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
 .ibdel svg { width: 18px; height: 18px; fill: none; stroke: var(--warn); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round }
 .ev-when { display: flex; gap: 6px; flex: none; flex-wrap: wrap }
@@ -179,7 +180,7 @@ button { font: inherit; color: inherit }
 .mm-star { right: 10px; top: 10px; color: var(--accent) }
 .mm-count { right: 10px; bottom: 10px; background: rgba(0, 0, 0, .5); color: #fff }
 .mm-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px }
-.mm-body b { font-size: 16px; font-weight: 500 }
+.mm-body b { font-size: 15px; font-weight: 500 }
 .mm-body p { margin: 2px 0 0; font-size: 14px; line-height: 1.45; color: var(--muted) }
 .mm-src { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 500 }
 .mm-nophoto .mm-body p { color: var(--ink) }
@@ -195,7 +196,12 @@ button { font: inherit; color: inherit }
 .sm-cover.big .sm-ov b { font-size: 46px; font-weight: 300 }
 .sm-ov span { font-size: 13px; opacity: .92 }
 .hl { display: flex; align-items: center; gap: 12px; padding: 4px 0 }
-.hl-i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 15px }
+.hl-i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none }
+.hl-i svg, .mm-star svg, .opts svg, .chip.ic svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block }
+.opts span:has(svg) { display: inline-flex; align-items: center; gap: 5px }
+.mm-star svg { width: 13px; height: 13px; fill: currentColor; margin: 2px 0 }
+.chip.ic { padding: 3px 8px; color: var(--t); background: var(--t-bg) }
+.chip.ic svg { width: 14px; height: 14px }
 .hl .t b { font-size: 14px; font-weight: 500 }
 .mh-top { display: flex; align-items: center; gap: 16px }
 .mh-top .t { padding-left: 16px; border-left: 1px solid var(--line) }
@@ -217,7 +223,7 @@ button { font: inherit; color: inherit }
 .ymonths { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; height: 130px; align-items: end }
 .ymonths > div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px }
 .ymonths i { width: 100%; border-radius: 4px 4px 2px 2px; background: color-mix(in srgb, var(--accent) 30%, var(--card)) }
-.ymonths span { font-size: 9px; color: var(--muted) }
+.ymonths span { font-size: 10px; color: var(--muted) }
 .ymonths b { font-size: 10px; font-weight: 400; color: var(--muted) }
 .ymonths .best i { background: var(--accent) }
 .ymonths .best span, .ymonths .best b { color: var(--accent); font-weight: 500 }
@@ -324,7 +330,7 @@ button { font: inherit; color: inherit }
 .gbar i.now { background: var(--g); border-radius: 3px }
 .gbar i.tick { width: 2px; top: -3px; bottom: -3px; margin-left: -1px; border-radius: 1px; background: var(--ink); opacity: .55 }
 .gplus { color: var(--g); font-weight: 500 }
-.wrow { display: grid; grid-template-columns: 1fr 168px 34px; align-items: center; gap: 8px; padding: 7px 0 }
+.wrow { display: grid; grid-template-columns: 1fr 160px 42px; align-items: center; gap: 8px; padding: 7px 0 }
 .wrow + .wrow { border-top: 1px solid var(--line) }
 .wrow.whead { padding: 2px 0 0 }
 .wrow .t b { font-size: 13px; font-weight: 500 }
@@ -334,8 +340,8 @@ button { font: inherit; color: inherit }
 .wcells i.ok { background: var(--h) }
 .wcells i.no { background: var(--warn) }
 .wcells i.off { height: 3px; background: var(--line); opacity: .7 }
-.wcnt { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums }
-.wcnt.full { color: var(--h); font-weight: 500 }
+/* процент привычки справа — одинаково в итогах недели, месяца и года */
+.hpct { font-size: 14px; font-weight: 500; color: var(--h); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap }
 .ins { display: flex; flex-direction: column; gap: 10px }
 .ins-step { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px }
 .ins-step .t { flex: 1 }
@@ -356,15 +362,14 @@ button { font: inherit; color: inherit }
 .h3 a, .link { color: var(--accent); font-weight: 500; font-size: 13px; cursor: pointer }
 .btn { flex: 1; padding: 14px 10px; border-radius: 12px; font-weight: 500; font-size: 14px; text-align: center; border: 0; background: var(--soft); cursor: pointer; line-height: 1.2 }
 .btn.pri { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: var(--on-accent); box-shadow: 0 10px 22px -12px var(--accent2) }
-.field { display: flex; flex-direction: column; gap: 6px }
 .field > label { font-size: 13px; font-weight: 500; color: var(--muted) }
-.inp { border: 1px solid color-mix(in srgb, var(--muted) 35%, var(--line)); border-radius: 10px; padding: 8px 12px; background: var(--card); display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 38px; line-height: 1.4; flex: none; white-space: normal; overflow-wrap: anywhere; outline: none }
+.inp { border: 1px solid color-mix(in srgb, var(--muted) 35%, var(--line)); border-radius: 10px; padding: 8px 12px; background: var(--card); display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 38px; min-width: 0; line-height: 1.4; flex: none; white-space: normal; overflow-wrap: anywhere; outline: none }
 .inp .chip { padding: 1px 8px }
 .inp[contenteditable]:focus { border-color: var(--accent); cursor: text }
 .inp.inp.typed { color: var(--ink); display: block }
 .field { display: flex; flex-direction: column; gap: 4px }
-.inp.ph, .inp.area { color: var(--muted) }
-.inp.area { align-items: flex-start; font-size: 13px }
+.inp.ph { color: var(--muted) }
+.inp.area { align-items: flex-start }
 .notecard { background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow) }
 .notecard b { font-size: 15px; font-weight: 500 }
 .step { display: flex; align-items: center; gap: 14px }
@@ -506,8 +511,7 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 .pick-row { cursor: pointer }
 .toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 99px; font-size: 13px; z-index: 50; opacity: 0; transition: opacity .2s; pointer-events: none }
 .toast.on { opacity: .92 }
-.dr-del { color: var(--muted); font-size: 18px; padding: 0 4px; cursor: pointer }
-.day.off { opacity: .35; pointer-events: none }
+.dr-del { color: var(--muted); font-size: 18px; padding: 0 4px; cursor: pointer; flex: none; min-width: 28px; height: 28px; display: grid; place-items: center }
 
 /* ---- книга года: печать A4 ---- */
 #print { display: none }
@@ -540,10 +544,8 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   .pg .mem { padding: 0 } .pg .mem li { list-style: none; margin: 1.2mm 0 } .pg p { margin: 0 0 3mm }
 }
 .mm-cover.ph { aspect-ratio: 16 / 9; background: var(--hatch) }
-.inp { min-width: 0 }
 .row > input.inp { flex: 1 }
 .bh > input.inp { flex: 1 }
-.dr-del { flex: none; min-width: 28px; height: 28px; display: grid; place-items: center }
 /* iPhone: нажатия по span/div срабатывают только у элементов с cursor: pointer */
 [data-act], [data-go] { cursor: pointer }
 
@@ -576,7 +578,7 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hub-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
 .hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: var(--card); box-shadow: 0 2px 8px -4px rgba(29, 159, 214, .35); cursor: pointer; position: relative }
 .hub-t b { font-size: 14px; font-weight: 500 }
-.hub-t small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.hub-t small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .hub-t em { font-style: normal; font-size: 15px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums }
 .hub-ti { display: grid; place-items: center; flex: none; margin: 2px 0 6px; color: var(--accent) }
 .hub-ti svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round }
