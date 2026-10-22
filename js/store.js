@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=63';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=64';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -46,6 +46,28 @@ export function save() {
     db.transaction(STORE, 'readwrite').objectStore(STORE).put(JSON.parse(JSON.stringify(state)), KEY);
   }, 150);
 }
+
+// ---------- отмена последнего действия ----------
+// Перед переносом, отменой, удалением, архивом и закрытием дня запоминаем данные целиком;
+// приложение показывает «Отменить» несколько секунд. Фото удаляются из базы только после этого.
+let undoSnap = null, photoDel = [];
+function checkpoint(label) {
+  flushPhotos();
+  undoSnap = JSON.stringify(state);
+  window.dispatchEvent(new CustomEvent('undoable', { detail: label }));
+}
+function flushPhotos() {
+  if (photoDel.length && db) { const st = db.transaction(PHOTOS, 'readwrite').objectStore(PHOTOS); photoDel.forEach((id) => st.delete(id)); }
+  photoDel = [];
+}
+export function undo() {
+  if (!undoSnap) return false;
+  state = Object.assign(emptyState(), JSON.parse(undoSnap));
+  undoSnap = null; photoDel = [];
+  save();
+  return true;
+}
+export function dropUndo() { undoSnap = null; flushPhotos(); }
 
 export function replaceState(next) {
   state = Object.assign(emptyState(), next);
@@ -94,7 +116,8 @@ export function photoUrl(id, size = 'thumb') {
 }
 
 export function deletePhoto(id) {
-  db.transaction(PHOTOS, 'readwrite').objectStore(PHOTOS).delete(id);
+  if (undoSnap) photoDel.push(id);
+  else db.transaction(PHOTOS, 'readwrite').objectStore(PHOTOS).delete(id);
 }
 
 async function allPhotos() {
@@ -302,6 +325,7 @@ export function setComment(date, key, comment) {
 // Перенос. Шаги целей и привычки остаются в дне «не сделано · перенесено на…»,
 // задачи и события уходят без следа.
 export function move(date, key, to) {
+  checkpoint(to ? 'Перенесено на ' + fmtDMshort(to) : 'Убрано в список без даты');
   const [type, id, occ] = key.split(':');
   const d = day(date, true);
   const wasExtra = d.extra.findIndex((e) => e.key === key);
@@ -328,6 +352,7 @@ export function move(date, key, to) {
 
 // Отмена. Цели и привычки остаются с ✕, задачи и события уходят (задача — обратно в список без даты).
 export function cancel(date, key) {
+  checkpoint('Отменено в этот день');
   const [type, id, occ] = key.split(':');
   const d = day(date, true);
   const ex = d.extra.findIndex((e) => e.key === key);
@@ -369,7 +394,7 @@ export function setStepDayDur(date, key, min) {
   save();
 }
 
-export function closeDay(date) { day(date, true).closedAt = new Date().toISOString(); save(); }
+export function closeDay(date) { checkpoint('День завершён'); day(date, true).closedAt = new Date().toISOString(); save(); }
 export function setMemory(date, text) { day(date, true).memory = text; save(); }
 export function setNote(date, text) { day(date, true).note = text; save(); }
 
@@ -385,6 +410,7 @@ export function saveHabit(data) {
 
 export function setHabitStatus(id, status) {
   const h = habitById(id);
+  checkpoint(status === 'paused' ? (h.pausedFrom ? 'Пауза снята' : 'Привычка на паузе') : status === 'archived' ? 'Убрано в архив' : 'Возвращено из архива');
   if (status === 'paused') { h.pausedFrom = h.pausedFrom ? null : today(); }
   else if (status === 'archived') { h.status = 'archived'; h.archivedAt = today(); h.pausedFrom = null; }
   else if (status === 'active') { h.status = 'active'; h.archivedAt = null; }
@@ -392,6 +418,7 @@ export function setHabitStatus(id, status) {
 }
 
 export function deleteHabit(id) {
+  checkpoint('Привычка удалена');
   state.habits = state.habits.filter((h) => h.id !== id);
   for (const d of Object.values(state.days)) {
     delete d.items['h:' + id];
@@ -447,6 +474,7 @@ export function saveTask(data) {
 }
 
 export function deleteTask(id) {
+  checkpoint('Задача удалена');
   state.tasks = state.tasks.filter((t) => t.id !== id);
   cleanupDays('t:' + id);
   save();
@@ -486,6 +514,7 @@ export function goalProgress(g, upTo) {
 }
 
 export function setGoalStatus(id, status) {
+  checkpoint(status === 'achieved' ? 'Цель достигнута' : status === 'archived' ? 'Убрано в архив' : 'Цель снова активна');
   const g = goalById(id);
   g.status = status;
   if (status === 'achieved') g.achievedAt = today();
@@ -495,6 +524,7 @@ export function setGoalStatus(id, status) {
 }
 
 export function deleteGoal(id) {
+  checkpoint('Цель удалена');
   state.goals = state.goals.filter((g) => g.id !== id);
   state.habits.forEach((h) => { if (h.goalId === id) h.goalId = null; });
   state.dreams.forEach((d) => { if (d.goalId === id) d.goalId = null; });
@@ -532,6 +562,7 @@ export function saveEvent(data) {
 }
 
 export function deleteEvent(id) {
+  checkpoint('Удалено');
   for (const en of state.entries.filter((x) => x.eventId === id)) (en.photos || []).forEach(deletePhoto);
   state.entries = state.entries.filter((x) => x.eventId !== id);
   state.events = state.events.filter((e) => e.id !== id);
@@ -560,6 +591,7 @@ export function saveEntry(data) {
 }
 
 export function deleteEntry(id) {
+  checkpoint('Запись удалена');
   const en = state.entries.find((x) => x.id === id);
   if (en) (en.photos || []).forEach(deletePhoto);
   state.entries = state.entries.filter((x) => x.id !== id);
@@ -597,7 +629,7 @@ export function memories(year, onlySignificant) {
 
 export function addDream(title) { const d = { id: uid(), title, why: '', createdAt: today() }; state.dreams.push(d); save(); return d; }
 export function saveDream(id, patch) { Object.assign(dreamById(id), patch); save(); }
-export function deleteDream(id) { state.dreams = state.dreams.filter((d) => d.id !== id); save(); }
+export function deleteDream(id) { checkpoint('Мечта удалена'); state.dreams = state.dreams.filter((d) => d.id !== id); save(); }
 export function setProfile(p) { state.profile = Object.assign(state.profile || {}, p); save(); }
 export function setAi(p) { state.ai = Object.assign(state.ai || {}, p); save(); }
 

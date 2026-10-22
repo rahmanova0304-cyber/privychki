@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=63';
-import * as V from './screens.js?v=63';
-import * as W from './screens2.js?v=63';
-import { aiScreen } from './ai.js?v=63';
-import { printScreen } from './print.js?v=63';
-import { today } from './util.js?v=63';
+import * as S from './store.js?v=64';
+import * as V from './screens.js?v=64';
+import * as W from './screens2.js?v=64';
+import { aiScreen } from './ai.js?v=64';
+import { printScreen } from './print.js?v=64';
+import { today } from './util.js?v=64';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -37,6 +37,7 @@ function route() {
     case 'eventcard': return W.eventCardScreen(parts[1]);
     case 'entry': return W.entryScreen(parts[1], parts[2], params);
     case 'memories': return W.memoriesScreen(params);
+    case 'search': return W.searchScreen();
     case 'dream': return W.dreamScreen(parts[1]);
     case 'summary': return W.summaryScreen(parts[1] || 'w', parts[2]);
     case 'year': return +parts[1] < +S.state.createdAt.slice(0, 4) ? W.yearPastScreen(parts[1]) : W.summaryScreen('y', parts[1]);
@@ -114,10 +115,31 @@ new MutationObserver(() => enhanceDates(app)).observe(app, { childList: true, su
 window.addEventListener('popstate', render);
 window.addEventListener('hashchange', render);
 window.addEventListener('rerender', render);
+
+// Плашка «Перенесено · Отменить» после действий, которые можно вернуть (см. S.undo).
+const toast = document.createElement('div');
+toast.className = 'toast undo';
+document.body.appendChild(toast);
+let toastTimer;
+window.addEventListener('undoable', (e) => {
+  clearTimeout(toastTimer);
+  toast.innerHTML = `<span></span><button type="button">Отменить</button>`;
+  toast.firstChild.textContent = e.detail;
+  toast.classList.add('on');
+  toastTimer = setTimeout(() => { toast.classList.remove('on'); S.dropUndo(); }, 5000);
+});
+toast.addEventListener('click', (e) => {
+  if (!e.target.closest('button')) return;
+  clearTimeout(toastTimer);
+  toast.classList.remove('on');
+  if (S.undo()) render();
+});
 // После полуночи «сегодня» меняется — перерисуем, когда приложение снова открыли.
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
 S.load().then(() => {
+  V.applyTheme();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => V.applyTheme());
   if (!history.state) history.replaceState({ depth: 0 }, '', location.hash || '#/day');
   render();
 });

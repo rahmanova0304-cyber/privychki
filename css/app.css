@@ -4,9 +4,29 @@
   --ink: #1c1938; --muted: #7c7894; --accent: #7556ee; --accent2: #6243e4; --on-accent: #ffffff; --soft: #e6dffc;
   --g: #e0559b; --g-bg: #fbd7ea; --h: #9466ef; --h-bg: #e5d9fc; --t: #3b80ee; --t-bg: #d6e4fb; --e: #1d9fd6; --e-bg: #cfeaf8;
   --warn: #e5484d; --warn-bg: #fde4e4; --good: #23905d; --good-bg: #e0f3e8;
-  --note: #fff3c4; --note-ink: #574300; --hatch: #ece8f6; --shadow: 0 6px 20px -12px rgba(60, 40, 140, .25);
+  --note: #fff3c4; --note-ink: #574300; --hatch: #ece8f6; --shadow: 0 6px 20px -12px rgba(60, 40, 140, .25); --toast: var(--ink);
   --ui: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* Тёмная тема: «как на телефоне» по настройке iPhone или выбранная в настройках приложения (data-theme на <html>). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #2a2638; --scr2: #15131d; --card: #201d2b; --line: #2f2b3d;
+    --ink: #ece9f6; --muted: #9d98b4; --accent: #8a6ff6; --accent2: #7a5cf0; --on-accent: #ffffff; --soft: #2d2647;
+    --g: #ee6cad; --g-bg: #3b2333; --h: #a684f6; --h-bg: #2e2546; --t: #5c98f3; --t-bg: #1d2a41; --e: #3db2e4; --e-bg: #16303e;
+    --warn: #f0666b; --warn-bg: #3b2023; --good: #43b880; --good-bg: #1a3428;
+    --note: #3a3219; --note-ink: #f1dc94; --hatch: #272334; --shadow: 0 6px 20px -12px rgba(0, 0, 0, .7); --toast: #3a3550;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #2a2638; --scr2: #15131d; --card: #201d2b; --line: #2f2b3d;
+    --ink: #ece9f6; --muted: #9d98b4; --accent: #8a6ff6; --accent2: #7a5cf0; --on-accent: #ffffff; --soft: #2d2647;
+    --g: #ee6cad; --g-bg: #3b2333; --h: #a684f6; --h-bg: #2e2546; --t: #5c98f3; --t-bg: #1d2a41; --e: #3db2e4; --e-bg: #16303e;
+    --warn: #f0666b; --warn-bg: #3b2023; --good: #43b880; --good-bg: #1a3428;
+    --note: #3a3219; --note-ink: #f1dc94; --hatch: #272334; --shadow: 0 6px 20px -12px rgba(0, 0, 0, .7); --toast: #3a3550;
+    color-scheme: dark;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
@@ -123,6 +143,8 @@ button { font: inherit; color: inherit }
 .kinds span b { font-size: 13px; font-weight: 500 }
 .kinds span small { font-size: 12px; color: var(--muted) }
 .kinds span.on { border-color: var(--h); background: var(--h-bg) }
+.ibsearch svg { width: 20px; height: 20px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round }
+mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px }
 .ibmore svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round }
 .ibgear svg { width: 21px; height: 21px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
 .ibdel svg { width: 18px; height: 18px; fill: none; stroke: var(--warn); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round }
@@ -510,8 +532,12 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 .btn.sm { flex: none; padding: 9px 16px; font-size: 13px; border-radius: 10px }
 .btn.ghost { background: none; color: var(--muted) }
 .pick-row { cursor: pointer }
-.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 99px; font-size: 13px; z-index: 50; opacity: 0; transition: opacity .2s; pointer-events: none }
+.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--toast); color: #fff; padding: 9px 16px; border-radius: 99px; font-size: 13px; z-index: 50; opacity: 0; transition: opacity .2s; pointer-events: none }
 .toast.on { opacity: .92 }
+.toast.undo { display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 16px; white-space: nowrap; max-width: calc(100% - 32px) }
+.toast.undo span { overflow: hidden; text-overflow: ellipsis }
+.toast.undo.on { opacity: 1; pointer-events: auto }
+.toast.undo button { border: 0; background: rgba(255, 255, 255, .16); color: #fff; font: inherit; font-weight: 500; padding: 6px 12px; border-radius: 99px; cursor: pointer; flex: none }
 .dr-del { color: var(--muted); font-size: 18px; padding: 0 4px; cursor: pointer; flex: none; min-width: 28px; height: 28px; display: grid; place-items: center }
 
 /* ---- книга года: печать A4 ---- */

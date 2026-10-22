@@ -1,9 +1,10 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=63';
+import * as S from './store.js?v=64';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=63';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=64';
 
 export const ICON = {
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
   more: '<svg viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg>',
   star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.8z"/></svg>',
   repeat: '<svg viewBox="0 0 24 24"><path d="M4 11a7 7 0 0 1 12.2-4.7L19 9M19 4v5h-5M20 13a7 7 0 0 1-12.2 4.7L5 15M5 20v-5h5"/></svg>',
@@ -23,6 +24,17 @@ const TAB_ICON = {
   list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
   life: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
 };
+
+// ---------- тема ----------
+// '' — как на телефоне, 'light', 'dark'. Запоминается и в данных, и в localStorage (чтобы не мигало при запуске).
+export function applyTheme(t = (S.state.profile || {}).theme || '') {
+  const root = document.documentElement;
+  if (t) root.dataset.theme = t; else delete root.dataset.theme;
+  try { if (t) localStorage.setItem('theme', t); else localStorage.removeItem('theme'); } catch (e) { /* без запоминания */ }
+  const dark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = dark ? '#15131d' : '#f7f5fe';
+}
 
 // ---------- общие куски ----------
 
@@ -444,7 +456,7 @@ export function listScreen() {
   const trows = open.map((t) => `<div class="row" data-go="#/task/${t.id}"><div class="t"><b>${esc(t.title)}</b><small${t.date && t.date < today() ? ' style="color:var(--warn)"' : ''}>${esc(taskSmall(t))}</small></div>${t.repeat ? `<span class="chip ic">${ICON.repeat}</span>` : t.duration ? `<span class="chip">${fmtMin(t.duration)}</span>` : ''}</div>`).join('');
   const arch = (label, rows) => rows.length ? `<div class="arch" data-act="arch">${label} · ${rows.length}<span>›</span></div><div class="rows" hidden>${rows.join('')}</div>` : '';
   const html = `<section class="scr">
-  ${top('Список · ' + y, { back: false, right: S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : '' })}
+  ${top('Список · ' + y, { back: false, right: (S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : '') + `<button class="ib ibsearch" data-go="#/search" title="Поиск">${ICON.search}</button>` })}
   <div class="body">
     <div class="blk goals"><div class="bh">${ICON.goal}<b>Цели</b><button class="plus" data-go="#/goal/new">+</button></div>
       ${grows ? `<div class="gcards">${grows}</div>` : '<div class="empty">Большое, к чему идёшь шагами: найти работу, сыграть концерт…</div>'}
@@ -645,6 +657,7 @@ export function settingsScreen() {
       ${field('Горизонт — сколько клеток в календаре жизни', `<input class="inp" type="number" inputmode="numeric" data-p="horizon" value="${p.horizon || 90}">`)}
       ${field('Ориентир — до какого возраста клетки светлее', `<input class="inp" type="number" inputmode="numeric" data-p="landmark" value="${p.landmark || 60}">`)}
     </div>
+    <div class="card plain"><div class="h3">Оформление</div><div class="seg">${[['', 'Как на телефоне'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([v, l]) => `<span class="${(p.theme || '') === v ? 'on' : ''}" data-act="theme" data-v="${v}">${l}</span>`).join('')}</div></div>
     <div class="card plain"><div class="h3">Данные</div><div class="rows">
       <div class="row" data-go="#/backup"><div class="t"><b>Резервная копия</b><small${ago > 7 ? ' style="color:var(--warn)"' : ''}>${S.state.backup.lastAt ? 'последняя: ' + fmtDM(S.state.backup.lastAt.slice(0, 10)) + ' · ' + ago + ' ' + plural(ago, 'день', 'дня', 'дней') + ' назад' : 'ещё не делалась'}</small></div><span class="chev">›</span></div>
     </div></div>
@@ -653,6 +666,7 @@ export function settingsScreen() {
   </div></section>`;
   return {
     html,
+    actions: { theme: (el, go, render) => { S.setProfile({ theme: el.dataset.v }); applyTheme(el.dataset.v); render(); } },
     mount(root) { root.querySelectorAll('[data-ai]').forEach((i) => i.addEventListener('change', () => S.setAi({ key: i.value.trim() }))); root.querySelectorAll('[data-p]').forEach((i) => i.addEventListener('change', () => S.setProfile({ [i.dataset.p]: i.type === 'number' ? Number(i.value) || null : i.value }))); },
   };
 }

@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=63';
+import * as S from './store.js?v=64';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=63';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip } from './screens.js?v=63';
-import { aiBreakdownGoal } from './ai.js?v=63';
+  MONTHS_NOM, WD } from './util.js?v=64';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip } from './screens.js?v=64';
+import { aiBreakdownGoal } from './ai.js?v=64';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -509,6 +509,61 @@ export function yearPastScreen(y) {
     actions: {
       own: (el, go, render) => { const v = prompt('Что было главным в ' + y + '?'); if (v && v.trim()) { ym.manual.push({ id: uid(), title: v.trim() }); S.save(); render(); } },
       delm: (el, go, render) => { ym.manual = ym.manual.filter((m) => m.id !== el.dataset.id); S.save(); render(); },
+    },
+  };
+}
+
+// ---------- ПОИСК ----------
+// По всему: цели и шаги, привычки, задачи, события и поездки, записи и воспоминания, мечты,
+// «что запомнилось», заметки дня и комментарии к отметкам.
+
+const norm = (x) => String(x || '').toLowerCase().replace(/ё/g, 'е');
+
+function searchAll(q) {
+  const n = norm(q).trim(), out = [];
+  if (n.length < 2) return out;
+  const has = (...xs) => xs.some((x) => norm(x).includes(n));
+  const add = (group, title, small, go, date) => out.push({ group, title, small, go, date: date || '' });
+  for (const g of S.state.goals) {
+    if (g.status === 'deleted') continue;
+    if (has(g.title, g.description)) add('Цели', g.title, g.status === 'achieved' ? 'цель достигнута' : g.status === 'archived' ? 'цель в архиве' : 'цель', '#/goalcard/' + g.id);
+    for (const st of g.stages) for (const x of st.steps) if (has(x.title)) add('Цели', x.title, 'шаг · ' + g.title, '#/goalcard/' + g.id);
+  }
+  for (const h of S.state.habits) if (has(h.title)) add('Привычки', h.title, h.status === 'archived' ? 'в архиве' : scheduleText(h), '#/habitcard/' + h.id);
+  for (const t of S.state.tasks) if (t.status !== 'deleted' && has(t.title)) add('Задачи', t.title, t.status === 'done' ? 'выполнена' : t.date ? fmtShort(t.date) : 'без даты', '#/task/' + t.id, t.date);
+  for (const e of S.state.events) if (has(e.title, e.note, ...(e.places || []).map((p) => p.name + ' ' + (p.addr || '')))) add('События', e.title, (e.type === 'trip' ? 'поездка · ' : '') + fmtShort(e.start), '#/eventcard/' + e.id, e.start);
+  for (const en of S.state.entries) if (has(en.title, en.text, en.place && en.place.name)) {
+    const ev = en.eventId && S.eventById(en.eventId);
+    add('Записи и воспоминания', en.title || en.text.slice(0, 60), (ev ? ev.title + ' · ' : 'воспоминание · ') + fmtShort(en.date), '#/entry/' + (en.eventId || 'memory') + '/' + en.id, en.date);
+  }
+  for (const d of S.state.dreams) if (has(d.title, d.why)) add('Мечты', d.title, 'мечта', '#/dream/' + d.id);
+  for (const [date, d] of Object.entries(S.state.days)) {
+    if (has(d.memory)) add('Дни', d.memory, 'что запомнилось · ' + fmtShort(date), '#/day/' + date, date);
+    if (has(d.note)) add('Дни', d.note, 'заметка дня · ' + fmtShort(date), '#/day/' + date, date);
+    for (const m of Object.values(d.items || {})) if (has(m.comment)) add('Дни', m.comment, 'комментарий · ' + fmtShort(date), '#/day/' + date, date);
+  }
+  return out;
+}
+
+export function searchScreen() {
+  let q = '';
+  const mark = (t) => { const s = esc(t), i = norm(s).indexOf(norm(esc(q.trim()))); return i < 0 || !q.trim() ? s : s.slice(0, i) + '<mark>' + s.slice(i, i + esc(q.trim()).length) + '</mark>' + s.slice(i + esc(q.trim()).length); };
+  const results = () => {
+    if (norm(q).trim().length < 2) return '<p class="small" style="text-align:center;margin:12px 0 0">Цели, шаги, привычки, задачи, события, записи, мечты, заметки и комментарии дней.</p>';
+    const r = searchAll(q);
+    if (!r.length) return '<p class="small" style="text-align:center;margin:12px 0 0">Ничего не нашлось.</p>';
+    const groups = {};
+    r.forEach((x) => (groups[x.group] = groups[x.group] || []).push(x));
+    return Object.entries(groups).map(([g, xs]) => `<div class="card plain"><div class="h3">${g}<span class="cnt" style="--c:var(--accent)">${xs.length}</span></div><div class="rows">${xs.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30).map((x) => `<div class="row" data-go="${x.go}"><div class="t"><b>${mark(x.title)}</b><small>${esc(x.small)}</small></div><span class="chev">›</span></div>`).join('')}</div></div>`).join('');
+  };
+  const html = `<section class="scr">${top('Поиск')}<div class="body"><input class="inp" type="search" data-q placeholder="Что найти?" enterkeyhint="search" autocomplete="off"><div data-res style="display:flex;flex-direction:column;gap:12px">${results()}</div></div></section>`;
+  return {
+    html,
+    mount(root) {
+      const inp = root.querySelector('[data-q]'), res = root.querySelector('[data-res]');
+      inp.value = sessionStorage.getItem('q') || ''; q = inp.value; res.innerHTML = results();
+      inp.addEventListener('input', () => { q = inp.value; try { sessionStorage.setItem('q', q); } catch (e) { /* без запоминания */ } res.innerHTML = results(); });
+      if (!q) setTimeout(() => inp.focus(), 50);
     },
   };
 }
