@@ -1,6 +1,6 @@
 /* Стили приложения «Привычки твоей жизни». Перенесены из прототипа prototype/screens.html; только светлая тема. */
 :root {
-  --bg: #f4f3f8; --scr1: #ffffff; --scr2: #f7f5fe; --card: #ffffff; --line: #ece9f4;
+  --bg: #f4f3f8; --scr2: #f7f5fe; --card: #ffffff; --line: #ece9f4;
   --ink: #1c1938; --muted: #7c7894; --accent: #7556ee; --accent2: #6243e4; --on-accent: #ffffff; --soft: #e6dffc;
   --g: #e0559b; --g-bg: #fbd7ea; --h: #9466ef; --h-bg: #e5d9fc; --t: #3b80ee; --t-bg: #d6e4fb; --e: #1d9fd6; --e-bg: #cfeaf8;
   --warn: #e5484d; --warn-bg: #fde4e4; --good: #23905d; --good-bg: #e0f3e8;
@@ -11,7 +11,8 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
 html, body { height: 100%; margin: 0 }
-body { background: linear-gradient(180deg, var(--scr1) 0, var(--scr2) 56px) var(--scr2); color: var(--ink); font: 14px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
+html { background: var(--scr2) }
+body { background: var(--scr2); color: var(--ink); font: 14px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
 button { font: inherit; color: inherit }
 #app { height: 100%; max-width: 520px; margin: 0 auto; position: relative; overflow: hidden }
 .scr { position: absolute; inset: 0; padding-top: env(safe-area-inset-top, 0px); height: 100%; display: flex; flex-direction: column }
