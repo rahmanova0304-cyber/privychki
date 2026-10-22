@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=57';
+import * as S from './store.js?v=58';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=57';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=58';
 
 export const ICON = {
   goal: '<svg><use href="#i-goal"/></svg>', habit: '<svg><use href="#i-habit"/></svg>',
@@ -645,7 +645,7 @@ export function settingsScreen() {
       <div class="row" data-go="#/backup"><div class="t"><b>Резервная копия</b><small${ago > 7 ? ' style="color:var(--warn)"' : ''}>${S.state.backup.lastAt ? 'последняя: ' + fmtDM(S.state.backup.lastAt.slice(0, 10)) + ' · ' + ago + ' ' + plural(ago, 'день', 'дня', 'дней') + ' назад' : 'ещё не делалась'}</small></div><span class="chev">›</span></div>
     </div></div>
     ${field('Ключ помощника (Claude API) · необязательно', `<input class="inp" type="password" data-ai="key" value="${esc((S.state.ai || {}).key || '')}" placeholder="sk-ant-…" autocomplete="off"><small class="small">Хранится только на телефоне. Без ключа помощник скрыт. Когда спрашиваешь помощника, нужные записи отправляются в Anthropic.</small>`)}
-    <p class="small" style="text-align:center;margin:0">Версия 2</p>
+    <p class="small" style="text-align:center;margin:0">Версия ${new URL(import.meta.url).searchParams.get('v') || '—'}</p>
   </div></section>`;
   return {
     html,

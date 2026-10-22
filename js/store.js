@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin } from './util.js?v=57';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin } from './util.js?v=58';
 
 const DB_NAME = 'privychki', STORE = 'kv', PHOTOS = 'photos', KEY = 'state';
 

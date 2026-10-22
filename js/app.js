@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=57';
-import * as V from './screens.js?v=57';
-import * as W from './screens2.js?v=57';
-import { aiScreen } from './ai.js?v=57';
-import { printScreen } from './print.js?v=57';
-import { today } from './util.js?v=57';
+import * as S from './store.js?v=58';
+import * as V from './screens.js?v=58';
+import * as W from './screens2.js?v=58';
+import { aiScreen } from './ai.js?v=58';
+import { printScreen } from './print.js?v=58';
+import { today } from './util.js?v=58';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -122,4 +122,8 @@ S.load().then(() => {
   render();
 });
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  // пришла новая версия — сразу перезагрузиться в неё (первый запуск без старой версии не трогаем)
+  if (navigator.serviceWorker.controller) navigator.serviceWorker.addEventListener('controllerchange', () => location.reload(), { once: true });
+  navigator.serviceWorker.register('sw.js');
+}
