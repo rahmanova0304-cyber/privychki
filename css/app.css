@@ -11,7 +11,7 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
 html, body { height: 100%; margin: 0 }
-body { background: linear-gradient(170deg, var(--scr1), var(--scr2)); color: var(--ink); font: 14px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
+body { background: linear-gradient(180deg, var(--scr1) 0, var(--scr2) 56px) var(--scr2); color: var(--ink); font: 14px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
 button { font: inherit; color: inherit }
 #app { height: 100%; max-width: 520px; margin: 0 auto; position: relative; overflow: hidden }
 .scr { position: absolute; inset: 0; padding-top: env(safe-area-inset-top, 0px); height: 100%; display: flex; flex-direction: column }
