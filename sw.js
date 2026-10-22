@@ -1,5 +1,5 @@
 // Офлайн: приложение целиком хранится в кэше телефона. При изменении файлов поднять VERSION.
-const VERSION = 'v51';
+const VERSION = 'v52';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'css/app.css', 'js/app.js', 'js/store.js', 'js/screens.js', 'js/util.js', 'js/screens2.js', 'js/ai.js', 'js/print.js', 'vendor/anthropic-sdk-0.131.0.js', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=56';
+import * as S from './store.js?v=57';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=56';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=57';
 
 export const ICON = {
   goal: '<svg><use href="#i-goal"/></svg>', habit: '<svg><use href="#i-habit"/></svg>',
