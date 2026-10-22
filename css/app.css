@@ -1,0 +1,600 @@
+/* Стили приложения «Привычки твоей жизни». Перенесены из прототипа prototype/screens.html; только светлая тема. */
+:root {
+  --bg: #f4f3f8; --scr1: #fcfbff; --scr2: #f7f5fe; --card: #ffffff; --line: #ece9f4;
+  --ink: #1c1938; --muted: #7c7894; --accent: #7556ee; --accent2: #6243e4; --on-accent: #ffffff; --soft: #e6dffc;
+  --g: #e0559b; --g-bg: #fbd7ea; --h: #9466ef; --h-bg: #e5d9fc; --t: #3b80ee; --t-bg: #d6e4fb; --e: #1d9fd6; --e-bg: #cfeaf8;
+  --warn: #e5484d; --warn-bg: #fde4e4; --good: #23905d; --good-bg: #e0f3e8;
+  --note: #fff3c4; --note-ink: #574300; --hatch: #ece8f6; --shadow: 0 6px 20px -12px rgba(60, 40, 140, .25);
+  --ui: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
+html, body { height: 100%; margin: 0 }
+body { background: linear-gradient(170deg, var(--scr1), var(--scr2)); color: var(--ink); font: 14px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
+button { font: inherit; color: inherit }
+#app { height: 100%; max-width: 520px; margin: 0 auto; position: relative; overflow: hidden }
+.scr { position: absolute; inset: 0; padding-top: env(safe-area-inset-top, 0px) }
+.foot, .tabbar { padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) }
+.scr { height: 100%; display: flex; flex-direction: column }
+.top { padding: 16px 16px 8px; display: flex; align-items: center; gap: 10px }
+.top .ttl { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.ib { width: 36px; height: 36px; border-radius: 50%; background: var(--card); border: 0; box-shadow: var(--shadow); display: grid; place-items: center; cursor: pointer; flex: none; font-size: 18px; line-height: 1; font-weight: 400 }
+.aib { border-radius: 99px; width: auto; padding: 0 12px; color: var(--accent); font-size: 13px; font-weight: 500 }
+.body { flex: 1; overflow: auto; padding: 4px 16px 18px; display: flex; flex-direction: column; gap: 14px }
+.body > * { flex-shrink: 0 }
+.foot { padding: 10px 16px 12px; display: flex; gap: 10px }
+.foot.col { flex-direction: column }
+.ptitle h1 { font-size: 20px; line-height: 1.2; margin: 0; font-weight: 500; text-wrap: balance }
+.ptitle p { color: var(--muted); font-size: 13px; margin: 3px 0 0 }
+
+.weekhead { display: flex; align-items: center; gap: 2px; padding-left: 0 }
+.weekhead span { cursor: pointer; padding: 0 8px; font-size: 18px; color: var(--muted); font-weight: 400 }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--card); border-radius: 12px; padding: 8px 4px; box-shadow: var(--shadow) }
+.day { text-align: center; font-size: 12px; color: var(--muted); position: relative; padding: 4px 0 6px; border-radius: 10px; cursor: pointer }
+.day + .day::before { content: ""; position: absolute; left: 0; top: 30%; bottom: 20%; width: 1px; background: var(--line) }
+.day b { display: grid; place-items: center; width: 34px; height: 34px; margin: 2px auto 0; border-radius: 50%; font-size: 15px; font-weight: 400; color: var(--ink) }
+.day i { display: block; width: 26px; height: 3px; margin: 5px auto 0; border-radius: 2px; background: var(--line); overflow: hidden }
+.day i::before { content: ""; display: block; height: 100%; width: var(--p, 0%); background: var(--accent); border-radius: 2px }
+.day.now { color: var(--accent); font-weight: 500 }
+.day.now b { box-shadow: inset 0 0 0 1.5px var(--accent); color: var(--accent) }
+.day.on { background: var(--soft) }
+.day.off { opacity: .35; pointer-events: none }
+.card .week { box-shadow: none; padding: 4px 0; background: transparent }
+.card .weekhead span:first-child { padding-left: 0 }
+.day.on b { background: var(--accent); color: var(--on-accent) }
+.day.on::before, .day.on + .day::before { display: none }
+
+.blk { background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow) }
+.blk.goals { --c: var(--g); --cb: var(--g-bg) }
+.blk.habits { --c: var(--h); --cb: var(--h-bg) }
+.blk.tasks { --c: var(--t); --cb: var(--t-bg) }
+.blk.events { --c: var(--e); --cb: var(--e-bg) }
+.blk.dreams { --c: var(--accent); --cb: var(--soft) }
+.bh { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: linear-gradient(180deg, var(--cb), color-mix(in srgb, var(--cb) 80%, var(--card))) }
+.bh > b { font-size: 15px; font-weight: 500; flex: 1 }
+.bh svg { width: 22px; height: 22px; fill: none; stroke: var(--c); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none }
+.plus { width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; border: 0; display: grid; place-items: center; font-size: 0; cursor: pointer; flex: none; position: relative }
+.ibplus { font-size: 0; position: relative; color: var(--ink) }
+.plus::before, .plus::after, .ibplus::before, .ibplus::after, .ph.add::before, .ph.add::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 1.6px; background: currentColor; border-radius: 1px; transform: translate(-50%, -50%) }
+.plus::after, .ibplus::after, .ph.add::after { transform: translate(-50%, -50%) rotate(90deg) }
+.ph.add::before, .ph.add::after { width: 18px }
+.cnt { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--c) 14%, var(--card)); font-variant-numeric: tabular-nums }
+.blk .rows { padding: 2px 14px 4px }
+.blk .empty { padding: 9px 14px 12px; color: var(--muted); font-size: 13px }
+.rows { display: flex; flex-direction: column }
+[hidden] { display: none !important }
+.row.addnew { background: var(--card); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); cursor: pointer }
+.row.addnew b { color: var(--accent) }
+.row { display: flex; align-items: center; gap: 12px; padding: 8px 0; position: relative }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 40px; right: 0; height: 1px; background: var(--line) }
+.card .row + .row::before, .plain .row + .row::before { left: 0 }
+.row[data-go] { cursor: pointer }
+.t { flex: 1; min-width: 0 }
+.t b { font-weight: 400; display: block; font-size: 14px }
+.t small { color: var(--muted); font-size: 12px; display: block }
+.chev { color: var(--muted); font-size: 20px; line-height: 1 }
+.ck { width: 24px; height: 24px; border: 1.5px solid var(--c, var(--accent)); border-radius: 50%; flex: none; cursor: pointer; position: relative; background: var(--card) }
+.ck.sq { border-radius: 7px; width: 22px; height: 22px }
+.ck.done { background: var(--c, var(--accent)); opacity: .9 }
+.ck.done::after { content: ""; position: absolute; left: 7px; top: 3px; width: 6px; height: 11px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) }
+.ck.sq.done::after { left: 6px; top: 2px }
+.ck.part { background: linear-gradient(90deg, var(--c, var(--accent)) 50%, var(--card) 50%) }
+.ck.no { background: var(--warn); border-color: var(--warn) }
+.ck.no::after { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 12px; line-height: 1 }
+.ck.moved { border: 1.5px dashed var(--muted); cursor: default }
+.ck.moved::after { content: "→"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 14px; line-height: 1 }
+.row.moved .t b { color: var(--muted) }
+.ck.miss { border: 1.5px solid var(--warn); cursor: default }
+.ck.miss::after { content: "→"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--warn); font-size: 14px; line-height: 1 }
+.row.missed small { color: var(--warn) }
+.chip { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--c, var(--accent)) 12%, var(--card)); color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; flex: none }
+.chip.info { background: var(--t-bg); color: var(--t) }
+.chip.warn { background: var(--warn-bg); color: var(--warn) }
+.chip.good { background: var(--good-bg); color: var(--good) }
+.chip.acc { background: var(--h-bg); color: var(--h) }
+.inp.sdur { width: 92px; flex: none; min-height: 32px; padding: 4px 22px 4px 10px; -webkit-appearance: none; appearance: none; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c6fd6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 6px center / 13px; font-size: 14px }
+.inp.sdur.empty { color: var(--accent) }
+.chip.spent { background: var(--g-bg); color: var(--g); font-weight: 600 }
+.fact { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap }
+.cut { font-size: 12px; color: var(--warn) !important }
+
+.card { background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow) }
+.card.soft { background: var(--soft); box-shadow: none }
+.card.dash { background: transparent; box-shadow: none; border: 1.5px dashed var(--line) }
+.h3 { font-size: 15px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 8px }
+.arch { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); cursor: pointer }
+.arch span { transition: transform .2s }
+.arch.open span { transform: rotate(90deg) }
+.arch-row .t, #today .row.is-done .t, #today .row.is-done .fact, #today .row.is-done .chip { opacity: .5 }
+.addrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; color: var(--c, var(--accent)); font-size: 13px; font-weight: 500; cursor: pointer }
+.addrow i { width: 22px; height: 22px; border-radius: 50%; border: 1.5px dashed currentColor; position: relative; flex: none }
+.addrow i::before, .addrow i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 1.5px; background: currentColor; transform: translate(-50%, -50%) }
+.addrow i::after { transform: translate(-50%, -50%) rotate(90deg) }
+.addcard { border: 1.5px dashed color-mix(in srgb, var(--c, var(--accent)) 45%, transparent); background: color-mix(in srgb, var(--c, var(--accent)) 6%, transparent); border-radius: 12px; padding: 0 14px; flex: none }
+.top { position: relative }
+.menu { position: absolute; right: 16px; top: 56px; z-index: 5; min-width: 220px; background: var(--card); border-radius: 12px; box-shadow: 0 12px 32px -10px rgba(60, 40, 140, .3); padding: 4px 0; display: flex; flex-direction: column }
+.menu span { padding: 10px 16px; font-size: 14px; cursor: pointer; display: flex; flex-direction: column }
+.menu span + span { border-top: 1px solid var(--line) }
+.menu span small { font-size: 12px; color: var(--muted) }
+.menu span.del { color: var(--warn) }
+.kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+.kinds span { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 2px }
+.kinds span b { font-size: 13px; font-weight: 500 }
+.kinds span small { font-size: 12px; color: var(--muted) }
+.kinds span.on { border-color: var(--h); background: var(--h-bg) }
+.ibgear svg { width: 21px; height: 21px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
+.ibdel svg { width: 18px; height: 18px; fill: none; stroke: var(--warn); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round }
+.ev-when { display: flex; gap: 6px; flex: none; flex-wrap: wrap }
+.ev-when .chip { background: var(--e-bg); color: var(--e); font-size: 13px; padding: 4px 12px }
+.ev-place { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); flex: none }
+.ev-pin { width: 38px; height: 38px; border-radius: 50%; background: var(--e-bg); color: var(--e); display: grid; place-items: center; flex: none }
+.ev-pin svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round }
+.ev-place .t { flex: 1; min-width: 0 }
+.ev-lab { display: flex; justify-content: space-between }
+.ev-lab span { font-weight: 400 }
+.ev-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px }
+.ev-photos .ph { position: relative }
+.ev-photos .ph i { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0, 0, 0, .45); color: #fff; font-style: normal; font-size: 10px; display: grid; place-items: center; cursor: pointer }
+.pl-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 10px; display: flex; flex-direction: column; gap: 6px }
+.pl-head { display: flex; align-items: center; gap: 8px }
+.pl-head .inp { flex: 1; font-weight: 500 }
+.ev-pin.sm { width: 30px; height: 30px }
+.ev-pin.sm svg { width: 16px; height: 16px }
+.ev-when .chip:nth-child(2) { background: var(--e); color: #fff }
+.pl-d { color: var(--ink) !important; margin-top: 2px }
+.ev-whenrow { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); flex: none }
+.ev-time { font-size: 12px; color: var(--e); font-weight: 500 }
+.ev-day { display: flex; flex-direction: column; gap: 6px; flex: none }
+.ev-dh { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; gap: 8px; align-items: center }
+.ev-dh span { font-size: 11px; font-weight: 500; color: var(--e); background: var(--e-bg); padding: 2px 8px; border-radius: 99px }
+.ev-entry { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px }
+.ev-entry p { margin: 0; font-size: 14px; line-height: 1.45 }
+.ev-tag { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--e); font-weight: 500 }
+.ev-tag svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; flex: none }
+.ev-photos.sm { grid-template-columns: repeat(4, 1fr) }
+.ev-sum { background: var(--card) !important; color: var(--ink) !important; box-shadow: inset 0 0 0 1px var(--line) }
+.pl-price { color: var(--ink) !important; font-weight: 500; margin-top: 2px }
+.ev-price { margin-left: auto; color: var(--ink); font-weight: 500 }
+.legs { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 2px 14px; flex: none }
+.leg { display: flex; align-items: center; gap: 12px; padding: 10px 0 }
+.leg + .leg { border-top: 1px solid var(--line) }
+.leg .t { flex: 1; min-width: 0 }
+.leg-i { width: 34px; height: 34px; border-radius: 50%; background: var(--e-bg); color: var(--e); display: grid; place-items: center; flex: none }
+.leg-i svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
+.leg-p { font-size: 13px; font-weight: 500; white-space: nowrap }
+.mo-list { display: flex; flex-direction: column; gap: 8px }
+.mo-h { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: var(--accent); padding-top: 6px; border-top: 1px solid var(--line) }
+.mo-h:first-child { border-top: 0; padding-top: 0 }
+.mo-h span { color: var(--muted); font-weight: 400 }
+.mo-it small { font-size: 12px; color: var(--muted) }
+.mo-it p { margin: 2px 0 6px; font-size: 14px }
+.mo-more { font-size: 12px; color: var(--muted); text-align: center; padding-top: 4px }
+.mm-month { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex: none; font-size: 18px; font-weight: 500 }
+.mm-month span { font-size: 12px; font-weight: 500; color: var(--accent); background: var(--soft); border-radius: 99px; padding: 2px 9px }
+.mm-month::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--accent) 20%, transparent) }
+.mm-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; flex: none }
+.mm-cover { position: relative; aspect-ratio: 16 / 9 !important; border-radius: 0 !important; max-width: none !important }
+.mm-date, .mm-count, .mm-star { position: absolute; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 99px; background: rgba(255, 255, 255, .92); color: #1c1938 }
+.mm-date { left: 10px; top: 10px }
+.mm-star { right: 10px; top: 10px; color: var(--accent) }
+.mm-count { right: 10px; bottom: 10px; background: rgba(0, 0, 0, .5); color: #fff }
+.mm-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px }
+.mm-body b { font-size: 16px; font-weight: 500 }
+.mm-body p { margin: 2px 0 0; font-size: 14px; line-height: 1.45; color: var(--muted) }
+.mm-src { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 500 }
+.mm-nophoto .mm-body p { color: var(--ink) }
+.mm-quote { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 14px 16px 12px; position: relative; flex: none }
+.mm-quote::before { content: "“"; position: absolute; right: 14px; top: 2px; font-size: 44px; line-height: 1; color: var(--soft); font-family: Georgia, serif }
+.mm-quote p { margin: 0 0 6px; font-size: 15px; line-height: 1.45; font-style: italic }
+.mm-quote small { font-size: 12px; color: var(--muted) }
+.sm-cover { position: relative; height: 170px; border-radius: 12px; overflow: hidden; flex: none }
+.sm-cover.big { height: 230px }
+.sm-ov { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; color: #fff; background: linear-gradient(180deg, transparent 30%, rgba(20, 12, 40, .75)) }
+.sm-ov small { font-size: 12px; opacity: .85; text-transform: uppercase; letter-spacing: .06em }
+.sm-ov b { font-size: 30px; font-weight: 500; line-height: 1.15 }
+.sm-cover.big .sm-ov b { font-size: 46px; font-weight: 300 }
+.sm-ov span { font-size: 13px; opacity: .92 }
+.hl { display: flex; align-items: center; gap: 12px; padding: 4px 0 }
+.hl-i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 15px }
+.hl .t b { font-size: 14px; font-weight: 500 }
+.mh-top { display: flex; align-items: center; gap: 16px }
+.mh-top .t { padding-left: 16px; border-left: 1px solid var(--line) }
+.mh-top .t b { font-size: 16px; font-weight: 500; display: block; margin-bottom: 4px }
+.mh-top .t small { font-size: 13px; color: var(--muted) }
+.mh-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 4px }
+.mh-cal .mh-d { font-size: 10px; color: var(--muted); text-align: center }
+.mh-cal i { font-style: normal; font-size: 11px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--muted); background: var(--bg) }
+.mh-cal i.e { background: transparent }
+.mh-cal i.l1 { background: color-mix(in srgb, var(--accent) 15%, var(--card)); color: var(--ink) }
+.mh-cal i.l2 { background: color-mix(in srgb, var(--accent) 35%, var(--card)); color: var(--ink) }
+.mh-cal i.l3 { background: color-mix(in srgb, var(--accent) 65%, var(--card)); color: #fff }
+.mh-cal i.l4 { background: var(--accent); color: #fff }
+.mh-leg { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 11px; color: var(--muted) }
+.mh-leg i { width: 12px; height: 12px; border-radius: 3px }
+.mh-leg i.l1 { background: color-mix(in srgb, var(--accent) 15%, var(--card)) } .mh-leg i.l2 { background: color-mix(in srgb, var(--accent) 35%, var(--card)) } .mh-leg i.l3 { background: color-mix(in srgb, var(--accent) 65%, var(--card)) } .mh-leg i.l4 { background: var(--accent) }
+.ybar { height: 5px; border-radius: 3px; background: var(--h-bg); overflow: hidden; margin-top: 6px }
+.ybar i { display: block; height: 100%; background: var(--h); border-radius: 3px }
+.ymonths { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; height: 130px; align-items: end }
+.ymonths > div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px }
+.ymonths i { width: 100%; border-radius: 4px 4px 2px 2px; background: color-mix(in srgb, var(--accent) 30%, var(--card)) }
+.ymonths span { font-size: 9px; color: var(--muted) }
+.ymonths b { font-size: 10px; font-weight: 400; color: var(--muted) }
+.ymonths .best i { background: var(--accent) }
+.ymonths .best span, .ymonths .best b { color: var(--accent); font-weight: 500 }
+.ymonths .low i { background: color-mix(in srgb, var(--warn) 45%, var(--card)) }
+.ybest { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.ybest div { background: var(--bg); border-radius: 10px; padding: 8px 10px }
+.ybest small { display: block; font-size: 11px; color: var(--muted) }
+.ybest b { font-size: 15px; font-weight: 500 }
+.ybest div:first-child b { color: var(--accent) }
+.yc { gap: 12px }
+.yc-age { width: 64px; height: 64px; border-radius: 50%; background: var(--soft); display: grid; place-content: center; text-align: center; line-height: 1 }
+.yc-top .yc-age b { display: block; line-height: 1; font-size: 22px; font-weight: 500; color: var(--accent) }
+.yc-age small { font-size: 11px; color: var(--muted) }
+.yt.l0 { background: var(--bg); color: var(--muted) }
+.yt[data-state] { cursor: pointer }
+.yc-top { display: flex; justify-content: space-between; align-items: center }
+.yc-top small { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em }
+.yc-top > div > b { display: block; font-size: 48px; font-weight: 300; line-height: 1; color: var(--accent) }
+.ring.sm { width: 72px; height: 72px }
+.ring.sm > div { width: 60px; height: 60px }
+.ring.sm b { font-size: 16px; font-weight: 500 }
+.yc-word { font-size: 14px; color: var(--muted) }
+.yc-word b { color: var(--ink); font-weight: 500; font-size: 16px }
+.yt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
+.yt { border-radius: 10px; padding: 8px 8px 7px; min-height: 66px; display: flex; flex-direction: column; gap: 1px; position: relative }
+.yt small { font-size: 11px }
+.yt b { font-size: 16px; font-weight: 500 }
+.yt em { font-style: normal; font-size: 10px; font-weight: 500 }
+.yt.l1 { background: color-mix(in srgb, var(--accent) 12%, var(--card)); color: var(--ink) }
+.yt.l2 { background: color-mix(in srgb, var(--accent) 28%, var(--card)); color: var(--ink) }
+.yt.l3 { background: color-mix(in srgb, var(--accent) 55%, var(--card)); color: #fff }
+.yt.l4 { background: var(--accent); color: #fff }
+.yt.best { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent) }
+.yt.low { background: var(--warn-bg); color: var(--warn) }
+.kindgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px 4px }
+.kindgrid span { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); cursor: pointer }
+.kindgrid i { width: 42px; height: 42px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow); display: grid; place-items: center; color: var(--e) }
+.kindgrid svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round }
+.kindgrid span.on { color: var(--ink); font-weight: 500 }
+.kindgrid span.on i { background: var(--e); color: #fff }
+.bk-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 8px; scroll-snap-type: x mandatory; flex: none }
+.bk { flex: none; width: 118px; display: flex; flex-direction: column; gap: 6px; align-items: center; scroll-snap-align: start }
+.bk em { font-style: normal; font-size: 11px; color: var(--muted) }
+.bk-cover, .bk-pg { width: 118px; aspect-ratio: 210 / 297; border-radius: 4px; box-shadow: 0 6px 16px -8px rgba(60, 40, 140, .3) }
+.bk-cover { position: relative; color: #fff; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; background-size: cover !important }
+.bk-cover::before { content: ""; position: absolute; inset: 0; border-radius: 4px; background: linear-gradient(180deg, transparent 40%, rgba(20, 12, 40, .7)) }
+.bk-cover b, .bk-cover span { position: relative }
+.bk-cover b { font-size: 26px; font-weight: 300; line-height: 1 }
+.bk-cover span { font-size: 10px }
+.bk-pg { background: #fff; padding: 9px; display: flex; flex-direction: column; gap: 6px; color: #1c1938 }
+.bk-pg b { font-size: 10px; font-weight: 500 }
+.bk-pg > i { display: block; height: 3px; border-radius: 2px; background: #ece9f4 }
+.bk-pg > i.s { width: 60% }
+.bk-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px }
+.bk-tiles i { height: 12px; border-radius: 2px }
+.bk-tiles i.l1 { background: #e7e1fb } .bk-tiles i.l2 { background: #cbbdf7 } .bk-tiles i.l3 { background: #a68ef3 } .bk-tiles i.l4 { background: #7556ee }
+.bk-ph { height: 52px; border-radius: 3px; background-size: cover !important }
+.bk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; flex: 1 }
+.bk-grid div { border-radius: 2px; background-size: cover !important }
+.bk-thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px }
+.bk-thumbs > div { aspect-ratio: 1; border-radius: 8px; position: relative; background-size: cover !important; max-width: none !important }
+.bk-thumbs i { position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: rgba(0, 0, 0, .5); color: #fff; font-style: normal; font-size: 8px; display: grid; place-items: center }
+.bk-more { display: grid; place-items: center; background: var(--soft); color: var(--accent); font-size: 13px; font-weight: 500 }
+.ai-day { align-self: center; font-size: 11px; color: var(--muted); background: var(--soft); padding: 2px 10px; border-radius: 99px }
+.ai-card { align-self: flex-start; width: 92%; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 6px 14px 12px; display: flex; flex-direction: column }
+.ai-it { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line) }
+.ai-it .t { flex: 1; min-width: 0 }
+.ai-it .t b { font-size: 13px; font-weight: 500 }
+.ai-it .t small { font-size: 11px }
+.ai-day-chip { font-size: 12px; font-weight: 500; color: var(--accent); background: var(--soft); border-radius: 8px; padding: 3px 8px }
+.ai-act { display: flex; align-items: center; justify-content: space-between; padding-top: 10px }
+.ai-act .btn { flex: none; padding: 9px 16px; font-size: 13px; border-radius: 10px }
+.ai-foot { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: none }
+.ai-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none }
+.ai-chips span { flex: none; font-size: 12px; padding: 6px 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--ink); cursor: pointer }
+.ai-input { display: flex; gap: 8px; align-items: flex-end }
+.ai-input .inp { flex: 1; border-radius: 20px }
+.ai-send { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; cursor: pointer }
+.ai-send svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.st-row { cursor: pointer }
+.st-val { font-size: 14px; color: var(--muted); white-space: nowrap }
+.st-time { color: var(--accent) !important; cursor: pointer }
+.mrow { padding: 10px 0; display: flex; flex-direction: column; gap: 6px }
+.mrow + .mrow { border-top: 1px solid var(--line) }
+.mrow-h { display: flex; align-items: baseline; gap: 8px }
+.mrow-h b { font-size: 14px; font-weight: 500 }
+.mrow-h small { font-size: 12px; color: var(--muted); flex: 1 }
+.mrow-h span { font-size: 14px; font-weight: 500; color: var(--h) }
+.mdots { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px; align-items: center }
+.mdots i { height: 5px; border-radius: 3px; background: var(--line) }
+.mdots i.ok { background: var(--h) }
+.mdots i.no { background: var(--warn) }
+.mdots i.off { height: 3px; opacity: .7 }
+.mdots i.fut { background: color-mix(in srgb, var(--h) 18%, var(--card)) }
+.mrow-s { font-size: 12px; color: var(--muted) }
+.mleg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--muted); padding: 8px 0 4px; border-top: 1px solid var(--line) }
+.mleg span { display: flex; align-items: center; gap: 5px }
+.mleg i { width: 14px; height: 5px; border-radius: 3px; background: var(--line) }
+.mleg i.ok { background: var(--h) } .mleg i.no { background: var(--warn) } .mleg i.off { height: 3px; opacity: .7 } .mleg i.fut { background: color-mix(in srgb, var(--h) 18%, var(--card)) }
+.grow { padding: 10px 0; display: flex; flex-direction: column; gap: 6px }
+.grow + .grow { border-top: 1px solid var(--line) }
+.gbar { position: relative; height: 5px; border-radius: 3px; background: var(--g-bg) }
+.gbar i { position: absolute; top: 0; bottom: 0; left: 0 }
+.gbar i.now { background: var(--g); border-radius: 3px }
+.gbar i.tick { width: 2px; top: -3px; bottom: -3px; margin-left: -1px; border-radius: 1px; background: var(--ink); opacity: .55 }
+.gplus { color: var(--g); font-weight: 500 }
+.wrow { display: grid; grid-template-columns: 1fr 168px 34px; align-items: center; gap: 8px; padding: 7px 0 }
+.wrow + .wrow { border-top: 1px solid var(--line) }
+.wrow.whead { padding: 2px 0 0 }
+.wrow .t b { font-size: 13px; font-weight: 500 }
+.wcells { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; align-items: center }
+.wcells span { font-size: 10px; color: var(--muted); text-align: center }
+.wcells i { height: 5px; border-radius: 3px; background: var(--line) }
+.wcells i.ok { background: var(--h) }
+.wcells i.no { background: var(--warn) }
+.wcells i.off { height: 3px; background: var(--line); opacity: .7 }
+.wcnt { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums }
+.wcnt.full { color: var(--h); font-weight: 500 }
+.ins { display: flex; flex-direction: column; gap: 10px }
+.ins-step { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px }
+.ins-step .t { flex: 1 }
+.ins-n { width: 26px; height: 26px; border-radius: 50%; background: var(--soft); color: var(--accent); font-size: 13px; font-weight: 500; display: grid; place-items: center; flex: none }
+.ins-i, .bk-ic, .dr-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--soft); color: var(--accent); display: grid; place-items: center; flex: none }
+.ins-i svg, .bk-ic svg, .dr-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
+.bk-status { flex-direction: row; align-items: center; gap: 12px }
+.warn-t { color: var(--warn) !important }
+.dr-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 8px 0 4px; flex: none }
+.dr-ic { width: 56px; height: 56px; border-radius: 50% }
+.dr-ic svg { width: 26px; height: 26px }
+.dr-head b { font-size: 20px; font-weight: 500 }
+.dr-head small { font-size: 12px; color: var(--muted) }
+.dels { display: flex; justify-content: center; gap: 22px; padding: 6px 0 2px }
+.link.del { color: var(--warn) }
+.link.mute { color: var(--muted) }
+.link.quiet { color: var(--muted); font-weight: 400; font-size: 12px }
+.h3 a, .link { color: var(--accent); font-weight: 500; font-size: 13px; cursor: pointer }
+.btn { flex: 1; padding: 14px 10px; border-radius: 12px; font-weight: 500; font-size: 14px; text-align: center; border: 0; background: var(--soft); cursor: pointer; line-height: 1.2 }
+.btn.pri { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: var(--on-accent); box-shadow: 0 10px 22px -12px var(--accent2) }
+.field { display: flex; flex-direction: column; gap: 6px }
+.field > label { font-size: 13px; font-weight: 500; color: var(--muted) }
+.inp { border: 1px solid color-mix(in srgb, var(--muted) 35%, var(--line)); border-radius: 10px; padding: 8px 12px; background: var(--card); display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 38px; line-height: 1.4; flex: none; white-space: normal; overflow-wrap: anywhere; outline: none }
+.inp .chip { padding: 1px 8px }
+.inp[contenteditable]:focus { border-color: var(--accent); cursor: text }
+.inp.inp.typed { color: var(--ink); display: block }
+.field { display: flex; flex-direction: column; gap: 4px }
+.inp.ph, .inp.area { color: var(--muted) }
+.inp.area { align-items: flex-start; font-size: 13px }
+.notecard { background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow) }
+.notecard b { font-size: 15px; font-weight: 500 }
+.step { display: flex; align-items: center; gap: 14px }
+.step i { width: 34px; height: 34px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font-style: normal; font-size: 18px }
+.seg { display: flex; background: var(--card); border-radius: 10px; padding: 4px; gap: 2px; box-shadow: var(--shadow) }
+.seg span { flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap }
+.seg span.on { background: var(--accent); color: var(--on-accent); font-weight: 500 }
+.opts { display: flex; flex-wrap: wrap; gap: 8px }
+.opts span { padding: 6px 12px; border-radius: 99px; font-size: 13px; cursor: pointer; background: var(--card); box-shadow: var(--shadow) }
+.opts span.on { background: var(--accent); color: var(--on-accent) }
+.pbar { height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden }
+.pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--c, var(--accent)), var(--accent2)); border-radius: 99px }
+.kv { display: flex; justify-content: space-between; gap: 8px; font-size: 14px }
+.kv span:first-child { color: var(--muted) }
+.kv b { font-weight: 500; font-variant-numeric: tabular-nums }
+.toggle { width: 46px; height: 28px; border-radius: 99px; background: var(--line); position: relative; flex: none; cursor: pointer }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: left .15s }
+.toggle.on { background: var(--accent) }
+.toggle.on::after { left: 21px }
+.card.hero { display: flex; flex-direction: row; gap: 16px; align-items: center; padding: 14px 16px }
+.ring { width: 104px; height: 104px; border-radius: 50%; background: conic-gradient(from 200deg, var(--accent2), var(--h) calc(var(--p) * 1%), var(--soft) 0); display: grid; place-items: center; flex: none }
+.ring > div { width: 88px; height: 88px; border-radius: 50%; background: var(--card); display: grid; place-items: center; text-align: center; line-height: 1.05 }
+.ring b { font-size: 28px; font-weight: 400; font-variant-numeric: tabular-nums }
+.ring small { font-size: 12px; color: var(--muted); display: block }
+.hero .t { padding-left: 18px; border-left: 1px solid var(--line) }
+.hero .t b { font-size: 16px; font-weight: 500; margin-bottom: 4px }
+.hero .t small { font-size: 13px }
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px }
+.ph:not(.inp) { aspect-ratio: 1; max-width: 100%; border-radius: 12px;
+  background: linear-gradient(to top right, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px)), linear-gradient(to top left, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px)), var(--hatch) }
+.ph.add { display: grid; place-items: center; background: transparent; border: 1.5px dashed var(--line); color: var(--muted); font-size: 0; position: relative }
+.ai { background: var(--soft); box-shadow: none }
+.ai .h3 { color: var(--accent); font-size: 14px }
+.ai p { margin: 0; font-size: 13px }
+.small { font-size: 13px; color: var(--muted) }
+.muted { color: var(--muted) }
+.hb-stats { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 16px 0; flex: none }
+.hb-stats div { text-align: center; display: flex; flex-direction: column; gap: 4px }
+.hb-stats div + div { border-left: 1px solid var(--line) }
+.hb-stats b { font-size: 28px; font-weight: 500; color: var(--h); font-variant-numeric: tabular-nums; line-height: 1.1 }
+.hb-stats b span { font-size: 16px }
+.hb-stats small { font-size: 12px; color: var(--muted) }
+.hb-goal { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); cursor: pointer; flex: none }
+.hb-gi { width: 38px; height: 38px; border-radius: 50%; background: var(--g-bg); color: var(--g); display: grid; place-items: center; flex: none }
+.hb-gi svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
+.hb-gt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px }
+.hb-gt small { font-size: 12px; color: var(--muted) }
+.hb-gt b { font-size: 14px; font-weight: 500 }
+.hb-gt span { font-size: 12px; color: var(--muted) }
+.hb-gbar { height: 5px; border-radius: 3px; background: var(--g-bg); overflow: hidden; margin: 3px 0 1px }
+.hb-gbar i { display: block; height: 100%; border-radius: 3px; background: var(--g) }
+.hb-arr { color: var(--muted); padding: 0 6px; cursor: pointer; font-weight: 400 }
+.hb-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center }
+.hb-cal span { font-size: 11px; color: var(--muted) }
+.hb-cal i { font-style: normal; font-size: 12px; height: 30px; display: grid; place-items: center; border-radius: 50%; width: 30px; margin: 0 auto; color: var(--ink) }
+.hb-cal i.ok { background: var(--h); color: #fff }
+.hb-cal i.no { box-shadow: inset 0 0 0 1.5px var(--warn); color: var(--warn) }
+.hb-cal i.off { color: color-mix(in srgb, var(--muted) 55%, transparent) }
+.hb-cal i.now { font-weight: 500; outline: 2px solid var(--h); outline-offset: 2px }
+.hb-legend { display: flex; gap: 12px; justify-content: center; font-size: 11px; color: var(--muted); flex-wrap: wrap }
+.hb-legend span { display: flex; align-items: center; gap: 6px }
+.hb-legend i { width: 10px; height: 10px; border-radius: 50% }
+.hb-legend i.ok { background: var(--h) } .hb-legend i.no { box-shadow: inset 0 0 0 1.5px var(--warn) } .hb-legend i.off { background: var(--line) }
+.heat { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; grid-auto-columns: 12px; gap: 4px; overflow-x: auto }
+.heat i, .dots i { border-radius: 3px; background: var(--soft) }
+.heat i.l1 { background: color-mix(in srgb, var(--h) 35%, var(--soft)) }
+.heat i.l2 { background: color-mix(in srgb, var(--h) 65%, var(--soft)) }
+.heat i.l3, .dots i.on { background: var(--h) }
+.dots { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px }
+.dots i { aspect-ratio: 1; border-radius: 2px }
+.hbar { display: grid; grid-template-columns: 84px 1fr 66px; align-items: center; gap: 8px; font-size: 13px }
+.hbar .track { height: 10px; background: var(--soft); border-radius: 99px; position: relative; overflow: hidden }
+.hbar .track i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 99px }
+.hbar .track u { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); text-decoration: none }
+.hbar span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted) }
+.months { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
+.mo { border-radius: 12px; padding: 8px; font-size: 12px; background: var(--soft); cursor: pointer }
+.mo b { display: block; font-size: 13px }
+.mo.dim { color: var(--muted); background: transparent; border: 1px dashed var(--line); cursor: default }
+.mo.now { background: var(--accent); color: var(--on-accent) }
+.cols12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 40px }
+.cols12 i { background: var(--h); border-radius: 3px 3px 0 0 }
+.cols12 i.f { background: var(--soft) }
+.life { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px }
+.life i { aspect-ratio: 1; border-radius: 7px; font-size: 10px; font-weight: 500; display: flex; padding: 3px 4px; font-style: normal; cursor: pointer }
+.life i.past { background: color-mix(in srgb, var(--muted) 50%, var(--card)); color: #fff }
+.life i.now { background: var(--accent); color: #fff }
+.life i.pre { background: color-mix(in srgb, var(--accent) 35%, var(--card)); color: var(--ink) }
+.life i.post { background: var(--soft); color: var(--muted) }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted) }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; background: var(--c); vertical-align: -1px }
+.a4s { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
+.a4 { aspect-ratio: 210 / 297; max-width: 100%; background: var(--card); border-radius: 4px; padding: 7px; display: flex; flex-direction: column; gap: 4px; font-size: 8.5px; line-height: 1.2; box-shadow: var(--shadow) }
+.a4 b { font-size: 9.5px }
+.a4 i { display: block; height: 3px; background: var(--line); border-radius: 2px }
+.a4 i.s { width: 60% }
+.a4 .ph { aspect-ratio: auto; height: 22px; border-radius: 3px }
+.a4 em { margin-top: auto; font-style: normal; color: var(--muted); font-size: 7.5px }
+.msg { max-width: 86%; padding: 9px 12px; border-radius: 14px; font-size: 13px }
+.msg.me { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 6px }
+.msg.bot { align-self: flex-start; background: var(--card); box-shadow: var(--shadow); border-bottom-left-radius: 6px }
+.chat { display: flex; flex-direction: column; gap: 10px }
+.tl { display: flex; flex-direction: column; border-left: 2px solid var(--line); margin-left: 6px; padding-left: 14px }
+.tl div { position: relative; padding: 4px 0 8px; font-size: 14px }
+.tl div::before { content: ""; position: absolute; left: -21px; top: 9px; width: 10px; height: 10px; border-radius: 50%; background: var(--card); border: 2px solid var(--accent) }
+.tl small { color: var(--muted); display: block; font-size: 12px }
+.big { font-size: 24px; font-weight: 400; line-height: 1.1 }
+.splash { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px }
+.splash h1 { font-size: 30px; line-height: 1.1; margin: 0; font-weight: 500 }
+.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px 16px 16px; flex: none; filter: drop-shadow(0 6px 12px rgba(60, 40, 140, .14)) }
+.tabbar button { position: relative; height: 46px; border: 0; border-radius: 12px; background: var(--card); color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; cursor: pointer }
+.tabbar button:nth-child(1)::after, .tabbar button:nth-child(3)::before { content: ""; position: absolute; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; background: var(--scr2) }
+.tabbar button:nth-child(1)::after { right: -15px }
+.tabbar button:nth-child(3)::before { left: -15px }
+.tabbar button:nth-child(2)::before, .tabbar button:nth-child(2)::after { content: ""; position: absolute; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; background: inherit }
+.tabbar button:nth-child(2)::before { left: -12px }
+.tabbar button:nth-child(2)::after { right: -12px }
+.tabbar button.on { background: var(--accent); color: #fff; font-weight: 500 }
+.tabbar button:nth-child(2) { z-index: 2 }
+.tabbar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+
+
+@media (prefers-reduced-motion: reduce) { .toggle::after { transition: none } }
+
+/* ---- только для приложения (не было в прототипе) ---- */
+input.inp, textarea.inp, select.inp { width: 100%; font: inherit; font-size: 14px; color: var(--ink); outline: none; -webkit-appearance: none; appearance: none; min-height: 38px }
+textarea.inp { resize: none; overflow: hidden; line-height: 1.4; display: block }
+input.inp:focus, textarea.inp:focus { border-color: var(--accent) }
+.inp::placeholder { color: var(--muted) }
+input[type="date"].inp, input[type="time"].inp { display: block; text-align: left }
+.row.is-done .t, .row.is-done .fact, .row.is-done .chip { opacity: .5 }
+.banner { display: flex; align-items: center; gap: 12px; background: var(--soft); border-radius: 12px; padding: 10px 14px; cursor: pointer }
+.banner .t b { font-weight: 500 }
+.empty-day { text-align: center; padding: 18px 14px }
+.btn.sm { flex: none; padding: 9px 16px; font-size: 13px; border-radius: 10px }
+.btn.ghost { background: none; color: var(--muted) }
+.pick-row { cursor: pointer }
+.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 99px; font-size: 13px; z-index: 50; opacity: 0; transition: opacity .2s; pointer-events: none }
+.toast.on { opacity: .92 }
+.dr-del { color: var(--muted); font-size: 18px; padding: 0 4px; cursor: pointer }
+.day.off { opacity: .35; pointer-events: none }
+
+/* ---- книга года: печать A4 ---- */
+#print { display: none }
+@media print {
+  @page { size: A4; margin: 15mm 16mm }
+  @page :first { margin: 0 }
+  html, body { background: #fff !important; height: auto }
+  #app { display: none !important }
+  #print { display: block; color: #1c1938; font: 10.5pt/1.45 var(--ui) }
+  .pg { position: relative }
+  .flow .pg + .pg, .flow .pgh { margin-top: 9mm }
+  .pg h1, .pg h2 { break-after: avoid; page-break-after: avoid }
+  .pg li, .pg p, .pg .tiles, .pg .phs, .pg .collage img { break-inside: avoid; page-break-inside: avoid }
+  .pg h1 { font-size: 22pt; font-weight: 300; color: #7556ee; margin: 0 0 4mm }
+  .pg h2 { font-size: 12.5pt; font-weight: 500; margin: 5mm 0 1.5mm }
+  .pg h2.mh { font-size: 15pt; font-weight: 400; color: #7556ee; margin: 0 0 2mm; padding-bottom: 1mm; border-bottom: .3mm solid #e6dffc }
+  .flow .pg.mon { margin-top: 6mm }
+  .pg h2 small { color: #7c7894; font-weight: 400 }
+  .pg ul { padding-left: 5mm; margin: 0 } .pg li { margin: 1.5mm 0 } .pg li span, .pg li small { color: #7c7894 }
+  .pg .big { font-size: 34pt; font-weight: 300; margin: 0 0 6mm } .pg .big small { font-size: 11pt; color: #7c7894 }
+  .pg .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm }
+  .pg .t { border-radius: 3mm; padding: 3mm; background: #f4f3f8 } .pg .t small { display: block; font-size: 9pt; color: inherit; opacity: .8 } .pg .t b { font-size: 15pt; font-weight: 500 }
+  .pg .t.l1 { background: #e7e1fb } .pg .t.l2 { background: #cbbdf7 } .pg .t.l3 { background: #a68ef3; color: #fff } .pg .t.l4 { background: #7556ee; color: #fff }
+  .pg .phs { float: right; width: 58mm; display: flex; flex-direction: column; gap: 2.5mm; margin: 1mm 0 2mm 5mm } .pg .phs img { width: 100%; height: 40mm; object-fit: cover; border-radius: 2.5mm; display: block }
+  .pg.mon { display: flow-root }
+  .pg .collage { display: flex; flex-wrap: wrap; gap: 2.5mm } .pg .collage img { display: block; width: calc(25% - 1.9mm); height: 36mm; object-fit: cover; border-radius: 2mm }
+  .pg.cover { width: 210mm; height: 297mm; overflow: hidden; background: #7556ee; break-after: page; page-break-after: always } .pg.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
+  .pg.cover .cv { position: absolute; left: 18mm; bottom: 24mm; color: #fff; text-shadow: 0 1mm 4mm rgba(0,0,0,.35) }
+  .pg.cover b { display: block; font-size: 72pt; font-weight: 200; line-height: 1 } .pg.cover span { display: block; font-size: 20pt } .pg.cover small { font-size: 11pt; opacity: .85 }
+  .pg .mem { padding: 0 } .pg .mem li { list-style: none; margin: 1.2mm 0 } .pg p { margin: 0 0 3mm }
+}
+.mm-cover.ph { aspect-ratio: 16 / 9; background: var(--hatch) }
+.inp { min-width: 0 }
+.row > input.inp { flex: 1 }
+.bh > input.inp { flex: 1 }
+.dr-del { flex: none; min-width: 28px; height: 28px; display: grid; place-items: center }
+/* iPhone: нажатия по span/div срабатывают только у элементов с cursor: pointer */
+[data-act], [data-go] { cursor: pointer }
+
+.gcards { display: flex; flex-direction: column; gap: 10px; padding: 10px }
+.gcard { border-radius: 10px; border: 1px solid color-mix(in srgb, var(--g) 22%, var(--line)); overflow: hidden; background: var(--card) }
+.gcard-h { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: color-mix(in srgb, var(--g-bg) 45%, var(--card)) }
+.gcard-h .t b { font-weight: 500; font-size: 15px }
+.gcard .rows { padding: 2px 12px 4px }
+
+/* даты: на iPhone поле даты шире, чем кажется — не ставим два в одну строку без запаса */
+input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp { width: 100%; min-width: 0; max-width: 100%; -webkit-appearance: none; appearance: none }
+.dt-col { display: flex; flex-direction: column; gap: 8px }
+.dt-l { display: flex; align-items: center; gap: 10px; min-width: 0 }
+.dt-l span { width: 22px; flex: none; color: var(--muted); font-size: 13px }
+.dt-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px }
+
+.dbox { position: relative; display: flex; align-items: center; min-width: 0; overflow: hidden; cursor: pointer }
+.dbox span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.dbox input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; margin: 0; padding: 0; font-size: 16px; -webkit-appearance: none; appearance: none }
+.dt-row > * { min-width: 0 } .dt-row.eq { grid-template-columns: 1fr 1fr }
+.field > * { min-width: 0 }
+.pl-card > div[style*="display:flex"] { align-items: center }
+.pl-card > div[style*="display:flex"] > .inp { flex: 1 }
+.lg-l { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px }
+.lg-l > span { font-size: 13px; color: var(--muted) }
+.ring small:empty { display: none }
+/* Жизнь: итоги, воспоминания, книга года */
+.hub { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px 10px 12px; border-radius: 14px; background: var(--e-bg) }
+.hub-lbl { font-size: 15px; font-weight: 500; padding: 2px 4px 0 }
+.hub-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: var(--card); box-shadow: 0 2px 8px -4px rgba(29, 159, 214, .35); cursor: pointer; position: relative }
+.hub-t b { font-size: 14px; font-weight: 500 }
+.hub-t small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.hub-t em { font-style: normal; font-size: 15px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums }
+.hub-ti { display: grid; place-items: center; flex: none; margin: 2px 0 6px; color: var(--accent) }
+.hub-ti svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round }
+.hub-t.due::after { content: ""; position: absolute; top: 10px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: var(--g) }
+.hub2 { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.hub-m, .hub-b { position: relative; overflow: hidden; height: 104px; flex: none; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; cursor: pointer; box-shadow: var(--shadow) }
+.hub-m div, .hub-b div { display: flex; flex-direction: column; position: relative }
+.hub-m b, .hub-b b { font-size: 14px; font-weight: 500 }
+.hub-m small, .hub-b small { font-size: 12px; color: var(--muted) }
+.hub-m { background: var(--soft) }
+.hub-ic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card); position: relative }
+.hub-ic svg { width: 17px; height: 17px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linejoin: round }
+.hub-b { background: var(--e-bg) }
+.hub-book { width: 30px; height: 38px; border-radius: 2px 5px 5px 2px; background: var(--accent); position: relative; display: grid; place-items: end center; padding-bottom: 5px; box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent) 35%, var(--card)) }
+.hub-book i { position: absolute; left: 3px; top: 0; bottom: 0; width: 1.5px; background: rgba(255, 255, 255, .45) }
+.hub-book em { font-style: normal; font-size: 8px; font-weight: 600; color: #fff; letter-spacing: .02em }
+/* Список: цели — заливка блока, карточки целей светлые */
+.blk.goals > .gcards { background: color-mix(in srgb, var(--g-bg) 80%, var(--card)) }
+.blk.goals > .gcards .gcard { border: 0; box-shadow: 0 2px 8px -4px rgba(224, 85, 155, .25) }
+.blk.goals > .gcards .gcard-h { background: var(--card); border-bottom: 1px solid var(--line) }
