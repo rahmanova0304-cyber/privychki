@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=64';
-import * as V from './screens.js?v=64';
-import * as W from './screens2.js?v=64';
-import { aiScreen } from './ai.js?v=64';
-import { printScreen } from './print.js?v=64';
-import { today } from './util.js?v=64';
+import * as S from './store.js?v=65';
+import * as V from './screens.js?v=65';
+import * as W from './screens2.js?v=65';
+import { aiScreen } from './ai.js?v=65';
+import { printScreen } from './print.js?v=65';
+import { today } from './util.js?v=65';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -47,17 +47,38 @@ function route() {
   }
 }
 
+let prevDepth = 0;
 function render() {
   const same = location.hash === currentRoute;
   const prevBody = app.querySelector('.body');
   const scroll = same && prevBody ? prevBody.scrollTop : 0;
+  // кольца на том же экране дорастают от прежнего процента, на новом — от нуля
+  const oldRings = same ? [...app.querySelectorAll('.ring')].map((r) => r.style.getPropertyValue('--rp')) : [];
   current = route();
   currentRoute = location.hash;
   app.innerHTML = current.html;
   if (current.mount) current.mount(app);
   const body = app.querySelector('.body');
   if (body && scroll) body.scrollTop = scroll;
+  app.querySelectorAll('.ring').forEach((r, i) => { if (oldRings[i]) r.style.setProperty('--rp0', oldRings[i]); });
+  // переход между экранами: вперёд — выезжает справа, назад — слева, вкладки — проявляются
+  const depth = (history.state && history.state.depth) || 0, scr = app.querySelector('.scr');
+  if (!same && scr) scr.classList.add(depth > prevDepth ? 'in-fwd' : depth < prevDepth ? 'in-back' : 'in-fade');
+  prevDepth = depth;
 }
+
+// Лёгкий тактильный «тик». Обычной вибрации у сайтов на iPhone нет; с iOS 18 тик даёт нажатие
+// на системный переключатель (input switch), поэтому щёлкаем по скрытому. На Android — navigator.vibrate.
+function haptic() {
+  if (navigator.vibrate && !/iPhone|iPad/.test(navigator.userAgent)) { navigator.vibrate(12); return; }
+  const label = document.createElement('label'), input = document.createElement('input');
+  input.type = 'checkbox'; input.setAttribute('switch', '');
+  label.style.display = 'none'; label.setAttribute('aria-hidden', 'true');
+  label.appendChild(input); document.head.appendChild(label);
+  label.click(); label.remove();
+}
+// Где тикает: отметка дела, «Сделано» в окне отметки, переключатели, «Завершить день», «Цель достигнута», «Отменить».
+const HAPTIC = new Set(['toggle', 'flip', 'whole', 'close', 'achieve']);
 
 // Поля даты и времени: на iPhone родное поле шире, чем кажется, и вылезает за экран.
 // Показываем аккуратный текст, а родное поле кладём прозрачно поверх — нажатие открывает обычный выбор даты.
@@ -98,7 +119,11 @@ app.addEventListener('click', (e) => {
   if (act && act.dataset.act === 'back') { e.preventDefault(); go('back'); return; }
   if (act && current && current.actions && current.actions[act.dataset.act]) {
     e.preventDefault();
-    current.actions[act.dataset.act](act, go, render);
+    const name = act.dataset.act;
+    if (HAPTIC.has(name) || (name === 'save' && currentRoute.startsWith('#/mark/'))) haptic();
+    current.actions[name](act, go, render);
+    // только что отмеченный кружок — «прыгает»
+    if (name === 'toggle') { const ck = app.querySelector(`[data-act="toggle"][data-key="${CSS.escape(act.dataset.key)}"]`); if (ck && ck.classList.contains('done')) ck.classList.add('pop'); }
     return;
   }
   const link = e.target.closest('[data-go]');
@@ -112,8 +137,10 @@ app.addEventListener('click', (e) => {
 
 // Любая перерисовка (и всего экрана, и части формы) — сразу оформляем новые поля дат.
 new MutationObserver(() => enhanceDates(app)).observe(app, { childList: true, subtree: true });
-window.addEventListener('popstate', render);
-window.addEventListener('hashchange', render);
+// «Назад» вызывает и popstate, и hashchange — рисуем один раз, иначе пропадает анимация перехода.
+const renderIfMoved = () => { if (location.hash !== currentRoute) render(); };
+window.addEventListener('popstate', renderIfMoved);
+window.addEventListener('hashchange', renderIfMoved);
 window.addEventListener('rerender', render);
 
 // Плашка «Перенесено · Отменить» после действий, которые можно вернуть (см. S.undo).
@@ -130,6 +157,7 @@ window.addEventListener('undoable', (e) => {
 });
 toast.addEventListener('click', (e) => {
   if (!e.target.closest('button')) return;
+  haptic();
   clearTimeout(toastTimer);
   toast.classList.remove('on');
   if (S.undo()) render();

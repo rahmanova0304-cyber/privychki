@@ -413,7 +413,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .toggle.on { background: var(--accent) }
 .toggle.on::after { left: 21px }
 .card.hero { display: flex; flex-direction: row; gap: 16px; align-items: center; padding: 14px 16px }
-.ring { width: 104px; height: 104px; border-radius: 50%; background: conic-gradient(from 200deg, var(--accent2), var(--h) calc(var(--p) * 1%), var(--soft) 0); display: grid; place-items: center; flex: none }
+.ring { width: 104px; height: 104px; border-radius: 50%; background: conic-gradient(from 200deg, var(--accent2), var(--h) calc(var(--rp) * 1%), var(--soft) 0); display: grid; place-items: center; flex: none }
 .ring > div { width: 88px; height: 88px; border-radius: 50%; background: var(--card); display: grid; place-items: center; text-align: center; line-height: 1.05 }
 .ring b { font-size: 28px; font-weight: 400; font-variant-numeric: tabular-nums }
 .ring small { font-size: 12px; color: var(--muted); display: block }
@@ -626,3 +626,29 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .blk.goals > .gcards { background: color-mix(in srgb, var(--g-bg) 80%, var(--card)) }
 .blk.goals > .gcards .gcard { border: 0; box-shadow: 0 2px 8px -4px rgba(224, 85, 155, .25) }
 .blk.goals > .gcards .gcard-h { background: var(--card); border-bottom: 1px solid var(--line) }
+
+/* ---------- Движение: спокойно и коротко. Кто отключил анимацию в iPhone — без неё. ---------- */
+@property --rp { syntax: '<number>'; inherits: true; initial-value: 0 }
+@media (prefers-reduced-motion: no-preference) {
+  .scr.in-fwd { animation: scr-fwd .26s cubic-bezier(.2, .8, .2, 1) }
+  .scr.in-back { animation: scr-back .26s cubic-bezier(.2, .8, .2, 1) }
+  .scr.in-fade { animation: scr-fade .2s ease-out }
+  @keyframes scr-fwd { from { transform: translateX(28px); opacity: 0 } }
+  @keyframes scr-back { from { transform: translateX(-28px); opacity: 0 } }
+  @keyframes scr-fade { from { opacity: 0 } }
+  /* кольца дорастают до своего процента */
+  .ring { animation: ring-grow .7s cubic-bezier(.2, .8, .2, 1) }
+  @keyframes ring-grow { from { --rp: var(--rp0, 0) } }
+  /* отметка: кружок «прыгает», галочка прорисовывается */
+  .ck.pop { animation: ck-pop .32s cubic-bezier(.3, 1.6, .5, 1) }
+  .ck.pop::after { animation: ck-tick .22s .08s ease-out backwards }
+  @keyframes ck-pop { 0% { transform: scale(.7) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
+  @keyframes ck-tick { from { opacity: 0; transform: rotate(45deg) scale(.4) } }
+  /* кнопки и карточки чуть проседают под пальцем */
+  .btn, .ib, .plus, .row[data-go], .hub-t, .hub-m, .hub-b, .opts span, .seg span { transition: transform .12s ease }
+  .btn:active, .ib:active, .plus:active, .hub-t:active, .hub-m:active, .hub-b:active, .opts span:active, .seg span:active { transform: scale(.96) }
+  .row[data-go]:active { transform: scale(.985) }
+  /* плашка «Отменить» выезжает снизу */
+  .toast { transition: opacity .2s, transform .25s cubic-bezier(.2, .8, .2, 1); transform: translate(-50%, 12px) }
+  .toast.on { transform: translate(-50%, 0) }
+}
