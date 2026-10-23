@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=68';
+import * as S from './store.js?v=69';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=68';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=68';
-import { aiBreakdownGoal } from './ai.js?v=68';
+  MONTHS_NOM, WD } from './util.js?v=69';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=69';
+import { aiBreakdownGoal } from './ai.js?v=69';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -510,7 +510,7 @@ export function yearPastScreen(y) {
   const html = `<section class="scr">${top('Прошлый год')}<div class="body">
     <div class="card yc"><div class="yc-top"><div><small>Год до приложения${a != null ? ' · тебе ' + a : ''}</small><b>${y}</b></div></div>
       <div class="yc-word">Слово года — <input class="inp" data-word value="${esc(ym.word)}" placeholder="одно слово" style="display:inline-block;width:150px;min-height:30px;padding:4px 8px"></div>
-      <div class="h3" style="font-size:13px;color:var(--muted);font-weight:400">Воспоминания по месяцам · ${mem.length}<span class="link" data-go="#/memories?y=${y}">Раскрыть все</span></div><div class="yt-grid">${tiles}</div></div>
+      <div class="h3" style="font-size:14px;color:var(--muted);font-weight:400">Воспоминания по месяцам · ${mem.length}<span class="link" data-go="#/memories?y=${y}">Раскрыть все</span></div><div class="yt-grid">${tiles}</div></div>
     <div class="card"><div class="h3">Главное за год</div>${ym.manual.map((m) => `<div class="hl"><span class="hl-i" style="background:var(--soft);color:var(--accent)">${ICON.star}</span><div class="t"><b>${esc(m.title)}</b></div><span class="dr-del" data-act="delm" data-id="${m.id}">✕</span></div>`).join('')}<div class="addrow" style="--c:var(--accent)" data-act="own"><i></i>Добавить своё</div></div>
   </div><div class="foot"><button class="btn pri" data-go="#/entry/memory/new?date=${y}-06-01">Добавить воспоминание</button></div></section>`;
   return {
