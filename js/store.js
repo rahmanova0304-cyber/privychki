@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=95';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=96';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -607,6 +607,20 @@ export function deleteGoal(id) {
 }
 
 // История цели: каждый день, когда с её шагами что-то происходило.
+// Путь к мечте: все её цели (у цели «Из мечты»), по порядку создания; сводка по ним.
+export function dreamGoals(d) {
+  return state.goals.filter((g) => g.status !== 'deleted' && (g.dreamId === d.id || g.id === d.goalId)).sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+}
+export function dreamSummary(d) {
+  let achieved = 0, minutes = 0, sessions = 0;
+  for (const g of dreamGoals(d)) {
+    if (g.status === 'achieved') achieved++;
+    for (const x of goalHistory(g)) if (x.what === 'сделано' || x.what === 'частично') { minutes += Number(x.fact) || 0; sessions++; }
+    const hs = goalHabitStats(g); minutes += hs.minutes; sessions += hs.days;
+  }
+  return { achieved, minutes, sessions };
+}
+
 export function goalHistory(g) {
   const out = [];
   for (const [date, d] of Object.entries(state.days)) {

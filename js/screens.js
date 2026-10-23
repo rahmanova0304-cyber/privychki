@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=95';
+import * as S from './store.js?v=96';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=95';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=96';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -650,7 +650,7 @@ export function lifeScreen() {
     cells += `<i class="${c}"${c === 'now' ? ' data-go="#/summary/y/' + yr + '"' : c === 'past' ? ' data-go="#/year/' + yr + '"' : ''}>${i}</i>`;
   }
   const dec = new Date().getMonth() === 11;
-  const dreams = S.state.dreams.map((d) => `<div class="row" data-go="#/dream/${d.id}"><i class="dr-dot${d.cameTrue ? ' on' : ''}"></i><div class="t"><b>${esc(d.title)}</b>${d.cameTrue ? `<small>сбылось · ${d.cameTrue.date.slice(0, 4)}</small>` : d.goalId && S.goalById(d.goalId) ? `<small>стала целью · ${esc(goalLine(S.goalById(d.goalId)).text)}</small>` : ''}</div><span class="chev">›</span></div>`).join('');
+  const dreams = S.state.dreams.map((d) => `<div class="row" data-go="#/dream/${d.id}"><i class="dr-dot${d.cameTrue ? ' on' : ''}"></i><div class="t"><b>${esc(d.title)}</b>${d.cameTrue ? `<small>сбылось · ${d.cameTrue.date.slice(0, 4)}</small>` : S.dreamGoals(d).length ? `<small>${(() => { const gs = S.dreamGoals(d), a = gs.filter((x) => x.status === 'achieved').length; return gs.length === 1 ? 'цель: ' + esc(goalLine(gs[0]).text) : 'путь: ' + a + ' из ' + gs.length + ' целей'; })()}</small>` : ''}</div><span class="chev">›</span></div>`).join('');
   const html = `<section class="scr">
   ${top('Моя жизнь', { back: false, right: `<button class="ib ibgear" data-go="#/settings" title="Настройки">${ICON.gear}</button>` })}
   <div class="body">

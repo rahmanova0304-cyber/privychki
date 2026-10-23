@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=95';
+import * as S from './store.js?v=96';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=95';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=95';
-import { aiBreakdownGoal } from './ai.js?v=95';
+  MONTHS_NOM, WD } from './util.js?v=96';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=96';
+import { aiBreakdownGoal } from './ai.js?v=96';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -40,7 +40,7 @@ export function goalEditScreen(id, params) {
   const g = id !== 'new' ? S.goalById(id) : null;
   const f = g ? JSON.parse(JSON.stringify({ title: g.title, description: g.description, deadline: g.deadline, dreamId: g.dreamId, stages: g.stages, mUnit: (g.measure || {}).unit || '', mStart: (g.measure || {}).start ?? '', mTarget: (g.measure || {}).target ?? '' }))
     : { title: params.get('title') || '', description: '', deadline: '', dreamId: params.get('dream') || '', stages: [{ id: uid(), title: 'Этап 1', steps: [{ id: uid(), title: '', duration: null }] }] };
-  if (!g && f.dreamId && !f.title) f.title = (S.dreamById(f.dreamId) || {}).title || '';
+  if (!g && f.dreamId && !f.title && !S.dreamGoals(S.dreamById(f.dreamId) || {}).length) f.title = (S.dreamById(f.dreamId) || {}).title || '';
   const actHabits = S.state.habits.filter((h) => h.status !== 'archived');
   f.habitIds = g ? S.goalHabits(g).map((h) => h.id) : [];
   const durSel = (si, ti, v) => `<select class="inp sdur${v ? "" : " empty"}" onchange="this.classList.toggle('empty',!this.value)" data-sd="${si}:${ti}">${[[null, 'Время'], ...S.DURATIONS].map(([x, l]) => `<option value="${x ?? ''}"${(v ?? null) === x ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
@@ -133,6 +133,7 @@ export function goalCardScreen(id) {
       ${minutes ? `<div class="kv"><span>Потрачено</span><b>${fmtMin(minutes)}</b></div>` : ''}${g.deadline ? `<div class="kv"><span>Срок</span><b>до ${fmtDM(g.deadline)}</b></div>` : ''}
       ${g.status === 'achieved' ? `<div class="kv"><span>Достигнута</span><b>${fmtDM(g.achievedAt)}</b></div>` : ''}${g.description ? `<p class="small" style="margin:0">${esc(g.description)}</p>` : ''}</div>
     ${habits.length ? `<div class="card plain"><div class="h3">Привычки для цели</div><div class="rows">${habits.map((h) => `<div class="row" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h))} · ${S.habitStats(h, addDays(today(), -29), today()).pct}% за 30 дней</small></div><span class="chev">›</span></div>`).join('')}</div></div>` : ''}
+    ${g.dreamId && S.dreamById(g.dreamId) ? `<div class="card plain"><div class="row" style="padding:0" data-go="#/dream/${g.dreamId}"><div class="t"><small>Ведёт к мечте</small><b style="color:var(--d)">${esc(S.dreamById(g.dreamId).title)}</b></div><span class="chev">›</span></div></div>` : ''}
     ${stages}
     ${hist.length ? `<div class="card"><div class="h3">История</div><div class="tl">${hist.map((x) => `<div>${esc(x.title)}${x.fact ? ' · ' + fmtMin(x.fact) : ''}<small>${fmtDMshort(x.date)} · ${esc(x.what.startsWith('перенос') ? 'перенос → ' + fmtDMshort(x.what.slice(10)) : x.what)}${x.comment ? ' · ' + esc(x.comment) : ''}</small></div>`).join('')}</div></div>` : ''}
   </div><div class="foot"><button class="btn" data-go="#/goal/${g.id}">Изменить</button>${g.status === 'active' ? '<button class="btn pri" data-act="achieve">Цель достигнута</button>' : ''}</div></section>`;
@@ -146,7 +147,15 @@ export function goalCardScreen(id) {
       step: (el, go, render) => { const x = g.stages.flatMap((s) => s.steps).find((s) => s.id === el.dataset.id); x.done = !x.done; x.doneAt = x.done ? today() : null; S.save(); render(); },
       arch: (el, go, render) => { S.setGoalStatus(g.id, g.status === 'active' ? 'archived' : 'active'); render(); },
       del: (el, go) => { if (confirm('Удалить цель «' + g.title + '» вместе с историей?')) { S.deleteGoal(g.id); go('back'); } },
-      achieve: (el, go, render) => { S.setGoalStatus(g.id, 'achieved'); render(); },
+      achieve: (el, go, render) => {
+        S.setGoalStatus(g.id, 'achieved');
+        // последняя цель на пути к мечте — спросить, сбылась ли мечта
+        const dr = g.dreamId && S.dreamById(g.dreamId);
+        if (dr && !dr.cameTrue && S.dreamGoals(dr).every((x) => x.status === 'achieved') && confirm('Это была последняя цель на пути к мечте «' + dr.title + '». Мечта сбылась?')) {
+          dr.cameTrue = { date: today(), text: '', photos: [] }; S.save(); go('#/dream/' + dr.id); return;
+        }
+        render();
+      },
     },
   };
 }
@@ -398,12 +407,16 @@ export function memoriesScreen(params) {
 export function dreamScreen(id) {
   const d = S.dreamById(id);
   if (!d) return { html: `<section class="scr">${top('Мечта')}<div class="body"><p class="small">Мечта удалена.</p></div></section>` };
-  const g = d.goalId && S.goalById(d.goalId), ct = d.cameTrue;
+  const ct = d.cameTrue;
+  // путь к мечте: все её цели по порядку, сводка «целей пройдено · вложено · занятий»
+  const goals = S.dreamGoals(d), sum = S.dreamSummary(d);
+  const pathHtml = `${goals.length ? `<div class="card"><div class="dr-sum"><div><b>${sum.achieved} из ${goals.length}</b><small>${plural(goals.length, 'цель', 'цели', 'целей')} пройдено</small></div><div><b>${sum.minutes >= 60 ? Math.round(sum.minutes / 60) + ' ч' : sum.minutes + ' мин'}</b><small>вложено</small></div><div><b>${sum.sessions}</b><small>${plural(sum.sessions, 'занятие', 'занятия', 'занятий')}</small></div></div></div>
+    <div class="card plain" style="padding:0"><div class="h3" style="padding:14px 14px 4px">Путь к мечте</div>${goals.map((g, i) => { const gl = goalLine(g), hs = S.goalHabits(g); return `<div class="path-g" data-go="#/goalcard/${g.id}"><div class="top"><span class="num${g.status === 'achieved' ? ' done' : ''}">${g.status === 'achieved' ? '✓' : i + 1}</span><div class="t"><b>${esc(g.title)}</b><small>${g.status === 'achieved' ? 'достигнута ' + fmtDMshort(g.achievedAt) : esc(gl.text) + (gl.pct != null && !S.goalMeasure(g) ? ' · ' + gl.pct + '%' : '')}</small></div><span class="chev">›</span></div>${hs.length && g.status !== 'achieved' ? `<div class="hab">${hs.map((h) => `<span>${esc(h.title)} · ${esc(scheduleText(h).split(' · ')[0])}</span>`).join('')}</div>` : ''}</div>`; }).join('')}</div>` : ''}
+    <div class="addcard" style="--c:var(--d)" data-go="#/goal/new?dream=${d.id}"><div class="addrow"><i></i>${goals.length ? 'Добавить цель на пути' : 'Сделать целью'}</div></div>`;
   const html = `<section class="scr">${top('Мечта', { right: menu([['rename', 'Изменить название', 'или просто нажми на название'], ['del', 'Удалить мечту', 'цель, если есть, останется', true]]) })}<div class="body">
     <div class="dr-head"><span class="dr-ic">${ICON.dream.replace('<svg>', '<svg viewBox="0 0 24 24">')}</span><input class="dr-title" data-title value="${esc(d.title)}" enterkeyhint="done" aria-label="Название мечты"><small>мечта с ${d.createdAt.slice(0, 4)} года</small></div>
     ${field('Почему хочу', `<textarea class="inp area" rows="1" data-why placeholder="Чтобы помнить, зачем">${esc(d.why || '')}</textarea>`)}
-    ${g ? `<div class="hb-goal" data-go="#/goalcard/${g.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Стала целью</small><b>${esc(g.title)}</b>${goalLine(g).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(g).pct}%"></i></div>` : ''}<span>${esc(goalLine(g).text)}</span></div><span class="chev">›</span></div>`
-      : `<div class="addcard" style="--c:var(--accent)" data-go="#/goal/new?dream=${d.id}"><div class="addrow"><i></i>Сделать целью</div></div>`}
+    ${pathHtml}
     <div class="card plain"><div class="row" style="padding:0" data-act="came"><span class="ck ${ct ? 'done' : ''}" style="--c:var(--d)"></span><div class="t"><b>Сбылось</b><small>${ct ? fmtDM(ct.date) + ' ' + ct.date.slice(0, 4) : 'отметь — добавишь дату, мысли и фото'}</small></div></div>
       ${ct ? `<input class="inp" type="date" data-ct="date" value="${ct.date}"><textarea class="inp area" rows="1" data-ct="text" placeholder="Как это было">${esc(ct.text || '')}</textarea>${photoGrid(ct.photos || [], 'delph')}` : ''}</div>
   </div></section>`;
