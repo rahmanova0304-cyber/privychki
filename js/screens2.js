@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=75';
+import * as S from './store.js?v=76';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=75';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=75';
-import { aiBreakdownGoal } from './ai.js?v=75';
+  MONTHS_NOM, WD } from './util.js?v=76';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=76';
+import { aiBreakdownGoal } from './ai.js?v=76';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -167,7 +167,7 @@ export function habitCardScreen(id) {
   const notes = [];
   for (const [date, d] of Object.entries(S.state.days)) { const mk = d.items['h:' + h.id]; if (mk && mk.comment) notes.push({ date, text: mk.comment, fact: mk.fact }); }
   notes.sort((a, b) => b.date.localeCompare(a.date));
-  const html = `<section class="scr">${top(esc(h.title), { right: menu([['arch', h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив', h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется']]) })}<div class="body">
+  const html = `<section class="scr">${top(esc(h.title), { right: menu([['arch', h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив', h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется'], ['del', 'Удалить совсем', 'сотрёт вместе с историей', true]]) })}<div class="body">
     ${goal ? `<div class="hb-goal" data-go="#/goalcard/${goal.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Ведёт к цели</small><b>${esc(goal.title)}</b>${goalLine(goal).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(goal).pct}%"></i></div>` : ''}<span>${esc(goalLine(goal).text)}${goal.deadline ? ' · до ' + fmtDM(goal.deadline) : ''}</span></div><span class="chev">›</span></div>` : ''}
     <div class="hb-stats"><div><b>${S.streak(h)}</b><small>${plural(S.streak(h), 'день', 'дня', 'дней')} подряд</small></div><div><b>${st30.pct}<span>%</span></b><small>за 30 дней</small></div><div><b>${avg || allSt.done}</b><small>${avg ? 'в среднем' : 'всего раз'}</small></div></div>
     <div class="card" data-cal>${cal()}</div>
@@ -182,6 +182,7 @@ export function habitCardScreen(id) {
       pause: (el, go, render) => { S.setHabitStatus(h.id, 'paused'); render(); },
       menu: menuAct,
       arch: (el, go) => { S.setHabitStatus(h.id, h.status === 'archived' ? 'active' : 'archived'); go('back'); },
+      del: (el, go) => { if (confirm('Удалить привычку «' + h.title + '» вместе со всей историей?')) { S.deleteHabit(h.id); go('back'); } },
     },
   };
 }
