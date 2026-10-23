@@ -37,15 +37,15 @@ button { font: inherit; color: inherit }
 #app { height: 100%; max-width: 520px; margin: 0 auto; position: relative; overflow: hidden }
 .scr { position: absolute; inset: 0; padding-top: env(safe-area-inset-top, 0px); height: 100%; display: flex; flex-direction: column }
 .top { position: relative; padding: 16px 16px 8px; min-height: 60px; box-sizing: border-box; display: flex; align-items: center; gap: 10px }
-.top .ttl { flex: 1; min-width: 0; font-size: 17px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.top .ttl { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .ib { width: 36px; height: 36px; border-radius: 50%; background: var(--card); border: 0; box-shadow: var(--shadow); display: grid; place-items: center; cursor: pointer; flex: none; font-size: 19px; line-height: 1; font-weight: 400 }
-.aib { border-radius: 99px; width: auto; padding: 0 12px; color: var(--accent); font-size: 14px; font-weight: 500 }
+.aib { border-radius: 99px; width: auto; padding: 0 12px; color: var(--accent); font-size: 13px; font-weight: 500 }
 .body { flex: 1; overflow: auto; padding: 4px 16px 18px; display: flex; flex-direction: column; gap: 14px }
 .body > * { flex-shrink: 0 }
 .foot { padding: 10px 16px max(12px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px }
 .foot.col { flex-direction: column }
 .ptitle h1 { font-size: 24px; line-height: 1.2; margin: 0; font-weight: 500; text-wrap: balance }
-.ptitle p { color: var(--muted); font-size: 14px; margin: 3px 0 0 }
+.ptitle p { color: var(--muted); font-size: 15px; margin: 3px 0 0 }
 
 /* Главные вкладки (Список, День, Жизнь) — большой заголовок, как в приложениях iPhone; внутренние экраны — 17 */
 .top.main .ttl { font-size: 24px; font-weight: 600; letter-spacing: -.01em }
@@ -74,7 +74,7 @@ button { font: inherit; color: inherit }
 .blk.events { --c: var(--e); --cb: var(--e-bg) }
 .blk.dreams { --c: var(--accent); --cb: var(--soft) }
 .bh { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: linear-gradient(180deg, var(--cb), color-mix(in srgb, var(--cb) 80%, var(--card))) }
-.bh-n { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums }
+.bh-n { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums }
 .bh-n.full { color: var(--c); font-weight: 500 }
 .bh > b { font-size: 16px; font-weight: 500; flex: 1 }
 .bh svg { width: 22px; height: 22px; fill: none; stroke: var(--c); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none }
@@ -85,7 +85,7 @@ button { font: inherit; color: inherit }
 .ph.add::before, .ph.add::after { width: 18px }
 .cnt { font-size: 13px; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--c) 14%, var(--card)); font-variant-numeric: tabular-nums }
 .blk .rows { padding: 2px 14px 4px }
-.blk .empty { padding: 9px 14px 12px; color: var(--muted); font-size: 14px }
+.blk .empty { padding: 9px 14px 12px; color: var(--muted); font-size: 13px }
 .rows { display: flex; flex-direction: column }
 [hidden] { display: none !important }
 .row.addnew { background: var(--card); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); cursor: pointer }
@@ -122,18 +122,18 @@ button { font: inherit; color: inherit }
 .inp.sdur { width: 92px; flex: none; min-height: 32px; padding: 4px 22px 4px 10px; -webkit-appearance: none; appearance: none; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c6fd6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 6px center / 13px; font-size: 15px }
 .inp.sdur.empty { color: var(--accent) }
 .chip.spent { background: var(--g-bg); color: var(--g); font-weight: 600 }
-.fact { font-variant-numeric: tabular-nums; font-size: 14px; white-space: nowrap }
+.fact { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap }
 .cut { font-size: 13px; color: var(--warn) !important }
 
 .card { background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow) }
 .card.soft { background: var(--soft); box-shadow: none }
 .card.dash { background: transparent; box-shadow: none; border: 1.5px dashed var(--line) }
 .h3 { font-size: 16px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 8px }
-.arch { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); cursor: pointer }
+.arch { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); cursor: pointer }
 .arch span { transition: transform .2s }
 .arch.open span { transform: rotate(90deg) }
 .arch-row .t, #today .row.is-done .t, #today .row.is-done .fact, #today .row.is-done .chip { opacity: .5 }
-.addrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; color: var(--c, var(--accent)); font-size: 14px; font-weight: 500; cursor: pointer }
+.addrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; color: var(--c, var(--accent)); font-size: 15px; font-weight: 500; cursor: pointer }
 .addrow i { width: 22px; height: 22px; border-radius: 50%; border: 1.5px dashed currentColor; position: relative; flex: none }
 .addrow i::before, .addrow i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 1.5px; background: currentColor; transform: translate(-50%, -50%) }
 .addrow i::after { transform: translate(-50%, -50%) rotate(90deg) }
@@ -145,7 +145,7 @@ button { font: inherit; color: inherit }
 .menu span.del { color: var(--warn) }
 .kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
 .kinds span { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 2px }
-.kinds span b { font-size: 14px; font-weight: 500 }
+.kinds span b { font-size: 15px; font-weight: 500 }
 .kinds span small { font-size: 13px; color: var(--muted) }
 .kinds span.on { border-color: var(--h); background: var(--h-bg) }
 .ibsearch svg { width: 20px; height: 20px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round }
@@ -154,7 +154,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .ibgear svg { width: 21px; height: 21px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
 .ibdel svg { width: 18px; height: 18px; fill: none; stroke: var(--warn); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round }
 .ev-when { display: flex; gap: 6px; flex: none; flex-wrap: wrap }
-.ev-when .chip { background: var(--e-bg); color: var(--e); font-size: 14px; padding: 4px 12px }
+.ev-when .chip { background: var(--e-bg); color: var(--e); font-size: 13px; padding: 4px 12px }
 .ev-place { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); flex: none }
 .ev-pin { width: 38px; height: 38px; border-radius: 50%; background: var(--e-bg); color: var(--e); display: grid; place-items: center; flex: none }
 .ev-pin svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round }
@@ -171,10 +171,10 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .ev-pin.sm svg { width: 16px; height: 16px }
 .ev-when .chip:nth-child(2) { background: var(--e); color: #fff }
 .pl-d { color: var(--ink) !important; margin-top: 2px }
-.ev-whenrow { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); flex: none }
+.ev-whenrow { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); flex: none }
 .ev-time { font-size: 13px; color: var(--e); font-weight: 500 }
 .ev-day { display: flex; flex-direction: column; gap: 6px; flex: none }
-.ev-dh { font-size: 14px; font-weight: 500; color: var(--muted); display: flex; gap: 8px; align-items: center }
+.ev-dh { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; gap: 8px; align-items: center }
 .ev-dh span { font-size: 13px; font-weight: 500; color: var(--e); background: var(--e-bg); padding: 2px 8px; border-radius: 99px }
 .ev-entry { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px }
 .ev-entry p { margin: 0; font-size: 15px; line-height: 1.45 }
@@ -190,15 +190,12 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .leg .t { flex: 1; min-width: 0 }
 .leg-i { width: 34px; height: 34px; border-radius: 50%; background: var(--e-bg); color: var(--e); display: grid; place-items: center; flex: none }
 .leg-i svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
-.leg-p { font-size: 14px; font-weight: 500; white-space: nowrap }
+.leg-p { font-size: 13px; font-weight: 500; white-space: nowrap }
 .mo-list { display: flex; flex-direction: column; gap: 8px }
-.mo-h { display: flex; justify-content: space-between; font-size: 14px; font-weight: 500; color: var(--accent); padding-top: 6px; border-top: 1px solid var(--line) }
-.mo-h:first-child { border-top: 0; padding-top: 0 }
-.mo-h span { color: var(--muted); font-weight: 400 }
 .mo-it small { font-size: 13px; color: var(--muted) }
 .mo-it p { margin: 2px 0 6px; font-size: 15px }
 .mo-more { font-size: 13px; color: var(--muted); text-align: center; padding-top: 4px }
-.mm-month { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex: none; font-size: 17px; font-weight: 500 }
+.mm-month { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex: none; font-size: 16px; font-weight: 500 }
 .mm-month span { font-size: 13px; font-weight: 500; color: var(--accent); background: var(--soft); border-radius: 99px; padding: 2px 9px }
 .mm-month::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--accent) 20%, transparent) }
 .mm-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; flex: none }
@@ -216,13 +213,6 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .mm-quote::before { content: "“"; position: absolute; right: 14px; top: 2px; font-size: 48px; line-height: 1; color: var(--soft); font-family: Georgia, serif }
 .mm-quote p { margin: 0 0 6px; font-size: 16px; line-height: 1.45; font-style: italic }
 .mm-quote small { font-size: 13px; color: var(--muted) }
-.sm-cover { position: relative; height: 170px; border-radius: 12px; overflow: hidden; flex: none }
-.sm-cover.big { height: 230px }
-.sm-ov { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; color: #fff; background: linear-gradient(180deg, transparent 30%, rgba(20, 12, 40, .75)) }
-.sm-ov small { font-size: 13px; opacity: .85; text-transform: uppercase; letter-spacing: .06em }
-.sm-ov b { font-size: 28px; font-weight: 500; line-height: 1.15 }
-.sm-cover.big .sm-ov b { font-size: 48px; font-weight: 300 }
-.sm-ov span { font-size: 14px; opacity: .92 }
 .hl { display: flex; align-items: center; gap: 12px; padding: 4px 0 }
 .hl-i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none }
 .hl-i svg, .mm-star svg, .opts svg, .chip.ic svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block }
@@ -233,8 +223,8 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .hl .t b { font-size: 15px; font-weight: 500 }
 .mh-top { display: flex; align-items: center; gap: 16px }
 .mh-top .t { padding-left: 16px; border-left: 1px solid var(--line) }
-.mh-top .t b { font-size: 17px; font-weight: 500; display: block; margin-bottom: 4px }
-.mh-top .t small { font-size: 14px; color: var(--muted) }
+.mh-top .t b { font-size: 16px; font-weight: 500; display: block; margin-bottom: 4px }
+.mh-top .t small { font-size: 13px; color: var(--muted) }
 .mh-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 4px }
 .mh-cal .mh-d { font-size: 11px; color: var(--muted); text-align: center }
 .mh-cal i { font-style: normal; font-size: 13px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--muted); background: var(--bg) }
@@ -272,13 +262,13 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .yc-top > div > b { display: block; font-size: 48px; font-weight: 300; line-height: 1; color: var(--accent) }
 .ring.sm { width: 72px; height: 72px }
 .ring.sm > div { width: 60px; height: 60px }
-.ring.sm b { font-size: 17px; font-weight: 500 }
+.ring.sm b { font-size: 16px; font-weight: 500 }
 .yc-word { font-size: 15px; color: var(--muted) }
-.yc-word b { color: var(--ink); font-weight: 500; font-size: 17px }
+.yc-word b { color: var(--ink); font-weight: 500; font-size: 16px }
 .yt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
 .yt { border-radius: 10px; padding: 8px 8px 7px; min-height: 66px; display: flex; flex-direction: column; gap: 1px; position: relative }
 .yt small { font-size: 13px }
-.yt b { font-size: 17px; font-weight: 500 }
+.yt b { font-size: 16px; font-weight: 500 }
 .yt em { font-style: normal; font-size: 11px; font-weight: 500 }
 .yt.l1 { background: color-mix(in srgb, var(--accent) 12%, var(--card)); color: var(--ink) }
 .yt.l2 { background: color-mix(in srgb, var(--accent) 28%, var(--card)); color: var(--ink) }
@@ -319,11 +309,11 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .ai-card { align-self: flex-start; width: 92%; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 6px 14px 12px; display: flex; flex-direction: column }
 .ai-it { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line) }
 .ai-it .t { flex: 1; min-width: 0 }
-.ai-it .t b { font-size: 14px; font-weight: 500 }
+.ai-it .t b { font-size: 15px; font-weight: 500 }
 .ai-it .t small { font-size: 13px }
 .ai-day-chip { font-size: 13px; font-weight: 500; color: var(--accent); background: var(--soft); border-radius: 8px; padding: 3px 8px }
 .ai-act { display: flex; align-items: center; justify-content: space-between; padding-top: 10px }
-.ai-act .btn { flex: none; padding: 9px 16px; font-size: 14px; border-radius: 10px }
+.ai-act .btn { flex: none; padding: 9px 16px; font-size: 15px; border-radius: 10px }
 .ai-foot { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: none }
 .ai-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none }
 .ai-chips span { flex: none; font-size: 13px; padding: 6px 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--ink); cursor: pointer }
@@ -361,7 +351,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .wrow { display: grid; grid-template-columns: 1fr 160px 42px; align-items: center; gap: 8px; padding: 7px 0 }
 .wrow + .wrow { border-top: 1px solid var(--line) }
 .wrow.whead { padding: 2px 0 0 }
-.wrow .t b { font-size: 14px; font-weight: 500 }
+.wrow .t b { font-size: 15px; font-weight: 500 }
 .wcells { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; align-items: center }
 .wcells span { font-size: 11px; color: var(--muted); text-align: center }
 .wcells i { height: 5px; border-radius: 3px; background: var(--line) }
@@ -373,7 +363,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .ins { display: flex; flex-direction: column; gap: 10px }
 .ins-step { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px }
 .ins-step .t { flex: 1 }
-.ins-n { width: 26px; height: 26px; border-radius: 50%; background: var(--soft); color: var(--accent); font-size: 14px; font-weight: 500; display: grid; place-items: center; flex: none }
+.ins-n { width: 26px; height: 26px; border-radius: 50%; background: var(--soft); color: var(--accent); font-size: 13px; font-weight: 500; display: grid; place-items: center; flex: none }
 .ins-i, .bk-ic, .dr-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--soft); color: var(--accent); display: grid; place-items: center; flex: none }
 .ins-i svg, .bk-ic svg, .dr-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
 .bk-status { flex-direction: row; align-items: center; gap: 12px }
@@ -389,10 +379,10 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .link.del { color: var(--warn) }
 .link.mute { color: var(--muted) }
 .link.quiet { color: var(--muted); font-weight: 400; font-size: 13px }
-.h3 a, .link { color: var(--accent); font-weight: 500; font-size: 14px; cursor: pointer }
+.h3 a, .link { color: var(--accent); font-weight: 500; font-size: 15px; cursor: pointer }
 .btn { flex: 1; padding: 14px 10px; border-radius: 12px; font-weight: 500; font-size: 15px; text-align: center; border: 0; background: var(--soft); cursor: pointer; line-height: 1.2 }
 .btn.pri { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: var(--on-accent); box-shadow: 0 10px 22px -12px var(--accent2) }
-.field > label { font-size: 14px; font-weight: 500; color: var(--muted) }
+.field > label { font-size: 13px; font-weight: 500; color: var(--muted) }
 .inp { border: 1px solid color-mix(in srgb, var(--muted) 35%, var(--line)); border-radius: 10px; padding: 8px 12px; background: var(--card); display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 38px; min-width: 0; line-height: 1.4; flex: none; white-space: normal; overflow-wrap: anywhere; outline: none }
 .inp .chip { padding: 1px 8px }
 .inp[contenteditable]:focus { border-color: var(--accent); cursor: text }
@@ -405,10 +395,10 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .step { display: flex; align-items: center; gap: 14px }
 .step i { width: 34px; height: 34px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font-style: normal; font-size: 19px }
 .seg { display: flex; background: var(--card); border-radius: 10px; padding: 4px; gap: 2px; box-shadow: var(--shadow) }
-.seg span { flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap }
+.seg span { flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; font-size: 15px; cursor: pointer; white-space: nowrap }
 .seg span.on { background: var(--accent); color: var(--on-accent); font-weight: 500 }
 .opts { display: flex; flex-wrap: wrap; gap: 8px }
-.opts span { padding: 6px 12px; border-radius: 99px; font-size: 14px; cursor: pointer; background: var(--card); box-shadow: var(--shadow) }
+.opts span { padding: 6px 12px; border-radius: 99px; font-size: 15px; cursor: pointer; background: var(--card); box-shadow: var(--shadow) }
 .opts span.on { background: var(--accent); color: var(--on-accent) }
 .pbar { height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden }
 .pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--c, var(--accent)), var(--accent2)); border-radius: 99px }
@@ -425,22 +415,22 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .ring b { font-size: 28px; font-weight: 400; font-variant-numeric: tabular-nums }
 .ring small { font-size: 13px; color: var(--muted); display: block }
 .hero .t { padding-left: 18px; border-left: 1px solid var(--line) }
-.hero .t b { font-size: 17px; font-weight: 500; margin-bottom: 4px }
-.hero .t small { font-size: 14px }
+.hero .t b { font-size: 16px; font-weight: 500; margin-bottom: 4px }
+.hero .t small { font-size: 13px }
 .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px }
 .ph:not(.inp) { aspect-ratio: 1; max-width: 100%; border-radius: 12px;
   background: linear-gradient(to top right, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px)), linear-gradient(to top left, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px)), var(--hatch) }
 .ph.add { display: grid; place-items: center; background: transparent; border: 1.5px dashed var(--line); color: var(--muted); font-size: 0; position: relative }
 .ai { background: var(--soft); box-shadow: none }
 .ai .h3 { color: var(--accent); font-size: 15px }
-.ai p { margin: 0; font-size: 14px }
-.small { font-size: 14px; color: var(--muted) }
+.ai p { margin: 0; font-size: 15px }
+.small { font-size: 13px; color: var(--muted) }
 .muted { color: var(--muted) }
 .hb-stats { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 16px 0; flex: none }
 .hb-stats div { text-align: center; display: flex; flex-direction: column; gap: 4px }
 .hb-stats div + div { border-left: 1px solid var(--line) }
 .hb-stats b { font-size: 28px; font-weight: 500; color: var(--h); font-variant-numeric: tabular-nums; line-height: 1.1 }
-.hb-stats b span { font-size: 17px }
+.hb-stats b span { font-size: 16px }
 .hb-stats small { font-size: 13px; color: var(--muted) }
 .hb-goal { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); cursor: pointer; flex: none }
 .hb-gi { width: 38px; height: 38px; border-radius: 50%; background: var(--g-bg); color: var(--g); display: grid; place-items: center; flex: none }
@@ -470,14 +460,9 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .heat i.l3, .dots i.on { background: var(--h) }
 .dots { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px }
 .dots i { aspect-ratio: 1; border-radius: 2px }
-.hbar { display: grid; grid-template-columns: 84px 1fr 66px; align-items: center; gap: 8px; font-size: 14px }
-.hbar .track { height: 10px; background: var(--soft); border-radius: 99px; position: relative; overflow: hidden }
-.hbar .track i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 99px }
-.hbar .track u { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); text-decoration: none }
-.hbar span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted) }
 .months { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
 .mo { border-radius: 12px; padding: 8px; font-size: 13px; background: var(--soft); cursor: pointer }
-.mo b { display: block; font-size: 14px }
+.mo b { display: block; font-size: 13px }
 .mo.dim { color: var(--muted); background: transparent; border: 1px dashed var(--line); cursor: default }
 .mo.now { background: var(--accent); color: var(--on-accent) }
 .cols12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 40px }
@@ -498,7 +483,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .a4 i.s { width: 60% }
 .a4 .ph { aspect-ratio: auto; height: 22px; border-radius: 3px }
 .a4 em { margin-top: auto; font-style: normal; color: var(--muted); font-size: 7.5px }
-.msg { max-width: 86%; padding: 9px 12px; border-radius: 14px; font-size: 14px }
+.msg { max-width: 86%; padding: 9px 12px; border-radius: 14px; font-size: 15px }
 .msg.me { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 6px }
 .msg.bot { align-self: flex-start; background: var(--card); box-shadow: var(--shadow); border-bottom-left-radius: 6px }
 .chat { display: flex; flex-direction: column; gap: 10px }
@@ -536,10 +521,10 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 .banner { display: flex; align-items: center; gap: 12px; background: var(--soft); border-radius: 12px; padding: 10px 14px; cursor: pointer }
 .banner .t b { font-weight: 500 }
 .empty-day { text-align: center; padding: 18px 14px }
-.btn.sm { flex: none; padding: 9px 16px; font-size: 14px; border-radius: 10px }
+.btn.sm { flex: none; padding: 9px 16px; font-size: 15px; border-radius: 10px }
 .btn.ghost { background: none; color: var(--muted) }
 .pick-row { cursor: pointer }
-.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--toast); color: var(--ink); box-shadow: 0 8px 28px -6px rgba(40, 25, 110, .28); padding: 9px 16px; border-radius: 99px; font-size: 14px; z-index: 50; opacity: 0; transition: opacity .2s; pointer-events: none }
+.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--toast); color: var(--ink); box-shadow: 0 8px 28px -6px rgba(40, 25, 110, .28); padding: 9px 16px; border-radius: 99px; font-size: 15px; z-index: 50; opacity: 0; transition: opacity .2s; pointer-events: none }
 .toast.on { opacity: 1 }
 .toast.undo { display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 16px; white-space: nowrap; max-width: calc(100% - 32px) }
 .toast.undo span { overflow: hidden; text-overflow: ellipsis }
@@ -592,8 +577,6 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 /* даты: на iPhone поле даты шире, чем кажется — не ставим два в одну строку без запаса */
 input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp { width: 100%; min-width: 0; max-width: 100%; -webkit-appearance: none; appearance: none }
 .dt-col { display: flex; flex-direction: column; gap: 8px }
-.dt-l { display: flex; align-items: center; gap: 10px; min-width: 0 }
-.dt-l span { width: 22px; flex: none; color: var(--muted); font-size: 14px }
 .dt-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px }
 
 .dbox { position: relative; display: flex; align-items: center; min-width: 0; overflow: hidden; cursor: pointer }
@@ -604,7 +587,7 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .pl-card > div[style*="display:flex"] { align-items: center }
 .pl-card > div[style*="display:flex"] > .inp { flex: 1 }
 .lg-l { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px }
-.lg-l > span { font-size: 14px; color: var(--muted) }
+.lg-l > span { font-size: 13px; color: var(--muted) }
 .ring small:empty { display: none }
 /* Жизнь: итоги, воспоминания, книга года */
 .hub { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px 10px 12px; border-radius: 14px; background: var(--e-bg) }
@@ -636,7 +619,7 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 
 /* Быстрый переход по разделам «Списка»: прилипает к верху при прокрутке */
 .jump { position: sticky; top: -4px; z-index: 5; display: flex; gap: 6px; margin: -4px -16px 0; padding: 6px 16px 8px; background: var(--scr2); flex: none }
-.jump span { flex: 1; text-align: center; padding: 7px 4px; border-radius: 99px; font-size: 14px; font-weight: 500; background: var(--cb); color: var(--c); cursor: pointer; white-space: nowrap }
+.jump span { flex: 1; text-align: center; padding: 7px 4px; border-radius: 99px; font-size: 13px; font-weight: 500; background: var(--cb); color: var(--c); cursor: pointer; white-space: nowrap }
 .jump i { font-style: normal; font-weight: 400; opacity: .75 }
 [data-sec] { scroll-margin-top: 52px }
 
