@@ -592,12 +592,13 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .lg-l > span { font-size: 13px; color: var(--muted) }
 .ring small:empty { display: none }
 /* Жизнь: итоги, воспоминания, книга года */
-/* заголовок-глава «2026 · этот год» над итогами, воспоминаниями и книгой */
-.yr-h { display: flex; align-items: baseline; gap: 8px; padding: 6px 4px 0; flex: none }
-.yr-h b { font-size: 24px; font-weight: 600 }
-.yr-h span { font-size: 13px; color: var(--muted) }
-.hub { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px 10px 12px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow) }
-.hub-lbl { font-size: 16px; font-weight: 500; padding: 2px 4px 0 }
+/* «Папка» этого года на «Жизни»: ярлык с выемкой, внутри пять плиток */
+.fld { flex: none; filter: drop-shadow(0 6px 14px rgba(60, 40, 140, .12)) }
+.fld-tab { position: relative; display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 14px 3px; background: var(--card); border-radius: 12px 12px 0 0 }
+.fld-tab b { font-size: 16px; font-weight: 600 }
+.fld-tab span { font-size: 13px; color: var(--muted) }
+.fld-tab::after { content: ""; position: absolute; right: -12px; bottom: 0; width: 12px; height: 12px; background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--card) 12px) }
+.fld-body { background: var(--card); border-radius: 0 14px 14px 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px }
 .hub-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
 .hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 7%, var(--card)); cursor: pointer; position: relative }
 .hub-t b { font-size: 15px; font-weight: 500 }
@@ -606,12 +607,12 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hub-ti { display: grid; place-items: center; flex: none; margin: 2px 0 6px; color: var(--accent) }
 .hub-ti svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round }
 .hub-t.due::after { content: ""; position: absolute; top: 10px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: var(--g) }
-.hub2 { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.hub2 { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
 .hub-m, .hub-b { position: relative; overflow: hidden; height: 104px; flex: none; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; cursor: pointer; box-shadow: var(--shadow) }
 .hub-m div, .hub-b div { display: flex; flex-direction: column; position: relative }
 .hub-m b, .hub-b b { font-size: 15px; font-weight: 500 }
 .hub-m small, .hub-b small { font-size: 13px; color: var(--muted) }
-.hub-m, .hub-b { background: var(--card) }
+.hub-m, .hub-b { background: color-mix(in srgb, var(--accent) 7%, var(--card)); box-shadow: none; height: 96px }
 .hub-m .hub-ic { background: var(--e-bg) }
 .hub-m .hub-ic svg { stroke: var(--e) }
 .hub-ic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card); position: relative }

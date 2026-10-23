@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=78';
+import * as S from './store.js?v=79';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=78';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=79';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -609,16 +609,17 @@ function lifeHub() {
   const tile = (go, k, name, sub, due) => `<div class="hub-t${due ? ' due' : ''}" data-go="${go}"><span class="hub-ti"><svg viewBox="0 0 24 24">${IC[k]}</svg></span><b>${name}</b><small>${sub}</small></div>`;
   const mems = S.memories(+y);
   // нижняя часть «Жизни» — про этот год: итоги, воспоминания, книга
-  return `<div class="yr-h"><b>${y}</b><span>этот год</span></div>
-    <div class="hub"><div class="hub-lbl">Итоги</div><div class="hub-row">
+  // «папка» этого года: ярлык «2026 · этот год», внутри итоги, воспоминания и книга
+  return `<div class="fld"><div class="fld-tab"><b>${y}</b><span>этот год</span></div><div class="fld-body">
+    <div class="hub-row">
       ${tile('#/summary/w/' + ws, 'w', 'Неделя', wl, wd(t) === 6).replace('class="hub-t', 'class="hub-t main')}
       ${tile('#/summary/m/' + mk, 'm', 'Месяц', MONTHS_NOM[+mk.slice(5) - 1])}
       ${tile('#/summary/y/' + y, 'y', 'Год', y)}
-    </div></div>
+    </div>
     <div class="hub2">
       <div class="hub-m" data-go="#/memories"><span class="hub-ic">${ICON.heart}</span><div><b>Воспоминания</b><small>${mems.length ? mems.length + ' за ' + y : 'пока пусто'}</small></div></div>
       <div class="hub-b" data-go="#/print"><span class="hub-book"><i></i><em>${y}</em></span><div><b>Книга года</b><small>PDF · A4</small></div></div>
-    </div>`;
+    </div></div></div>`;
 }
 
 export function lifeScreen() {
