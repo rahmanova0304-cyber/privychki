@@ -592,15 +592,15 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .lg-l > span { font-size: 13px; color: var(--muted) }
 .ring small:empty { display: none }
 /* Жизнь: итоги, воспоминания, книга года */
-/* «Папка» этого года на «Жизни»: ярлык с выемкой, внутри пять плиток */
+/* «Папка» этого года на «Жизни»: светло-сиреневая, ярлык с выемкой, внутри пять белых плиток с мягкой тенью */
 .fld { flex: none; filter: drop-shadow(0 6px 14px rgba(60, 40, 140, .12)) }
-.fld-tab { position: relative; display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 14px 3px; background: var(--card); border-radius: 12px 12px 0 0 }
+.fld-tab { position: relative; display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 14px 3px; background: var(--soft); border-radius: 12px 12px 0 0 }
 .fld-tab b { font-size: 16px; font-weight: 600 }
 .fld-tab span { font-size: 13px; color: var(--muted) }
-.fld-tab::after { content: ""; position: absolute; right: -12px; bottom: 0; width: 12px; height: 12px; background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--card) 12px) }
-.fld-body { background: var(--card); border-radius: 0 14px 14px 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px }
+.fld-tab::after { content: ""; position: absolute; right: -12px; bottom: 0; width: 12px; height: 12px; background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--soft) 12px) }
+.fld-body { background: var(--soft); border-radius: 0 14px 14px 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px }
 .hub-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
-.hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 7%, var(--card)); cursor: pointer; position: relative }
+.hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: var(--card); box-shadow: 0 2px 10px -4px rgba(60, 40, 140, .25); cursor: pointer; position: relative }
 .hub-t b { font-size: 15px; font-weight: 500 }
 .hub-t small { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .hub-t em { font-style: normal; font-size: 16px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums }
@@ -612,7 +612,7 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hub-m div, .hub-b div { display: flex; flex-direction: column; position: relative }
 .hub-m b, .hub-b b { font-size: 15px; font-weight: 500 }
 .hub-m small, .hub-b small { font-size: 13px; color: var(--muted) }
-.hub-m, .hub-b { background: color-mix(in srgb, var(--accent) 7%, var(--card)); box-shadow: none; height: 96px }
+.hub-m, .hub-b { background: var(--card); box-shadow: 0 2px 10px -4px rgba(60, 40, 140, .25); height: 96px }
 .hub-m .hub-ic { background: var(--e-bg) }
 .hub-m .hub-ic svg { stroke: var(--e) }
 .hub-ic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card); position: relative }
