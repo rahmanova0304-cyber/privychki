@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=96';
+import * as S from './store.js?v=97';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=96';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=97';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -484,7 +484,7 @@ export function listScreen() {
   <div class="body">
     <div class="jump">${[['goals', 'Цели', goals.length, 'g'], ['habits', 'Привычки', habits.length, 'h'], ['tasks', 'Задачи', open.length, 't'], ['events', 'События', evs.length, 'e']].map(([k, l, n, c]) => `<span data-act="jump" data-k="${k}" style="--c:var(--${c});--cb:var(--${c}-bg)">${l}${n ? ` <i>${n > 99 ? '99+' : n}</i>` : ''}</span>`).join('')}</div>
     <div class="blk goals" data-sec="goals"><div class="bh">${ICON.goal}<b>Цели</b><button class="plus" data-go="#/goal/new">+</button></div>
-      ${grows ? `<div class="gcards">${grows}</div>` : '<div class="empty">Большое, к чему идёшь шагами: найти работу, сыграть концерт…</div>'}
+      ${grows ? `<div class="gcards">${grows}</div>` : '<div class="empty">Конкретная точка на пути к мечте: подтянуться 5 раз, найти новую работу. Шаги и привычки приведут.</div>'}
       ${arch('Архив', garch.map((g) => `<div class="row arch-row" data-go="#/goalcard/${g.id}"><span class="ck done"></span><div class="t"><b>${esc(g.title)}</b><small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : 'в архиве с ' + fmtDM(g.archivedAt)}</small></div></div>`))}
     </div>
     <div class="blk habits" data-sec="habits"><div class="bh">${ICON.habit}<b>Привычки</b><button class="plus" data-go="#/habit/new">+</button></div>
@@ -659,7 +659,7 @@ export function lifeScreen() {
       <div class="legend"><span style="--c:color-mix(in srgb, var(--muted) 55%, var(--soft))">Прошло</span><span style="--c:var(--accent)">Сейчас · ${a} ${plural(a, 'год', 'года', 'лет')}</span><span style="--c:color-mix(in srgb, var(--accent) 35%, var(--card))">До ${lm}</span><span style="--c:var(--soft)">После</span></div></div>
     <div class="blk dreams"><div class="bh">${ICON.dream}<b>Мои мечты${S.state.dreams.length ? ` <span class="bh-n">${S.state.dreams.length}</span>` : ''}</b><button class="plus" data-act="adddream">+</button></div>
       <div class="rows">${dreams}<div class="row" data-dreamnew hidden><input class="inp" data-dreaminp placeholder="О чём мечтаешь?"></div></div>
-      ${!dreams ? '<div class="empty" data-dreamempty>Мечты — без дат и плана. Например: побывать на Байкале.</div>' : ''}
+      ${!dreams ? '<div class="empty" data-dreamempty>Куда хочешь прийти — без дат и плана. Например: побывать на Байкале. Потом наметишь путь: цели и привычки.</div>' : ''}
     </div>
     ${lifeHub()}
   </div>
@@ -750,7 +750,7 @@ export function backupScreen() {
 // ---------- ПЕРВЫЙ ЗАПУСК ----------
 
 export function welcomeScreen() {
-  return { html: `<section class="scr"><div class="splash"><div class="small">ПРИВЫЧКИ ТВОЕЙ ЖИЗНИ</div><h1>Планируй и анализируй</h1><p class="muted">Мечты, цели, привычки и воспоминания в одном месте. Всё хранится только на твоём телефоне.</p></div><div class="foot col"><button class="btn pri" data-go="${standalone() ? '#/profile' : '#/install'}">Начать</button></div></section>` };
+  return { html: `<section class="scr"><div class="splash"><div class="small">ПРИВЫЧКИ ТВОЕЙ ЖИЗНИ</div><h1>Из мечты — в реальность</h1><p class="muted">Любая мечта — это набор действий. Ты определяешь их, а приложение помогает методично идти: цели, шаги и привычки встают в дни, а итоги показывают, насколько ты ближе.</p><p class="small" style="margin-top:-6px">Всё хранится только на твоём телефоне.</p></div><div class="foot col"><button class="btn pri" data-go="${standalone() ? '#/profile' : '#/install'}">Начать</button></div></section>` };
 }
 
 export const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -787,7 +787,7 @@ export function profileScreen() {
 export function dreamsScreen() {
   const rows = S.state.dreams.map((d) => `<div class="row"><div class="t"><b>${esc(d.title)}</b></div><span class="dr-del" data-act="del" data-id="${d.id}">✕</span></div>`).join('');
   const html = `<section class="scr"><div class="body" style="padding-top:28px">
-    <div class="ptitle"><p>Шаг 2 из 2</p><h1>О чём ты мечтаешь?</h1></div>
+    <div class="ptitle"><p>Шаг 2 из 2</p><h1>О чём ты мечтаешь?</h1><p>Куда хочешь прийти — без дат и плана. Например: побывать на Байкале, научиться подтягиваться. Путь к мечте наметишь потом.</p></div>
     <div class="blk dreams"><div class="bh">${ICON.dream}<b>Мои мечты</b></div><div class="rows">${rows}<div class="row"><input class="inp" data-dreaminp placeholder="Напиши мечту и нажми «Ввод»"></div></div></div>
   </div><div class="foot"><button class="btn" data-act="done">Пропустить</button><button class="btn pri" data-act="done">Готово</button></div></section>`;
   return {
@@ -807,11 +807,11 @@ export function introScreen() {
   const b = (cls, ic, t, d) => `<div class="blk ${cls}"><div class="bh">${ic}<b>${t}</b></div><div class="empty">${d}</div></div>`;
   return {
     html: `<section class="scr"><div class="body" style="padding-top:28px">
-    <div class="ptitle"><p>Планирование ${new Date().getFullYear()}</p><h1>Как устроен план на год</h1><p>Записываешь всё в список года. То, у чего есть расписание или дата, само встаёт в дни.</p></div>
-    ${b('habits', ICON.habit, 'Привычка', 'Повторяется по расписанию — сама появляется в нужные дни.')}
-    ${b('tasks', ICON.task, 'Задача', 'Один раз или с повтором (каждый месяц 20-го). С датой — встаёт в день сама, без даты — ждёт в списке.')}
-    ${b('goals', ICON.goal, 'Цель', 'Проект из этапов и шагов. Появится на следующем этапе.')}
-    ${b('events', ICON.event, 'Событие', 'Встреча, поездка, важная дата. Появится на следующем этапе.')}
+    <div class="ptitle"><p>Как это работает</p><h1>Как мечта становится реальностью</h1></div>
+    ${b('dreams', ICON.dream, '1. Мечта', 'Куда хочешь прийти: «произвести впечатление», «побывать на Байкале». Без дат и плана.')}
+    ${b('goals', ICON.goal, '2. Цели', 'Конкретные точки на пути: «подтянуться 5 раз», «найти новую работу». Можно задать меру — было 0, хочу 5.')}
+    ${b('habits', ICON.habit, '3. Шаги и привычки', 'Что делаешь, чтобы дойти: разовые шаги и регулярные привычки — например, негативные подтягивания 4 раза в неделю.')}
+    <div class="card"><div class="h3">4. Дни и итоги</div><p class="small" style="margin:0">Шаги и привычки сами встают в дни. Отмечаешь сделанное — итоги недели, месяца и года показывают, насколько ты ближе к мечте. Задачи и события — для остальной жизни: оплатить ЖКХ, встреча с Олей.</p></div>
   </div><div class="foot"><button class="btn pri" data-act="go">Далее</button></div></section>`,
     actions: { go: (el, go) => { S.setProfile({ onboarded: true }); go('#/list', false, true); } },
   };
