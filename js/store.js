@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=94';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=95';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -539,6 +539,7 @@ export function saveGoal(data) {
   let g = data.id && goalById(data.id);
   if (!g) { g = { id: uid(), createdAt: today(), status: 'active', stages: [] }; state.goals.push(g); }
   Object.assign(g, { title: data.title, description: data.description || '', deadline: data.deadline || null, dreamId: data.dreamId || null });
+  if ('measure' in data) g.measure = data.measure ? { ...data.measure, log: (g.measure && g.measure.log) || [] } : null;
   g.stages = data.stages.filter((st) => st.steps.some((s) => s.title.trim())).map((st) => ({ id: st.id || uid(), title: st.title, steps: st.steps.filter((s) => s.title.trim()).map((s) => {
     const old = g.stages.flatMap((x) => x.steps).find((o) => o.id === s.id);
     return { id: s.id || uid(), title: s.title.trim(), duration: s.duration || null, done: old ? old.done : false, doneAt: old ? old.doneAt : null };
@@ -552,6 +553,24 @@ export function goalProgress(g, upTo) {
   const steps = g.stages.flatMap((s) => s.steps);
   const done = steps.filter((s) => s.done && (!upTo || (s.doneAt && s.doneAt < upTo))).length;
   return { total: steps.length, done, pct: steps.length ? Math.round(done / steps.length * 100) : 0 };
+}
+
+// Мера цели (необязательно): что меряем, было, хочу и записи «сколько сейчас» — например, «подтянуться 5 раз»
+// или «накопить 120 000 ₽». Подходит и для уменьшения (вес: было 70, хочу 62).
+export function goalMeasure(g, upTo) {
+  const m = g.measure;
+  if (!m || m.target == null) return null;
+  const log = (m.log || []).filter((x) => !upTo || x.date < upTo);
+  const cur = log.length ? log[log.length - 1].value : m.start;
+  const span = m.target - m.start;
+  const pct = span ? Math.max(0, Math.min(100, Math.round((cur - m.start) / span * 100))) : 100;
+  return { unit: m.unit || '', start: m.start, target: m.target, cur, pct, log: m.log || [] };
+}
+export function logMeasure(gid, value) {
+  const g = goalById(gid), t = today();
+  if (!g || !g.measure) return;
+  g.measure.log = (g.measure.log || []).filter((x) => x.date !== t).concat({ date: t, value });
+  save();
 }
 
 // Цель может идти не только шагами, но и через привычки (у привычки «Для какой цели»).

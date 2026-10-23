@@ -652,6 +652,19 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hap { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; z-index: 2; cursor: pointer }
 .ck > .hap { inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px) }
 
+/* мера цели: поля в редакторе и блок в карточке цели */
+.meas { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px }
+.meas small { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px }
+.gm-big { display: flex; align-items: baseline; gap: 8px }
+.gm-big b { font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums }
+.gm-big span { color: var(--muted); font-size: 15px }
+.gm-bar { position: relative; height: 10px; border-radius: 99px; background: var(--g-bg) }
+.gm-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--g) }
+.gm-scale { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: -4px }
+.gm-hist { display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--muted) }
+.gm-hist b { color: var(--ink); font-weight: 500 }
+.gm-in { display: flex; gap: 8px } .gm-in .btn { flex: none; padding: 10px 16px }
+
 /* недельная привычка в строке дня: чёрточки «сколько из N сделано» */
 .wk { display: flex; gap: 4px; margin-top: 5px }
 .wk i { width: 16px; height: 5px; border-radius: 3px; background: var(--h-bg) }

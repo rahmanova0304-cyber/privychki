@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=94';
+import * as S from './store.js?v=95';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=94';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=94';
-import { aiBreakdownGoal } from './ai.js?v=94';
+  MONTHS_NOM, WD } from './util.js?v=95';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=95';
+import { aiBreakdownGoal } from './ai.js?v=95';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -38,7 +38,7 @@ const grab = (root) => { const v = {}; root.querySelectorAll('[data-f]').forEach
 
 export function goalEditScreen(id, params) {
   const g = id !== 'new' ? S.goalById(id) : null;
-  const f = g ? JSON.parse(JSON.stringify({ title: g.title, description: g.description, deadline: g.deadline, dreamId: g.dreamId, stages: g.stages }))
+  const f = g ? JSON.parse(JSON.stringify({ title: g.title, description: g.description, deadline: g.deadline, dreamId: g.dreamId, stages: g.stages, mUnit: (g.measure || {}).unit || '', mStart: (g.measure || {}).start ?? '', mTarget: (g.measure || {}).target ?? '' }))
     : { title: params.get('title') || '', description: '', deadline: '', dreamId: params.get('dream') || '', stages: [{ id: uid(), title: 'Этап 1', steps: [{ id: uid(), title: '', duration: null }] }] };
   if (!g && f.dreamId && !f.title) f.title = (S.dreamById(f.dreamId) || {}).title || '';
   const actHabits = S.state.habits.filter((h) => h.status !== 'archived');
@@ -46,6 +46,7 @@ export function goalEditScreen(id, params) {
   const durSel = (si, ti, v) => `<select class="inp sdur${v ? "" : " empty"}" onchange="this.classList.toggle('empty',!this.value)" data-sd="${si}:${ti}">${[[null, 'Время'], ...S.DURATIONS].map(([x, l]) => `<option value="${x ?? ''}"${(v ?? null) === x ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
   const form = () => `${field('Название', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Найти новую работу">`)}
     ${field('Описание · необязательно', `<textarea class="inp area" rows="1" data-f="description">${esc(f.description)}</textarea>`)}
+    ${field('Мера цели · необязательно', `<div class="meas"><div><small>Что меряем</small><input class="inp" data-f="mUnit" value="${esc(f.mUnit || '')}" placeholder="раз, ₽, кг"></div><div><small>Сейчас</small><input class="inp" type="number" inputmode="decimal" data-f="mStart" value="${esc(f.mStart ?? '')}" placeholder="0"></div><div><small>Хочу</small><input class="inp" type="number" inputmode="decimal" data-f="mTarget" value="${esc(f.mTarget ?? '')}" placeholder="5"></div></div><small class="small">Будете вписывать, сколько получается сейчас, — у цели появится честная полоска.</small>`)}
     ${field('Срок · необязательно', `<input class="inp" type="date" data-f="deadline" value="${esc(f.deadline || '')}">`)}
     ${S.state.dreams.length ? field('Из мечты · необязательно', `<select class="inp" data-f="dreamId"><option value="">Не связана</option>${S.state.dreams.map((d) => `<option value="${d.id}"${f.dreamId === d.id ? ' selected' : ''}>${esc(d.title)}</option>`).join('')}</select>`) : ''}
     ${f.stages.map((st, si) => `<div class="blk goals"><div class="bh"><input class="inp" style="min-height:30px;font-weight:500" data-st="${si}" value="${esc(st.title)}">${f.stages.length > 1 ? `<span class="dr-del" data-act="delstage" data-i="${si}">✕</span>` : ''}</div>
@@ -98,7 +99,8 @@ export function goalEditScreen(id, params) {
       save: (el, go) => {
         sync();
         if (!f.title.trim()) { alert('Напиши название'); return; }
-        const saved = S.saveGoal({ id: g && g.id, ...f, title: f.title.trim(), stages: f.stages.filter((st) => st.title.trim() || st.steps.some((x) => x.title.trim())) });
+        const measure = f.mTarget !== '' && f.mTarget != null ? { unit: (f.mUnit || '').trim(), start: Number(f.mStart) || 0, target: Number(f.mTarget) } : null;
+        const saved = S.saveGoal({ id: g && g.id, ...f, measure, title: f.title.trim(), stages: f.stages.filter((st) => st.title.trim() || st.steps.some((x) => x.title.trim())) });
         S.setGoalHabits(saved.id, f.habitIds);
         go(g ? 'back' : '#/goalcard/' + saved.id, !g);
       },
@@ -113,6 +115,12 @@ export function goalCardScreen(id) {
   if (!g) return { html: `<section class="scr">${top('Цель')}<div class="body"><p class="small">Цель удалена.</p></div></section>` };
   const allHist = S.goalHistory(g), p = S.goalProgress(g), hist = allHist.slice(0, 12), habits = S.state.habits.filter((h) => h.goalId === g.id);
   const hst = S.goalHabitStats(g);
+  // мера цели: «3 из 5 раз», полоска от «было» до «хочу», последние записи и «Записать результат»
+  const ms = S.goalMeasure(g), nf = (v) => Number(v).toLocaleString('ru-RU');
+  const measHtml = !ms ? '' : `<div class="gm-big"><b>${nf(ms.cur)}</b><span>из ${nf(ms.target)}${ms.unit ? ' ' + esc(ms.unit) : ''}</span></div>
+    <div class="gm-bar"><i style="width:${Math.max(2, ms.pct)}%"></i></div><div class="gm-scale"><span>было ${nf(ms.start)}</span><span>цель ${nf(ms.target)}</span></div>
+    ${ms.log.length ? `<div class="gm-hist">${ms.log.slice(-5).map((x) => `<span>${fmtDMshort(x.date)} <b>${nf(x.value)}</b></span>`).join('<span>·</span>')}</div>` : ''}
+    ${g.status === 'active' ? `<button class="btn" style="flex:none" data-act="mlog">Записать результат</button><div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval placeholder="Сколько сейчас${ms.unit ? ', ' + esc(ms.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
   const minutes = allHist.reduce((m, x) => m + (x.what === 'сделано' || x.what === 'частично' ? Number(x.fact) || 0 : 0), 0) + hst.minutes;
   const stages = g.stages.map((st) => {
     const d = st.steps.filter((x) => x.done).length, all = st.steps.length, closed = all && d === all;
@@ -121,7 +129,7 @@ export function goalCardScreen(id) {
   }).join('');
   const right = menu([['arch', g.status === 'active' ? 'Убрать в архив' : 'Вернуть из архива', g.status === 'active' ? 'из дней уйдёт, история останется' : 'снова станет активной'], ['del', 'Удалить совсем', 'сотрёт вместе с историей', true]]);
   const html = `<section class="scr">${top(esc(g.title), { right })}<div class="body">
-    <div class="card" style="--c:var(--g)">${p.total ? `<div class="kv"><span>Прогресс</span><b>${p.done} из ${p.total} шагов · ${p.pct}%</b></div><div class="gbar"><i class="now" style="width:${p.pct}%"></i></div>` : habits.length ? `<div class="kv"><span>Идёт через привычку</span><b>${esc(habits.map((h) => h.title).join(', '))}</b></div>${!minutes && hst.days ? `<div class="kv"><span>Занятий</span><b>${hst.days}</b></div>` : ''}` : '<p class="small" style="margin:0">Шагов пока нет. Добавь шаги или свяжи привычку — в «Изменить».</p>'}
+    <div class="card" style="--c:var(--g)">${measHtml}${p.total ? `<div class="kv"><span>Прогресс</span><b>${p.done} из ${p.total} шагов · ${p.pct}%</b></div><div class="gbar"><i class="now" style="width:${p.pct}%"></i></div>` : !ms && habits.length ? `<div class="kv"><span>Идёт через привычку</span><b>${esc(habits.map((h) => h.title).join(', '))}</b></div>${!minutes && hst.days ? `<div class="kv"><span>Занятий</span><b>${hst.days}</b></div>` : ''}` : (ms ? '' : '<p class="small" style="margin:0">Шагов пока нет. Добавь шаги, меру или свяжи привычку — в «Изменить».</p>')}
       ${minutes ? `<div class="kv"><span>Потрачено</span><b>${fmtMin(minutes)}</b></div>` : ''}${g.deadline ? `<div class="kv"><span>Срок</span><b>до ${fmtDM(g.deadline)}</b></div>` : ''}
       ${g.status === 'achieved' ? `<div class="kv"><span>Достигнута</span><b>${fmtDM(g.achievedAt)}</b></div>` : ''}${g.description ? `<p class="small" style="margin:0">${esc(g.description)}</p>` : ''}</div>
     ${habits.length ? `<div class="card plain"><div class="h3">Привычки для цели</div><div class="rows">${habits.map((h) => `<div class="row" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h))} · ${S.habitStats(h, addDays(today(), -29), today()).pct}% за 30 дней</small></div><span class="chev">›</span></div>`).join('')}</div></div>` : ''}
@@ -133,6 +141,8 @@ export function goalCardScreen(id) {
     actions: {
       menu: menuAct,
       open: (el) => { el.nextElementSibling.hidden = false; el.remove(); },
+      mlog: (el) => { el.hidden = true; const r = el.nextElementSibling; r.hidden = false; r.querySelector('input').focus(); },
+      msave: (el, go, render) => { const v = el.previousElementSibling.value; if (v === '') return; S.logMeasure(g.id, Number(v)); render(); },
       step: (el, go, render) => { const x = g.stages.flatMap((s) => s.steps).find((s) => s.id === el.dataset.id); x.done = !x.done; x.doneAt = x.done ? today() : null; S.save(); render(); },
       arch: (el, go, render) => { S.setGoalStatus(g.id, g.status === 'active' ? 'archived' : 'active'); render(); },
       del: (el, go) => { if (confirm('Удалить цель «' + g.title + '» вместе с историей?')) { S.deleteGoal(g.id); go('back'); } },
@@ -457,6 +467,11 @@ export function summaryScreen(period, key) {
   const gHtml = goals.length ? `<div class="blk goals"><div class="bh">${ICON.goal}<b>Цели</b></div><div class="rows">${goals.map((g) => {
     const now = S.goalProgress(g), was = S.goalProgress(g, from), plus = now.pct - was.pct;
     const stepsDone = g.stages.flatMap((s) => s.steps).filter((x) => x.done && x.doneAt >= from && x.doneAt <= to).map((x) => x.title);
+    const msNow = S.goalMeasure(g), msWas = S.goalMeasure(g, from);
+    if (msNow) {
+      const nf = (v) => Number(v).toLocaleString('ru-RU'), moved = msNow.cur !== msWas.cur;
+      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div><small class="mrow-s">${moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : 'не двигалась'}</small></div>`;
+    }
     if (!now.total) {
       const hs = S.goalHabits(g), st = S.goalHabitStats(g, from, to);
       return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${st.minutes ? fmtMin(st.minutes) : st.days ? st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : ''}</span></div><small class="mrow-s">${hs.length ? (st.minutes || st.days ? 'через привычку ' + esc(hs.map((h) => h.title).join(', ')) + (st.minutes && st.days ? ' · ' + st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : '') : 'не двигалась') : 'шагов пока нет'}</small></div>`;

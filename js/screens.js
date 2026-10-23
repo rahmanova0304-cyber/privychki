@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=94';
+import * as S from './store.js?v=95';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=94';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=95';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -428,7 +428,10 @@ export function markScreen(date, key) {
 }
 
 // Прогресс цели одной строкой: шагами («1 из 3 шагов», есть полоска) или через привычку («через привычку Скрипка · 12 ч»).
+const num = (v) => Number(v).toLocaleString('ru-RU');
 export function goalLine(g, from, to) {
+  const ms = S.goalMeasure(g);
+  if (ms) return { text: num(ms.cur) + ' из ' + num(ms.target) + (ms.unit ? ' ' + ms.unit : ''), pct: ms.pct };
   const p = S.goalProgress(g);
   if (p.total) return { text: p.done + ' из ' + p.total + ' шагов', pct: p.pct };
   const hs = S.goalHabits(g);

@@ -1,8 +1,8 @@
 // Помощник: Claude API прямо из телефона по ключу владелицы. Ничего не меняет сам — только предлагает.
 import Anthropic from '../vendor/anthropic-sdk-0.131.0.js';
-import * as S from './store.js?v=94';
-import { esc, today, addDays, weekStart, fmtShort, fmtMin, WD_ACC, wd } from './util.js?v=94';
-import { top } from './screens.js?v=94';
+import * as S from './store.js?v=95';
+import { esc, today, addDays, weekStart, fmtShort, fmtMin, WD_ACC, wd } from './util.js?v=95';
+import { top } from './screens.js?v=95';
 
 function client() {
   const key = (S.state.ai || {}).key;
