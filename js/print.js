@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=65';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=65';
-import { top, field } from './screens.js?v=65';
-import { aiYearText } from './ai.js?v=65';
+import * as S from './store.js?v=66';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=66';
+import { top, field } from './screens.js?v=66';
+import { aiYearText } from './ai.js?v=66';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -37,7 +37,7 @@ async function buildBook(year, myText) {
   if (opts.text && myText) pages.push(`<section class="pg"><h1>Мой ${year}</h1>${myText.split(/\n+/).map((x) => `<p>${esc(x)}</p>`).join('')}${S.state.reflections['y:' + year] ? `<h2>Письмо себе через год</h2><p>${esc(S.state.reflections['y:' + year])}</p>` : ''}</section>`);
   if (opts.goals) {
     const goals = S.state.goals.filter((g) => g.createdAt <= to);
-    if (goals.length) pages.push(`<section class="pg"><h1>Цели</h1>${goals.map((g) => { const pr = S.goalProgress(g); return `<h2>${esc(g.title)} <small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : pr.pct + '%'}</small></h2><ul>${g.stages.map((st) => `<li><b>${esc(st.title)}</b>: ${st.steps.map((x) => (x.done ? '✓ ' : '') + esc(x.title)).join(', ')}</li>`).join('')}</ul>`; }).join('')}</section>`);
+    if (goals.length) pages.push(`<section class="pg"><h1>Цели</h1>${goals.map((g) => { const pr = S.goalProgress(g), hs = S.goalHabits(g), hst = S.goalHabitStats(g); if (!pr.total) return `<h2>${esc(g.title)} <small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : ''}</small></h2>${hs.length ? `<p>Через привычку ${esc(hs.map((h) => h.title).join(', '))}${hst.minutes ? ' · ' + Math.round(hst.minutes / 60) + ' ч' : hst.days ? ' · занятий: ' + hst.days : ''}</p>` : ''}`; return `<h2>${esc(g.title)} <small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : pr.pct + '%'}</small></h2><ul>${g.stages.map((st) => `<li><b>${esc(st.title)}</b>: ${st.steps.map((x) => (x.done ? '✓ ' : '') + esc(x.title)).join(', ')}</li>`).join('')}</ul>`; }).join('')}</section>`);
   }
   if (opts.months) {
     const mem = S.memories(year).reverse();

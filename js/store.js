@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=65';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=66';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -498,7 +498,7 @@ export function saveGoal(data) {
   let g = data.id && goalById(data.id);
   if (!g) { g = { id: uid(), createdAt: today(), status: 'active', stages: [] }; state.goals.push(g); }
   Object.assign(g, { title: data.title, description: data.description || '', deadline: data.deadline || null, dreamId: data.dreamId || null });
-  g.stages = data.stages.map((st) => ({ id: st.id || uid(), title: st.title, steps: st.steps.filter((s) => s.title.trim()).map((s) => {
+  g.stages = data.stages.filter((st) => st.steps.some((s) => s.title.trim())).map((st) => ({ id: st.id || uid(), title: st.title, steps: st.steps.filter((s) => s.title.trim()).map((s) => {
     const old = g.stages.flatMap((x) => x.steps).find((o) => o.id === s.id);
     return { id: s.id || uid(), title: s.title.trim(), duration: s.duration || null, done: old ? old.done : false, doneAt: old ? old.doneAt : null };
   }) }));
@@ -511,6 +511,20 @@ export function goalProgress(g, upTo) {
   const steps = g.stages.flatMap((s) => s.steps);
   const done = steps.filter((s) => s.done && (!upTo || (s.doneAt && s.doneAt < upTo))).length;
   return { total: steps.length, done, pct: steps.length ? Math.round(done / steps.length * 100) : 0 };
+}
+
+// Цель может идти не только шагами, но и через привычки (у привычки «Для какой цели»).
+// Вклад привычки считается с дня создания цели: минуты (для «Сколько времени») и дни, когда сделано.
+export const goalHabits = (g) => state.habits.filter((h) => h.goalId === g.id);
+export function setGoalHabits(gid, ids) {
+  state.habits.forEach((h) => { if (ids.includes(h.id)) h.goalId = gid; else if (h.goalId === gid) h.goalId = null; });
+  save();
+}
+export function goalHabitStats(g, from, to) {
+  const f = from && from > g.createdAt ? from : g.createdAt;
+  let minutes = 0, days = 0;
+  for (const h of goalHabits(g)) { const st = habitStats(h, f, to || today()); minutes += st.minutes; days += st.done; }
+  return { minutes, days };
 }
 
 export function setGoalStatus(id, status) {

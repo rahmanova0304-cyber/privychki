@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=65';
+import * as S from './store.js?v=66';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=65';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip } from './screens.js?v=65';
-import { aiBreakdownGoal } from './ai.js?v=65';
+  MONTHS_NOM, WD } from './util.js?v=66';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=66';
+import { aiBreakdownGoal } from './ai.js?v=66';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -41,6 +41,8 @@ export function goalEditScreen(id, params) {
   const f = g ? JSON.parse(JSON.stringify({ title: g.title, description: g.description, deadline: g.deadline, dreamId: g.dreamId, stages: g.stages }))
     : { title: params.get('title') || '', description: '', deadline: '', dreamId: params.get('dream') || '', stages: [{ id: uid(), title: 'Этап 1', steps: [{ id: uid(), title: '', duration: null }] }] };
   if (!g && f.dreamId && !f.title) f.title = (S.dreamById(f.dreamId) || {}).title || '';
+  const actHabits = S.state.habits.filter((h) => h.status !== 'archived');
+  f.habitIds = g ? S.goalHabits(g).map((h) => h.id) : [];
   const durSel = (si, ti, v) => `<select class="inp sdur${v ? "" : " empty"}" onchange="this.classList.toggle('empty',!this.value)" data-sd="${si}:${ti}">${[[null, 'Время'], ...S.DURATIONS].map(([x, l]) => `<option value="${x ?? ''}"${(v ?? null) === x ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
   const form = () => `${field('Название', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Найти новую работу">`)}
     ${field('Описание · необязательно', `<textarea class="inp area" rows="1" data-f="description">${esc(f.description)}</textarea>`)}
@@ -50,6 +52,7 @@ export function goalEditScreen(id, params) {
       <div class="rows">${st.steps.map((x, ti) => `<div class="row" style="gap:6px"><input class="inp" style="min-height:32px" data-stp="${si}:${ti}" value="${esc(x.title)}" placeholder="Шаг" enterkeyhint="next">${durSel(si, ti, x.duration)}${x.done ? '<span class="dr-del"><span class="ck done" style="--c:var(--g);cursor:default"></span></span>' : `<span class="dr-del" data-act="delstep" data-i="${si}:${ti}">✕</span>`}</div>`).join('')}
       <div class="addrow" style="--c:var(--accent)" data-act="addstep" data-i="${si}"><i></i>Добавить шаг</div></div></div>`).join('')}
     <div class="addcard" style="--c:var(--accent)" data-act="addstage"><div class="addrow"><i></i>Добавить этап</div></div>
+    ${actHabits.length ? field('Привычки для цели · необязательно', `<div class="opts">${actHabits.map((h) => `<span class="${f.habitIds.includes(h.id) ? 'on' : ''}" data-act="hab" data-id="${h.id}">${esc(h.title)}</span>`).join('')}</div><small class="small">Время и занятия этих привычек пойдут в цель. Если цель идёт только через привычку, шаги можно не добавлять.</small>`) : ''}
     ${S.state.ai && S.state.ai.key ? '<button class="btn" style="flex:none" data-act="ai">✦ Разбить на этапы с ИИ</button>' : ''}`;
   let rootEl;
   const sync = () => {
@@ -79,6 +82,7 @@ export function goalEditScreen(id, params) {
     actions: {
       addstep: (el) => { sync(); f.stages[+el.dataset.i].steps.push({ id: uid(), title: '', duration: null }); rerender(); const n = rootEl.querySelectorAll(`[data-stp^="${el.dataset.i}:"]`); if (n.length) n[n.length - 1].focus(); },
       delstep: (el) => { sync(); const [a, b] = el.dataset.i.split(':').map(Number); f.stages[a].steps.splice(b, 1); rerender(); },
+      hab: (el) => { sync(); const id = el.dataset.id; f.habitIds = f.habitIds.includes(id) ? f.habitIds.filter((x) => x !== id) : [...f.habitIds, id]; rerender(); },
       addstage: () => { sync(); f.stages.push({ id: uid(), title: 'Этап ' + (f.stages.length + 1), steps: [{ id: uid(), title: '', duration: null }] }); rerender(); },
       delstage: (el) => { sync(); f.stages.splice(+el.dataset.i, 1); rerender(); },
       ai: async (el) => {
@@ -95,6 +99,7 @@ export function goalEditScreen(id, params) {
         sync();
         if (!f.title.trim()) { alert('Напиши название'); return; }
         const saved = S.saveGoal({ id: g && g.id, ...f, title: f.title.trim(), stages: f.stages.filter((st) => st.title.trim() || st.steps.some((x) => x.title.trim())) });
+        S.setGoalHabits(saved.id, f.habitIds);
         go(g ? 'back' : '#/goalcard/' + saved.id, !g);
       },
     },
@@ -107,7 +112,8 @@ export function goalCardScreen(id) {
   const g = S.goalById(id);
   if (!g) return { html: `<section class="scr">${top('Цель')}<div class="body"><p class="small">Цель удалена.</p></div></section>` };
   const allHist = S.goalHistory(g), p = S.goalProgress(g), hist = allHist.slice(0, 12), habits = S.state.habits.filter((h) => h.goalId === g.id);
-  const minutes = allHist.reduce((m, x) => m + (x.what === 'сделано' || x.what === 'частично' ? Number(x.fact) || 0 : 0), 0);
+  const hst = S.goalHabitStats(g);
+  const minutes = allHist.reduce((m, x) => m + (x.what === 'сделано' || x.what === 'частично' ? Number(x.fact) || 0 : 0), 0) + hst.minutes;
   const stages = g.stages.map((st) => {
     const d = st.steps.filter((x) => x.done).length, all = st.steps.length, closed = all && d === all;
     const rows = st.steps.map((x) => `<div class="row" data-act="step" data-id="${x.id}"><span class="ck ${x.done ? 'done' : ''}" style="--c:var(--g)"></span><div class="t"><b>${esc(x.title)}</b><small>${x.done ? 'выполнено ' + fmtDMshort(x.doneAt) : stepSmall(g.id, x.id) || (S.stepPlan(g.id, x.id).length ? 'в днях' : 'не в днях')}</small></div>${stepChip(g.id, x)}</div>`).join('');
@@ -115,7 +121,7 @@ export function goalCardScreen(id) {
   }).join('');
   const right = menu([['arch', g.status === 'active' ? 'Убрать в архив' : 'Вернуть из архива', g.status === 'active' ? 'из дней уйдёт, история останется' : 'снова станет активной'], ['del', 'Удалить совсем', 'сотрёт вместе с историей', true]]);
   const html = `<section class="scr">${top(esc(g.title), { right })}<div class="body">
-    <div class="card" style="--c:var(--g)"><div class="kv"><span>Прогресс</span><b>${p.done} из ${p.total} шагов · ${p.pct}%</b></div><div class="gbar"><i class="now" style="width:${p.pct}%"></i></div>
+    <div class="card" style="--c:var(--g)">${p.total ? `<div class="kv"><span>Прогресс</span><b>${p.done} из ${p.total} шагов · ${p.pct}%</b></div><div class="gbar"><i class="now" style="width:${p.pct}%"></i></div>` : habits.length ? `<div class="kv"><span>Идёт через привычку</span><b>${esc(habits.map((h) => h.title).join(', '))}</b></div>${!minutes && hst.days ? `<div class="kv"><span>Занятий</span><b>${hst.days}</b></div>` : ''}` : '<p class="small" style="margin:0">Шагов пока нет. Добавь шаги или свяжи привычку — в «Изменить».</p>'}
       ${minutes ? `<div class="kv"><span>Потрачено</span><b>${fmtMin(minutes)}</b></div>` : ''}${g.deadline ? `<div class="kv"><span>Срок</span><b>до ${fmtDM(g.deadline)}</b></div>` : ''}
       ${g.status === 'achieved' ? `<div class="kv"><span>Достигнута</span><b>${fmtDM(g.achievedAt)}</b></div>` : ''}${g.description ? `<p class="small" style="margin:0">${esc(g.description)}</p>` : ''}</div>
     ${habits.length ? `<div class="card plain"><div class="h3">Привычки для цели</div><div class="rows">${habits.map((h) => `<div class="row" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h))} · ${S.habitStats(h, addDays(today(), -29), today()).pct}% за 30 дней</small></div><span class="chev">›</span></div>`).join('')}</div></div>` : ''}
@@ -162,7 +168,7 @@ export function habitCardScreen(id) {
   for (const [date, d] of Object.entries(S.state.days)) { const mk = d.items['h:' + h.id]; if (mk && mk.comment) notes.push({ date, text: mk.comment, fact: mk.fact }); }
   notes.sort((a, b) => b.date.localeCompare(a.date));
   const html = `<section class="scr">${top(esc(h.title), { right: menu([['arch', h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив', h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется']]) })}<div class="body">
-    ${goal ? `<div class="hb-goal" data-go="#/goalcard/${goal.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Ведёт к цели</small><b>${esc(goal.title)}</b><div class="hb-gbar"><i style="width:${S.goalProgress(goal).pct}%"></i></div><span>${S.goalProgress(goal).done} из ${S.goalProgress(goal).total} шагов${goal.deadline ? ' · до ' + fmtDM(goal.deadline) : ''}</span></div><span class="chev">›</span></div>` : ''}
+    ${goal ? `<div class="hb-goal" data-go="#/goalcard/${goal.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Ведёт к цели</small><b>${esc(goal.title)}</b>${goalLine(goal).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(goal).pct}%"></i></div>` : ''}<span>${esc(goalLine(goal).text)}${goal.deadline ? ' · до ' + fmtDM(goal.deadline) : ''}</span></div><span class="chev">›</span></div>` : ''}
     <div class="hb-stats"><div><b>${S.streak(h)}</b><small>${plural(S.streak(h), 'день', 'дня', 'дней')} подряд</small></div><div><b>${st30.pct}<span>%</span></b><small>за 30 дней</small></div><div><b>${avg || allSt.done}</b><small>${avg ? 'в среднем' : 'всего раз'}</small></div></div>
     <div class="card" data-cal>${cal()}</div>
     ${notes.length ? `<div class="card"><div class="h3">Заметки</div><div class="tl">${notes.slice(0, 15).map((x) => `<div>${esc(x.text)}<small>${fmtShort(x.date)}${x.fact && h.kind === 'duration' ? ' · ' + fmtMin(x.fact) : ''}</small></div>`).join('')}</div></div>` : ''}
@@ -383,7 +389,7 @@ export function dreamScreen(id) {
   const html = `<section class="scr">${top('Мечта', { right: menu([['del', 'Удалить мечту', 'цель, если есть, останется', true]]) })}<div class="body">
     <div class="dr-head"><span class="dr-ic">${ICON.dream.replace('<svg>', '<svg viewBox="0 0 24 24">')}</span><b>${esc(d.title)}</b><small>мечта с ${d.createdAt.slice(0, 4)} года</small></div>
     ${field('Почему хочу', `<textarea class="inp area" rows="1" data-why placeholder="Чтобы помнить, зачем">${esc(d.why || '')}</textarea>`)}
-    ${g ? `<div class="hb-goal" data-go="#/goalcard/${g.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Стала целью</small><b>${esc(g.title)}</b><div class="hb-gbar"><i style="width:${S.goalProgress(g).pct}%"></i></div><span>${S.goalProgress(g).done} из ${S.goalProgress(g).total} шагов</span></div><span class="chev">›</span></div>`
+    ${g ? `<div class="hb-goal" data-go="#/goalcard/${g.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Стала целью</small><b>${esc(g.title)}</b>${goalLine(g).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(g).pct}%"></i></div>` : ''}<span>${esc(goalLine(g).text)}</span></div><span class="chev">›</span></div>`
       : `<div class="addcard" style="--c:var(--accent)" data-go="#/goal/new?dream=${d.id}"><div class="addrow"><i></i>Сделать целью</div></div>`}
     <div class="card plain"><div class="row" style="padding:0" data-act="came"><span class="ck ${ct ? 'done' : ''}"></span><div class="t"><b>Сбылось</b><small>${ct ? fmtDM(ct.date) + ' ' + ct.date.slice(0, 4) : 'отметь — добавишь дату, мысли и фото'}</small></div></div>
       ${ct ? `<input class="inp" type="date" data-ct="date" value="${ct.date}"><textarea class="inp area" rows="1" data-ct="text" placeholder="Как это было">${esc(ct.text || '')}</textarea>${photoGrid(ct.photos || [], 'delph')}` : ''}</div>
@@ -443,6 +449,10 @@ export function summaryScreen(period, key) {
   const gHtml = goals.length ? `<div class="blk goals"><div class="bh">${ICON.goal}<b>Цели</b></div><div class="rows">${goals.map((g) => {
     const now = S.goalProgress(g), was = S.goalProgress(g, from), plus = now.pct - was.pct;
     const stepsDone = g.stages.flatMap((s) => s.steps).filter((x) => x.done && x.doneAt >= from && x.doneAt <= to).map((x) => x.title);
+    if (!now.total) {
+      const hs = S.goalHabits(g), st = S.goalHabitStats(g, from, to);
+      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${st.minutes ? fmtMin(st.minutes) : st.days ? st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : ''}</span></div><small class="mrow-s">${hs.length ? (st.minutes || st.days ? 'через привычку ' + esc(hs.map((h) => h.title).join(', ')) + (st.minutes && st.days ? ' · ' + st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : '') : 'не двигалась') : 'шагов пока нет'}</small></div>`;
+    }
     return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${now.pct}%</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, now.pct)}%"></i>${plus > 0 ? `<i class="tick" style="left:${was.pct}%"></i>` : ''}</div><small class="mrow-s">${plus > 0 ? `было ${was.pct}% → <b class="gplus">+${plus}%</b> · ${esc(stepsDone.join(', '))}` : 'не двигалась'}</small></div>`;
   }).join('')}</div></div>` : '';
   // цифры: привычки

@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=65';
+import * as S from './store.js?v=66';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=65';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=66';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -416,6 +416,16 @@ export function markScreen(date, key) {
   };
 }
 
+// Прогресс цели одной строкой: шагами («1 из 3 шагов», есть полоска) или через привычку («через привычку Скрипка · 12 ч»).
+export function goalLine(g, from, to) {
+  const p = S.goalProgress(g);
+  if (p.total) return { text: p.done + ' из ' + p.total + ' шагов', pct: p.pct };
+  const hs = S.goalHabits(g);
+  if (!hs.length) return { text: 'шагов пока нет', pct: null };
+  const st = S.goalHabitStats(g, from, to);
+  return { text: 'через привычку ' + hs.map((h) => h.title).join(', ') + (st.minutes ? ' · ' + fmtMin(st.minutes) : st.days ? ' · ' + st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : ''), pct: null };
+}
+
 // ---------- СПИСОК ГОДА ----------
 
 // «ещё 3 дня» для невыполненного шага
@@ -444,9 +454,9 @@ export function listScreen() {
   open.sort((a, b) => (a.date || a.repeat && S.nextOccurrence(a) || '9999').localeCompare(b.date || b.repeat && S.nextOccurrence(b) || '9999'));
   const goals = S.state.goals.filter((g) => g.status === 'active'), garch = S.state.goals.filter((g) => g.status !== 'active');
   const grows = goals.map((g, i) => {
-    const p = S.goalProgress(g);
+    const gl = goalLine(g);
     const steps = g.stages.map((st) => `<div class="row"><div class="t"><small>${esc(st.title)}</small></div></div>` + st.steps.map((x) => `<div class="row"><span class="ck ${x.done ? 'done' : ''}"></span><div class="t"><b>${esc(x.title)}</b>${x.done ? `<small>выполнено ${fmtDMshort(x.doneAt)}</small>` : stepSmall(g.id, x.id) ? `<small>${stepSmall(g.id, x.id)}</small>` : ''}</div>${stepChip(g.id, x)}</div>`).join('')).join('');
-    return `<div class="gcard"><div class="gcard-h" data-go="#/goalcard/${g.id}"><div class="t"><b>${esc(g.title)}</b><small>${p.done} из ${p.total} шагов${g.deadline ? ' · до ' + fmtDM(g.deadline) : ''}</small><div class="gbar" style="margin-top:6px"><i class="now" style="width:${Math.max(2, p.pct)}%"></i></div></div><span class="chev">›</span></div><div class="rows">${steps}</div></div>`;
+    return `<div class="gcard"><div class="gcard-h" data-go="#/goalcard/${g.id}"><div class="t"><b>${esc(g.title)}</b><small>${esc(gl.text)}${g.deadline ? ' · до ' + fmtDM(g.deadline) : ''}</small>${gl.pct != null ? `<div class="gbar" style="margin-top:6px"><i class="now" style="width:${Math.max(2, gl.pct)}%"></i></div>` : ''}</div><span class="chev">›</span></div>${steps ? `<div class="rows">${steps}</div>` : ''}</div>`;
   }).join('');
   const evs = S.state.events.filter((e) => e.repeat || (e.end || e.start) >= today()).sort((a, b) => a.start.localeCompare(b.start));
   const evPast = S.state.events.filter((e) => !e.repeat && (e.end || e.start) < today()).sort((a, b) => b.start.localeCompare(a.start));
@@ -458,26 +468,31 @@ export function listScreen() {
   const html = `<section class="scr">
   ${top('Список · ' + y, { back: false, right: (S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : '') + `<button class="ib ibsearch" data-go="#/search" title="Поиск">${ICON.search}</button>` })}
   <div class="body">
-    <div class="blk goals"><div class="bh">${ICON.goal}<b>Цели</b><button class="plus" data-go="#/goal/new">+</button></div>
+    <div class="jump">${[['goals', 'Цели', goals.length, 'g'], ['habits', 'Привычки', habits.length, 'h'], ['tasks', 'Задачи', open.length, 't'], ['events', 'События', evs.length, 'e']].map(([k, l, n, c]) => `<span data-act="jump" data-k="${k}" style="--c:var(--${c});--cb:var(--${c}-bg)">${l}${n ? ` <i>${n}</i>` : ''}</span>`).join('')}</div>
+    <div class="blk goals" data-sec="goals"><div class="bh">${ICON.goal}<b>Цели</b><button class="plus" data-go="#/goal/new">+</button></div>
       ${grows ? `<div class="gcards">${grows}</div>` : '<div class="empty">Большое, к чему идёшь шагами: найти работу, сыграть концерт…</div>'}
       ${arch('Архив', garch.map((g) => `<div class="row arch-row" data-go="#/goalcard/${g.id}"><span class="ck done"></span><div class="t"><b>${esc(g.title)}</b><small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : 'в архиве с ' + fmtDM(g.archivedAt)}</small></div></div>`))}
     </div>
-    <div class="blk habits"><div class="bh">${ICON.habit}<b>Привычки</b><button class="plus" data-go="#/habit/new">+</button></div>
+    <div class="blk habits" data-sec="habits"><div class="bh">${ICON.habit}<b>Привычки</b><button class="plus" data-go="#/habit/new">+</button></div>
       ${hrows ? `<div class="rows">${hrows}</div>` : '<div class="empty">Что ты хочешь делать регулярно? Скрипка, витамины, шаги…</div>'}
       ${arch('Архив', harch.map((h) => `<div class="row arch-row" data-go="#/habit/${h.id}"><span class="ck done"></span><div class="t"><b>${esc(h.title)}</b><small>в архиве с ${fmtDM(h.archivedAt)}</small></div></div>`))}
     </div>
-    <div class="blk tasks"><div class="bh">${ICON.task}<b>Задачи</b><button class="plus" data-go="#/task/new">+</button></div>
+    <div class="blk tasks" data-sec="tasks"><div class="bh">${ICON.task}<b>Задачи</b><button class="plus" data-go="#/task/new">+</button></div>
       ${trows ? `<div class="rows">${trows}</div>` : '<div class="empty">Дела один раз или с повтором: записаться к врачу, оплатить ЖКХ…</div>'}
       ${arch('Выполнено', done.map((t) => `<div class="row arch-row"><span class="ck done"></span><div class="t"><b>${esc(t.title)}</b><small>${t.doneAt ? fmtShort(t.doneAt) : ''}</small></div></div>`))}
     </div>
-    <div class="blk events"><div class="bh">${ICON.event}<b>События</b><button class="plus" data-go="#/event/new">+</button></div>
+    <div class="blk events" data-sec="events"><div class="bh">${ICON.event}<b>События</b><button class="plus" data-go="#/event/new">+</button></div>
       ${erows ? `<div class="rows">${erows}</div>` : '<div class="empty">Встречи, театр, поездки, дни рождения…</div>'}
       ${arch('Прошедшие', evPast.map((e) => `<div class="row arch-row" data-go="#/eventcard/${e.id}"><span class="ck done"></span><div class="t"><b>${esc(e.title)}</b><small>${esc(evSmall(e))}</small></div></div>`))}
     </div>
   </div>
   ${tabbar('list')}
 </section>`;
-  return { html, actions: { arch: (el) => { el.nextElementSibling.hidden = !el.nextElementSibling.hidden; el.classList.toggle('open'); } } };
+  return { html, actions: {
+    arch: (el) => { el.nextElementSibling.hidden = !el.nextElementSibling.hidden; el.classList.toggle('open'); },
+    // быстрый переход к разделу «Списка»
+    jump: (el) => { const sec = document.querySelector(`[data-sec="${el.dataset.k}"]`); if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+  } };
 }
 
 // ---------- ПРИВЫЧКА ----------
@@ -614,7 +629,7 @@ export function lifeScreen() {
     cells += `<i class="${c}"${c === 'now' ? ' data-go="#/summary/y/' + yr + '"' : c === 'past' ? ' data-go="#/year/' + yr + '"' : ''}>${i}</i>`;
   }
   const dec = new Date().getMonth() === 11;
-  const dreams = S.state.dreams.map((d) => `<div class="row" data-go="#/dream/${d.id}">${d.cameTrue ? '<span class="ck done"></span>' : ''}<div class="t"><b>${esc(d.title)}</b>${d.cameTrue ? `<small>сбылось · ${d.cameTrue.date.slice(0, 4)}</small>` : d.goalId && S.goalById(d.goalId) ? `<small>стала целью · ${S.goalProgress(S.goalById(d.goalId)).pct}%</small>` : ''}</div><span class="chev">›</span></div>`).join('');
+  const dreams = S.state.dreams.map((d) => `<div class="row" data-go="#/dream/${d.id}">${d.cameTrue ? '<span class="ck done"></span>' : ''}<div class="t"><b>${esc(d.title)}</b>${d.cameTrue ? `<small>сбылось · ${d.cameTrue.date.slice(0, 4)}</small>` : d.goalId && S.goalById(d.goalId) ? `<small>стала целью · ${esc(goalLine(S.goalById(d.goalId)).text)}</small>` : ''}</div><span class="chev">›</span></div>`).join('');
   const html = `<section class="scr">
   ${top('Моя жизнь', { back: false, right: `<button class="ib ibgear" data-go="#/settings" title="Настройки">${ICON.gear}</button>` })}
   <div class="body">

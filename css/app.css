@@ -627,6 +627,12 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .blk.goals > .gcards .gcard { border: 0; box-shadow: 0 2px 8px -4px rgba(224, 85, 155, .25) }
 .blk.goals > .gcards .gcard-h { background: var(--card); border-bottom: 1px solid var(--line) }
 
+/* Быстрый переход по разделам «Списка»: прилипает к верху при прокрутке */
+.jump { position: sticky; top: -4px; z-index: 5; display: flex; gap: 6px; margin: -4px -16px 0; padding: 6px 16px 8px; background: var(--scr2); flex: none }
+.jump span { flex: 1; text-align: center; padding: 7px 4px; border-radius: 99px; font-size: 13px; font-weight: 500; background: var(--cb); color: var(--c); cursor: pointer; white-space: nowrap }
+.jump i { font-style: normal; font-weight: 400; opacity: .75 }
+[data-sec] { scroll-margin-top: 52px }
+
 /* ---------- Движение: спокойно и коротко. Кто отключил анимацию в iPhone — без неё. ---------- */
 @property --rp { syntax: '<number>'; inherits: true; initial-value: 0 }
 @media (prefers-reduced-motion: no-preference) {
