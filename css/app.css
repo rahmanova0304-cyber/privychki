@@ -644,6 +644,14 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .jump i { font-style: normal; font-weight: 400; opacity: .75 }
 [data-sec] { scroll-margin-top: 52px }
 
+/* невидимый системный переключатель под пальцем — ради тактильного «тика» на iPhone (см. app.js) */
+.has-hap, .hap-wrap { position: relative }
+.hap-wrap { display: flex; flex: none }
+.foot > .hap-wrap { flex: 1 }
+.hap-wrap > button { flex: 1 }
+.hap { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; z-index: 2; cursor: pointer }
+.ck > .hap { inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px) }
+
 /* ---------- Движение: спокойно и коротко. Кто отключил анимацию в iPhone — без неё. ---------- */
 @property --rp { syntax: '<number>'; inherits: true; initial-value: 0 }
 @media (prefers-reduced-motion: no-preference) {
@@ -665,6 +673,7 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
   .btn, .ib, .plus, .row[data-go], .hub-t, .hub-m, .hub-b, .opts span, .seg span { transition: transform .12s ease }
   .btn:active, .ib:active, .plus:active, .hub-t:active, .hub-m:active, .hub-b:active, .opts span:active, .seg span:active { transform: scale(.96) }
   .row[data-go]:active { transform: scale(.985) }
+  .hap-wrap:active > button { transform: scale(.96) }
   /* плашка «Отменить» выезжает снизу */
   .toast { transition: opacity .2s, transform .25s cubic-bezier(.2, .8, .2, 1); transform: translate(-50%, 12px) }
   .toast.on { transform: translate(-50%, 0) }

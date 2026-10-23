@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=90';
-import * as V from './screens.js?v=90';
-import * as W from './screens2.js?v=90';
-import { aiScreen } from './ai.js?v=90';
-import { printScreen } from './print.js?v=90';
-import { today } from './util.js?v=90';
+import * as S from './store.js?v=91';
+import * as V from './screens.js?v=91';
+import * as W from './screens2.js?v=91';
+import { aiScreen } from './ai.js?v=91';
+import { printScreen } from './print.js?v=91';
+import { today } from './util.js?v=91';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -67,18 +67,28 @@ function render() {
   prevDepth = depth;
 }
 
-// Лёгкий тактильный «тик». Обычной вибрации у сайтов на iPhone нет; с iOS 18 тик даёт нажатие
-// на системный переключатель (input switch), поэтому щёлкаем по скрытому. На Android — navigator.vibrate.
-function haptic() {
-  if (navigator.vibrate && !/iPhone|iPad/.test(navigator.userAgent)) { navigator.vibrate(12); return; }
-  const label = document.createElement('label'), input = document.createElement('input');
-  input.type = 'checkbox'; input.setAttribute('switch', '');
-  label.style.display = 'none'; label.setAttribute('aria-hidden', 'true');
-  label.appendChild(input); document.head.appendChild(label);
-  label.click(); label.remove();
-}
+// Лёгкий тактильный «тик». Обычной вибрации у сайтов на iPhone нет, а нажатие «из кода» iPhone игнорирует
+// (проверено на iOS 26). Тик бывает, только когда палец нажимает на системный переключатель (input switch),
+// поэтому кладём невидимый переключатель прямо под палец — поверх кружка или кнопки. На Android — navigator.vibrate.
+function haptic() { if (navigator.vibrate && !/iPhone|iPad/.test(navigator.userAgent)) navigator.vibrate(12); }
 // Где тикает: отметка дела, «Сделано» в окне отметки, переключатели, «Завершить день», «Цель достигнута», «Отменить».
 const HAPTIC = new Set(['toggle', 'flip', 'whole', 'close', 'achieve']);
+function hapInput() {
+  const i = document.createElement('input');
+  i.type = 'checkbox'; i.setAttribute('switch', ''); i.className = 'hap'; i.tabIndex = -1; i.setAttribute('aria-hidden', 'true');
+  return i;
+}
+// К кнопке <button> переключатель кладём рядом (внутри кнопки он не нажимается) и запоминаем кнопку в i._host.
+function hapOver(el) {
+  if (el.querySelector(':scope > .hap') || (el.parentElement && el.parentElement.classList.contains('hap-wrap'))) return;
+  const i = hapInput();
+  if (el.tagName === 'BUTTON') { const w = document.createElement('span'); w.className = 'hap-wrap'; el.replaceWith(w); w.append(el, i); i._host = el; }
+  else { el.classList.add('has-hap'); el.appendChild(i); }
+}
+function addHaptics() {
+  app.querySelectorAll([...HAPTIC].map((a) => `[data-act="${a}"]`).join(',')).forEach(hapOver);
+  if (currentRoute && currentRoute.startsWith('#/mark/')) app.querySelectorAll('[data-act="save"]').forEach(hapOver);
+}
 
 // Поля даты и времени: на iPhone родное поле шире, чем кажется, и вылезает за экран.
 // Показываем аккуратный текст, а родное поле кладём прозрачно поверх — нажатие открывает обычный выбор даты.
@@ -129,7 +139,7 @@ app.addEventListener('click', (e) => {
 }, true);
 
 app.addEventListener('click', (e) => {
-  const act = e.target.closest('[data-act]');
+  const act = e.target._host || e.target.closest('[data-act]');
   if (act && act.dataset.act === 'back') { e.preventDefault(); go('back'); return; }
   if (act && current && current.actions && current.actions[act.dataset.act]) {
     e.preventDefault();
@@ -150,7 +160,7 @@ app.addEventListener('click', (e) => {
 });
 
 // Любая перерисовка (и всего экрана, и части формы) — сразу оформляем новые поля дат.
-new MutationObserver(() => enhanceDates(app)).observe(app, { childList: true, subtree: true });
+new MutationObserver(() => { enhanceDates(app); addHaptics(); }).observe(app, { childList: true, subtree: true });
 // «Назад» вызывает и popstate, и hashchange — рисуем один раз, иначе пропадает анимация перехода.
 const renderIfMoved = () => { if (location.hash !== currentRoute) render(); };
 window.addEventListener('popstate', renderIfMoved);
@@ -166,11 +176,12 @@ window.addEventListener('undoable', (e) => {
   clearTimeout(toastTimer);
   toast.innerHTML = `<span></span><button type="button">Отменить</button>`;
   toast.firstChild.textContent = e.detail;
+  hapOver(toast.querySelector('button'));
   toast.classList.add('on');
   toastTimer = setTimeout(() => { toast.classList.remove('on'); S.dropUndo(); }, 5000);
 });
 toast.addEventListener('click', (e) => {
-  if (!e.target.closest('button')) return;
+  if (!e.target.closest('button') && !e.target._host) return;
   haptic();
   clearTimeout(toastTimer);
   toast.classList.remove('on');
