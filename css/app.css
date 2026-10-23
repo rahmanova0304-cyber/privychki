@@ -559,9 +559,9 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   .pg .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm }
   .pg .t { border-radius: 3mm; padding: 3mm; background: #f4f3f8 } .pg .t small { display: block; font-size: 9pt; color: inherit; opacity: .8 } .pg .t b { font-size: 15pt; font-weight: 500 }
   .pg .t.l1 { background: #e7e1fb } .pg .t.l2 { background: #cbbdf7 } .pg .t.l3 { background: #a68ef3; color: #fff } .pg .t.l4 { background: #7556ee; color: #fff }
-  .pg .phs { float: right; width: 58mm; display: flex; flex-direction: column; gap: 2.5mm; margin: 1mm 0 2mm 5mm } .pg .phs img { width: 100%; height: 40mm; object-fit: cover; border-radius: 2.5mm; display: block }
+  .pg .phs { float: right; width: 58mm; display: flex; flex-direction: column; gap: 2.5mm; margin: 1mm 0 2mm 5mm } .pg .phs img { width: 100%; height: auto; display: block; border-radius: 2.5mm; display: block }
   .pg.mon { display: flow-root }
-  .pg .collage { display: flex; flex-wrap: wrap; gap: 2.5mm } .pg .collage img { display: block; width: calc(25% - 1.9mm); height: 36mm; object-fit: cover; border-radius: 2mm }
+  /* коллаж — колонками, каждое фото в своих пропорциях, без обрезки */ .pg .collage { column-count: 3; column-gap: 2.5mm } .pg .collage img { display: block; width: 100%; height: auto; margin-bottom: 2.5mm; border-radius: 2mm; break-inside: avoid; page-break-inside: avoid }
   .pg.cover { width: 210mm; height: 297mm; overflow: hidden; background: #7556ee; break-after: page; page-break-after: always } .pg.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
   .pg.cover .cv { position: absolute; left: 18mm; bottom: 24mm; color: #fff; text-shadow: 0 1mm 4mm rgba(0,0,0,.35) }
   .pg.cover b { display: block; font-size: 72pt; font-weight: 200; line-height: 1 } .pg.cover span { display: block; font-size: 20pt } .pg.cover small { font-size: 11pt; opacity: .85 }
