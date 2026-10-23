@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=66';
+import * as S from './store.js?v=67';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=66';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=67';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -504,7 +504,7 @@ export function habitScreen(id, params) {
   const f = h ? { title: h.title, days: [...(h.days || [])], kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '' }
     : { title: params.get('title') || '', days: [0, 1, 2, 3, 4], kind: 'check', target: null, unit: '' };
   const targetField = () => {
-    if (f.kind === 'duration') return field('План на день, минут', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 60"><div class="opts">${[10, 20, 30, 60].map((m) => `<span data-act="preset" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`);
+    if (f.kind === 'duration') return field('План на день, минут', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 60"><div class="opts">${[10, 20, 30, 60, 120].map((m) => `<span data-act="preset" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`);
     if (f.kind === 'count') return field('Цель на день', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 10000"><input class="inp" data-f="unit" value="${esc(f.unit)}" placeholder="чего: шагов, страниц…">`);
     if (f.kind === 'time') return field('Во сколько', `<input class="inp" type="time" data-f="target" value="${esc(f.target || '08:00')}">`);
     return '<p class="small" style="margin:0">В дне — кружок: нажала, и готово.</p>';
