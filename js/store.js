@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=86';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=87';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -77,7 +77,7 @@ export function replaceState(next) {
 // ---------- фото ----------
 // Хранятся отдельно от данных: большое (до 1600 px) и миниатюра (400 px).
 
-function shrink(file, max) {
+function shrink(file, max, q) {
   return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
     img.onload = () => {
@@ -86,16 +86,17 @@ function shrink(file, max) {
       c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      c.toBlob((b) => res(b), 'image/jpeg', max > 500 ? 0.8 : 0.75);
+      c.toBlob((b) => res(b), 'image/jpeg', q || (max > 500 ? 0.8 : 0.75));
     };
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Не удалось открыть фото')); };
     img.src = url;
   });
 }
 
-export async function addPhoto(file) {
+// light — фото дня «Что запомнилось»: полегче (1200 px, сильнее сжатие, ~150 КБ)
+export async function addPhoto(file, light) {
   const id = uid();
-  const [full, thumb] = await Promise.all([shrink(file, 1600), shrink(file, 400)]);
+  const [full, thumb] = await Promise.all([light ? shrink(file, 1200, 0.7) : shrink(file, 1600), shrink(file, 400)]);
   await new Promise((res, rej) => {
     const tx = db.transaction(PHOTOS, 'readwrite');
     tx.objectStore(PHOTOS).put({ full, thumb }, id);

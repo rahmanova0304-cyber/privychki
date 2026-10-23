@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=86';
+import * as S from './store.js?v=87';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=86';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=87';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -101,9 +101,9 @@ export const autoGrow = (root) => root.querySelectorAll('textarea.inp').forEach(
 
 // ---------- фото ----------
 // Плитки фото: <div data-photo="id">. Картинки подгружаются из IndexedDB после отрисовки.
-export function photoGrid(ids = [], delAct, { max = 6, add = true, cls = 'ev-photos sm' } = {}) {
+export function photoGrid(ids = [], delAct, { max = 6, add = true, cls = 'ev-photos sm', light = false } = {}) {
   const tiles = ids.map((id) => `<div class="ph" data-photo="${id}">${delAct ? `<i data-act="${delAct}" data-id="${id}">✕</i>` : ''}</div>`).join('');
-  const plus = add && ids.length < max ? `<label class="ph add" style="cursor:pointer"><input type="file" accept="image/*" multiple hidden data-photoinput data-left="${max - ids.length}"></label>` : '';
+  const plus = add && ids.length < max ? `<label class="ph add" style="cursor:pointer"><input type="file" accept="image/*"${max - ids.length > 1 ? ' multiple' : ''} hidden data-photoinput data-left="${max - ids.length}"${light ? ' data-light="1"' : ''}></label>` : '';
   return tiles || plus ? `<div class="${cls}">${tiles}${plus}</div>` : '';
 }
 export function fillPhotos(root, size = 'thumb') {
@@ -115,9 +115,9 @@ export function fillPhotos(root, size = 'thumb') {
 export function bindPhotoInput(root, onAdd) {
   root.querySelectorAll('[data-photoinput]').forEach((inp) => inp.addEventListener('change', async () => {
     const files = [...inp.files].slice(0, Number(inp.dataset.left) || 6);
-    if (inp.files.length > files.length) alert('Можно добавить ещё ' + files.length + ' фото — не больше 6 за день.');
+    if (inp.files.length > files.length) alert('Можно добавить ещё ' + files.length + ' фото.');
     const ids = [];
-    for (const f of files) { try { ids.push(await S.addPhoto(f)); } catch (e) { alert(e.message); } }
+    for (const f of files) { try { ids.push(await S.addPhoto(f, !!inp.dataset.light)); } catch (e) { alert(e.message); } }
     onAdd(ids);
   }));
 }
@@ -207,7 +207,7 @@ export function dayScreen(date) {
   const d = S.day(date);
   const note = future
     ? `<div class="notecard"><b>Заметки на день</b><textarea class="inp area" data-bind="note" rows="1" placeholder="Мысли, идеи…">${esc(d.note)}</textarea></div>`
-    : `<div class="notecard"><b>Что запомнилось ${date === t ? 'сегодня' : 'в этот день'}?</b><textarea class="inp area" data-bind="memory" rows="1" placeholder="Напиши здесь…">${esc(d.memory)}</textarea>${photoGrid(d.photos, 'dayphoto')}</div>`;
+    : `<div class="notecard"><b>Что запомнилось ${date === t ? 'сегодня' : 'в этот день'}?</b><textarea class="inp area" data-bind="memory" rows="1" placeholder="Напиши здесь…">${esc(d.memory)}</textarea>${photoGrid(d.photos, 'dayphoto', { max: 1, light: true })}</div>`;
 
   const html = `<section class="scr">
   <div class="top main"><div class="ttl">${weekHead(date, 'week')}</div>${S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : ''}</div>
