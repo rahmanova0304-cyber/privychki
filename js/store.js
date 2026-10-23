@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=93';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=94';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -154,10 +154,24 @@ export function findStep(gid, sid) {
   return null;
 }
 
-export function habitScheduled(h, date) {
+function habitActive(h, date) {
   if (h.status === 'archived' && (!h.archivedAt || date >= h.archivedAt)) return false;
   if (h.createdAt && date < h.createdAt) return false;
   if (h.pausedFrom && date >= h.pausedFrom) return false;
+  return true;
+}
+// Привычка «N раз в неделю» (h.per === 'week', h.n): дни любые. В прошедших днях она стоит только там, где сделана
+// (пропуск дня — не «не сделано»), в сегодняшнем и будущих — пока недельный план не набран.
+export const isWeekly = (h) => h.per === 'week' && h.n > 0;
+export function weekDone(h, date, except) {
+  const ws = addDays(date, -wd(date));
+  let n = 0;
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d !== except && habitMark(h, d).s === 'done') n++; }
+  return n;
+}
+export function habitScheduled(h, date) {
+  if (!habitActive(h, date)) return false;
+  if (isWeekly(h)) return habitMark(h, date).s === 'done' || (date >= today() && !day(date).closedAt && weekDone(h, date, date) < h.n);
   return (h.days || []).includes(wd(date));
 }
 
@@ -404,7 +418,7 @@ export function setNote(date, text) { day(date, true).note = text; save(); }
 export function saveHabit(data) {
   let h = data.id && habitById(data.id);
   if (!h) { h = { id: uid(), createdAt: today(), status: 'active' }; state.habits.push(h); }
-  Object.assign(h, { title: data.title, days: data.days, kind: data.kind, target: data.target, unit: data.unit || '', goalId: data.goalId || null });
+  Object.assign(h, { title: data.title, days: data.days, per: data.per || null, n: data.n || null, kind: data.kind, target: data.target, unit: data.unit || '', goalId: data.goalId || null });
   save();
   return h;
 }
@@ -432,6 +446,13 @@ export const habitMark = (h, date) => (day(date).items['h:' + h.id] || {});
 
 // Серия: подряд выполненные дни по расписанию, считая назад от даты.
 export function streak(h, upTo = today()) {
+  if (isWeekly(h)) {
+    // недель подряд с выполненным планом (текущая неделя считается, если план уже набран)
+    let n = 0, ws = addDays(upTo, -wd(upTo));
+    if (weekDone(h, ws) < h.n) ws = addDays(ws, -7);
+    for (let g = 0; g < 300 && !(h.createdAt && addDays(ws, 6) < h.createdAt); g++, ws = addDays(ws, -7)) { if (weekDone(h, ws) >= h.n) n++; else break; }
+    return n;
+  }
   let n = 0, date = upTo, guard = 0;
   if (habitMark(h, date).s !== 'done') date = addDays(date, -1);
   while (guard++ < 2000) {
@@ -454,6 +475,25 @@ export function bestStreak(h, from, to) {
 // Регулярность за период — только по дням расписания и только по прошедшим дням.
 export function habitStats(h, from, to) {
   const end = to < today() ? to : today();
+  if (isWeekly(h)) {
+    // план по неделям: n за полную неделю, за неполную — пропорционально дням; сделанное за неделю не больше n
+    let plan = 0, done = 0, minutes = 0, factN = 0;
+    const start = from < (h.createdAt || from) ? h.createdAt : from;
+    for (let ws = addDays(start, -wd(start)); ws <= end; ws = addDays(ws, 7)) {
+      let days = 0, dn = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(ws, i);
+        if (d < start || d > end || !habitActive(h, d)) continue;
+        days++;
+        const m = habitMark(h, d);
+        if (m.s === 'done') dn++;
+        if (m.fact != null && (m.s === 'done' || m.s === 'partial') && h.kind === 'duration') { minutes += Number(m.fact) || 0; factN++; }
+      }
+      const wp = days === 7 ? h.n : Math.round(h.n * days / 7);
+      plan += wp; done += Math.min(dn, h.n);
+    }
+    return { plan, done: Math.min(done, plan || done), pct: plan ? Math.round(Math.min(done, plan) / plan * 100) : 0, minutes, avg: factN ? Math.round(minutes / factN) : 0 };
+  }
   let plan = 0, done = 0, minutes = 0, factN = 0;
   for (let d = from < (h.createdAt || from) ? h.createdAt : from; d <= end; d = addDays(d, 1)) {
     const m = habitMark(h, d);

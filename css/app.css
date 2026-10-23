@@ -652,6 +652,11 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hap { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; z-index: 2; cursor: pointer }
 .ck > .hap { inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px) }
 
+/* недельная привычка в строке дня: чёрточки «сколько из N сделано» */
+.wk { display: flex; gap: 4px; margin-top: 5px }
+.wk i { width: 16px; height: 5px; border-radius: 3px; background: var(--h-bg) }
+.wk i.on { background: var(--h) }
+
 /* ---------- Движение: спокойно и коротко. Кто отключил анимацию в iPhone — без неё. ---------- */
 @property --rp { syntax: '<number>'; inherits: true; initial-value: 0 }
 @media (prefers-reduced-motion: no-preference) {

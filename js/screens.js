@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=93';
+import * as S from './store.js?v=94';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=93';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=94';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -54,7 +54,8 @@ const addToLabel = (date) => date === today() ? 'Добавить сегодня
 export function scheduleText(h) {
   const d = (h.days || []).slice().sort();
   let s;
-  if (d.length === 7) s = 'каждый день';
+  if (S.isWeekly(h)) s = h.n + ' ' + plural(h.n, 'раз', 'раза', 'раз') + ' в неделю';
+  else if (d.length === 7) s = 'каждый день';
   else if (d.join() === '0,1,2,3,4') s = 'Пн–Пт';
   else if (d.join() === '5,6') s = 'Сб, Вс';
   else if (!d.length) s = 'без расписания';
@@ -136,6 +137,13 @@ function itemRow(it, date) {
   else if (it.s === 'missed') { ck = 'ck no'; cls.push('missed'); small = 'не сделано'; }
   if (!small && it.from) small = 'перенесено с ' + fmtDM(it.from);
   if (!small && it.offSchedule && it.type === 'h') small = 'вне расписания';
+  let wk = '';
+  if (!small && it.type === 'h' && S.isWeekly(r)) {
+    // недельная привычка: «2 из 4 на этой неделе» и чёрточки
+    const dn = S.weekDone(r, date);
+    small = dn + ' из ' + r.n + ' на этой неделе';
+    wk = `<span class="wk">${Array.from({ length: r.n }, (_, i) => `<i class="${i < dn ? 'on' : ''}"></i>`).join('')}</span>`;
+  }
   if (it.type === 'h' || it.type === 's') {
     const k = S.kindOf(it), tgt = it.type === 'h' ? S.habitTargetText(r) : S.targetOf(it) ? fmtMin(S.targetOf(it)) : '';
     if (it.type === 's' && !small) {
@@ -164,7 +172,7 @@ function itemRow(it, date) {
   }
   const tapCk = it.s === 'moved' ? '' : ` data-act="toggle" data-key="${it.key}"`;
   if (it.type === 'e' && !small) small = '';
-  return `<div class="${cls.join(' ')}" data-go="#/mark/${date}/${encodeURIComponent(it.key)}"><span class="${ck}"${tapCk}></span><div class="t"><b>${esc(title)}</b>${small ? `<small>${esc(small)}</small>` : ''}</div>${right}</div>`;
+  return `<div class="${cls.join(' ')}" data-go="#/mark/${date}/${encodeURIComponent(it.key)}"><span class="${ck}"${tapCk}></span><div class="t"><b>${esc(title)}</b>${small ? `<small>${esc(small)}</small>` : ''}${wk}</div>${right}</div>`;
 }
 
 const order = (it) => it.s === 'done' ? 2 : 0;
@@ -182,7 +190,7 @@ const VERDICT = (p) => p >= 90 ? 'Отличный день!' : p >= 70 ? 'Хо�
 
 function dayPhrase(date, st) {
   let best = null;
-  for (const it of st.items) if (it.type === 'h' && it.s === 'done') {
+  for (const it of st.items) if (it.type === 'h' && it.s === 'done' && !S.isWeekly(it.ref)) {
     const n = S.streak(it.ref, date);
     if (n >= 3 && (!best || n > best.n)) best = { n, t: it.ref.title };
   }
@@ -504,8 +512,8 @@ const KINDS = [['check', 'Просто сделано', 'витамины'], ['d
 
 export function habitScreen(id, params) {
   const h = id !== 'new' ? S.habitById(id) : null;
-  const f = h ? { title: h.title, days: [...(h.days || [])], kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '' }
-    : { title: params.get('title') || '', days: [0, 1, 2, 3, 4], kind: 'check', target: null, unit: '' };
+  const f = h ? { title: h.title, days: [...(h.days || [])], per: h.per || '', n: h.n || 3, kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '' }
+    : { title: params.get('title') || '', days: [0, 1, 2, 3, 4], per: '', n: 3, kind: 'check', target: null, unit: '' };
   const targetField = () => {
     if (f.kind === 'duration') return field('План на день, минут', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 60"><div class="opts">${[10, 20, 30, 60, 120].map((m) => `<span data-act="preset" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`);
     if (f.kind === 'count') return field('Цель на день', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 10000"><input class="inp" data-f="unit" value="${esc(f.unit)}" placeholder="чего: шагов, страниц…">`);
@@ -513,7 +521,9 @@ export function habitScreen(id, params) {
     return '<p class="small" style="margin:0">В дне — кружок: нажала, и готово.</p>';
   };
   const form = () => `${field('Название', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Скрипка">`)}
-    ${field('Дни', `<div class="opts">${WD.map((w, i) => `<span class="${f.days.includes(i) ? 'on' : ''}" data-act="day" data-i="${i}">${w}</span>`).join('')}</div>`)}
+    ${field('Как часто', `<div class="seg"><span class="${f.per ? '' : 'on'}" data-act="per" data-v="">По дням недели</span><span class="${f.per ? 'on' : ''}" data-act="per" data-v="week">Раз в неделю</span></div>`)}
+    ${f.per ? `<div class="card"><div class="step"><i data-act="pn" data-d="-1">−</i><span class="big">${f.n} ${plural(f.n, 'раз', 'раза', 'раз')}</span><i data-act="pn" data-d="1">+</i></div><p class="small" style="margin:0">в неделю, в любые дни. В дне привычка ждёт, пока недельный план не набран.</p></div>`
+      : field('Дни', `<div class="opts">${WD.map((w, i) => `<span class="${f.days.includes(i) ? 'on' : ''}" data-act="day" data-i="${i}">${w}</span>`).join('')}</div>`)}
     ${field('Как отмечать выполнение', `<div class="kinds">${KINDS.map(([k, t, ex]) => `<span class="${f.kind === k ? 'on' : ''}" data-act="kind" data-k="${k}"><b>${t}</b><small>${ex}</small></span>`).join('')}</div>`)}
     ${targetField()}
     ${S.state.goals.some((g) => g.status === 'active') ? field('Для какой цели · необязательно', `<select class="inp" data-f="goalId"><option value="">Не связана</option>${S.state.goals.filter((g) => g.status === 'active').map((g) => `<option value="${g.id}"${f.goalId === g.id ? ' selected' : ''}>${esc(g.title)}</option>`).join('')}</select>`) : ''}
@@ -530,6 +540,8 @@ export function habitScreen(id, params) {
     html,
     mount(root) { rootEl = root; },
     actions: {
+      per: (el) => { sync(); f.per = el.dataset.v; rerender(); },
+      pn: (el) => { sync(); f.n = Math.min(7, Math.max(1, f.n + Number(el.dataset.d))); rerender(); },
       day: (el) => { sync(); const i = +el.dataset.i; f.days = f.days.includes(i) ? f.days.filter((x) => x !== i) : [...f.days, i]; el.classList.toggle('on'); },
       kind: (el) => { sync(); if (f.kind !== el.dataset.k) { f.kind = el.dataset.k; f.target = f.kind === 'time' ? '08:00' : null; } rerender(); },
       preset: (el) => { rootEl.querySelector('[data-f="target"]').value = el.dataset.v; },
@@ -542,9 +554,9 @@ export function habitScreen(id, params) {
         let target = f.target;
         if (f.kind === 'duration' || f.kind === 'count') { target = Math.max(0, Number(target) || 0); if (!target) { alert('Укажи план на день'); return; } }
         if (f.kind === 'check') target = null;
-        const saved = S.saveHabit({ id: h && h.id, title: f.title.trim(), days: f.days.sort(), kind: f.kind, target, unit: f.unit, goalId: f.goalId });
+        const saved = S.saveHabit({ id: h && h.id, title: f.title.trim(), days: f.days.sort(), per: f.per || null, n: f.per ? f.n : null, kind: f.kind, target, unit: f.unit, goalId: f.goalId });
         const dayP = params.get('day');
-        if (dayP && !f.days.includes(wd(dayP))) S.addHabitToDay(dayP, saved.id);
+        if (dayP && !f.per && !f.days.includes(wd(dayP))) S.addHabitToDay(dayP, saved.id);
         go('back');
       },
     },

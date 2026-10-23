@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=93';
+import * as S from './store.js?v=94';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=93';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=93';
-import { aiBreakdownGoal } from './ai.js?v=93';
+  MONTHS_NOM, WD } from './util.js?v=94';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=94';
+import { aiBreakdownGoal } from './ai.js?v=94';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -160,8 +160,10 @@ export function habitCardScreen(id) {
       if (mk.s === 'done') { c = 'ok'; if (sch) done++; } else if (!sch) c = 'off'; else if (date < today()) c = 'no';
       if (sch && date <= today()) plan++;
       if (date === today()) c += ' now';
+      if (S.isWeekly(h) && c.startsWith('no')) c = c.replace('no', 'off');
       cells += `<i class="${c.trim()}">${d}</i>`;
     }
+    if (S.isWeekly(h)) { const st = S.habitStats(h, first, month + '-' + String(n).padStart(2, '0')); done = st.done; plan = st.plan; }
     return `<div class="h3"><span><span class="hb-arr" data-act="mon" data-d="-1">‹</span> ${MONTHS_NOM[m - 1]} <span class="hb-arr" data-act="mon" data-d="1">›</span></span><span class="cnt" style="--c:var(--h)">${done} из ${plan}</span></div><div class="hb-cal">${cells}</div>`;
   };
   const notes = [];
@@ -169,7 +171,7 @@ export function habitCardScreen(id) {
   notes.sort((a, b) => b.date.localeCompare(a.date));
   const html = `<section class="scr">${top(esc(h.title), { right: menu([['arch', h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив', h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется'], ['del', 'Удалить совсем', 'сотрёт вместе с историей', true]]) })}<div class="body">
     ${goal ? `<div class="hb-goal" data-go="#/goalcard/${goal.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Ведёт к цели</small><b>${esc(goal.title)}</b>${goalLine(goal).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(goal).pct}%"></i></div>` : ''}<span>${esc(goalLine(goal).text)}${goal.deadline ? ' · до ' + fmtDM(goal.deadline) : ''}</span></div><span class="chev">›</span></div>` : ''}
-    <div class="hb-stats"><div><b>${S.streak(h)}</b><small>${plural(S.streak(h), 'день', 'дня', 'дней')} подряд</small></div><div><b>${st30.pct}<span>%</span></b><small>за 30 дней</small></div><div><b>${avg || allSt.done}</b><small>${avg ? 'в среднем' : 'всего раз'}</small></div></div>
+    <div class="hb-stats"><div><b>${S.streak(h)}</b><small>${S.isWeekly(h) ? plural(S.streak(h), 'неделя', 'недели', 'недель') : plural(S.streak(h), 'день', 'дня', 'дней')} подряд</small></div><div><b>${st30.pct}<span>%</span></b><small>за 30 дней</small></div><div><b>${avg || allSt.done}</b><small>${avg ? 'в среднем' : 'всего раз'}</small></div></div>
     <div class="card" data-cal>${cal()}</div>
     ${notes.length ? `<div class="card"><div class="h3">Заметки</div><div class="tl">${notes.slice(0, 15).map((x) => `<div>${esc(x.text)}<small>${fmtShort(x.date)}${x.fact && h.kind === 'duration' ? ' · ' + fmtMin(x.fact) : ''}</small></div>`).join('')}</div></div>` : ''}
     <p class="small" style="margin:0;text-align:center">${esc(scheduleText(h))}${h.pausedFrom ? ' · на паузе' : ''}${h.status === 'archived' ? ' · в архиве' : ''}</p>
@@ -473,6 +475,7 @@ export function summaryScreen(period, key) {
       if (sch && d <= t) plan++; if (mk.s === 'done' && sch) done++;
       segs += `<i class="${c}"></i>`;
     }
+    if (S.isWeekly(h)) { const st = S.habitStats(h, from, to); plan = st.plan; done = st.done; }
     if (period === 'w') hRows += `<div class="wrow" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b></div><div class="wcells">${segs}</div><span class="hpct">${plan ? Math.round(done / plan * 100) : 0}%</span></div>`;
     else hRows += `<div class="mrow" data-go="#/habitcard/${h.id}"><div class="mrow-h"><b>${esc(h.title)}</b><small>${esc(scheduleText(h).split(' · ')[0])}</small><span class="hpct">${plan ? Math.round(done / plan * 100) : 0}%</span></div><div class="mdots" style="grid-template-columns:repeat(${Math.round((parse(to) - parse(from)) / 864e5) + 1},1fr)">${segs}</div><small class="mrow-s">${done} из ${plan} · пропущено ${plan - done}</small></div>`;
   }
