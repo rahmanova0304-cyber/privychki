@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=72';
+import * as S from './store.js?v=73';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=72';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=73';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -170,7 +170,7 @@ function block(kind, title, items, date) {
   const map = { s: ['goals', ICON.goal], h: ['habits', ICON.habit], t: ['tasks', ICON.task], e: ['events', ICON.event] }[kind];
   const done = items.filter((i) => i.s === 'done').length;
   const rows = items.slice().sort((a, b) => order(a) - order(b)).map((i) => itemRow(i, date)).join('');
-  return `<div class="blk ${map[0]}"><div class="bh">${map[1]}<b>${title}</b>${items.length ? `<span class="cnt">${done} из ${items.length}</span>` : ''}<button class="plus" data-go="${kind === 'e' ? '#/event/new?date=' + date : '#/pick/' + kind + '/' + date}">+</button></div>${rows ? `<div class="rows">${rows}</div>` : ''}</div>`;
+  return `<div class="blk ${map[0]}"><div class="bh">${map[1]}<b>${title}${items.length ? ` <span class="bh-n${done === items.length ? ' full' : ''}">${done} из ${items.length}</span>` : ''}</b><button class="plus" data-go="${kind === 'e' ? '#/event/new?date=' + date : '#/pick/' + kind + '/' + date}">+</button></div>${rows ? `<div class="rows">${rows}</div>` : ''}</div>`;
 }
 
 // ---------- ДЕНЬ ----------
