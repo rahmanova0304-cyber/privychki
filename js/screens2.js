@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=71';
+import * as S from './store.js?v=72';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=71';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=71';
-import { aiBreakdownGoal } from './ai.js?v=71';
+  MONTHS_NOM, WD } from './util.js?v=72';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=72';
+import { aiBreakdownGoal } from './ai.js?v=72';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -386,8 +386,8 @@ export function dreamScreen(id) {
   const d = S.dreamById(id);
   if (!d) return { html: `<section class="scr">${top('Мечта')}<div class="body"><p class="small">Мечта удалена.</p></div></section>` };
   const g = d.goalId && S.goalById(d.goalId), ct = d.cameTrue;
-  const html = `<section class="scr">${top('Мечта', { right: menu([['del', 'Удалить мечту', 'цель, если есть, останется', true]]) })}<div class="body">
-    <div class="dr-head"><span class="dr-ic">${ICON.dream.replace('<svg>', '<svg viewBox="0 0 24 24">')}</span><b>${esc(d.title)}</b><small>мечта с ${d.createdAt.slice(0, 4)} года</small></div>
+  const html = `<section class="scr">${top('Мечта', { right: menu([['rename', 'Изменить название', 'или просто нажми на название'], ['del', 'Удалить мечту', 'цель, если есть, останется', true]]) })}<div class="body">
+    <div class="dr-head"><span class="dr-ic">${ICON.dream.replace('<svg>', '<svg viewBox="0 0 24 24">')}</span><input class="dr-title" data-title value="${esc(d.title)}" enterkeyhint="done" aria-label="Название мечты"><small>мечта с ${d.createdAt.slice(0, 4)} года</small></div>
     ${field('Почему хочу', `<textarea class="inp area" rows="1" data-why placeholder="Чтобы помнить, зачем">${esc(d.why || '')}</textarea>`)}
     ${g ? `<div class="hb-goal" data-go="#/goalcard/${g.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Стала целью</small><b>${esc(g.title)}</b>${goalLine(g).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(g).pct}%"></i></div>` : ''}<span>${esc(goalLine(g).text)}</span></div><span class="chev">›</span></div>`
       : `<div class="addcard" style="--c:var(--accent)" data-go="#/goal/new?dream=${d.id}"><div class="addrow"><i></i>Сделать целью</div></div>`}
@@ -399,11 +399,16 @@ export function dreamScreen(id) {
     mount(root) {
       autoGrow(root); fillPhotos(root);
       root.querySelector('[data-why]').addEventListener('input', (e) => S.saveDream(d.id, { why: e.target.value }));
+      // название правится прямо в шапке; пустое не сохраняем
+      const t = root.querySelector('[data-title]');
+      t.addEventListener('change', () => { const v = t.value.trim(); if (v) S.saveDream(d.id, { title: v }); else t.value = d.title; });
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter') t.blur(); });
       root.querySelectorAll('[data-ct]').forEach((i) => i.addEventListener('change', () => { d.cameTrue[i.dataset.ct] = i.value; S.save(); }));
       bindPhotoInput(root, (ids) => { d.cameTrue.photos = [...(d.cameTrue.photos || []), ...ids].slice(0, 6); S.save(); re(); });
     },
     actions: {
       menu: menuAct,
+      rename: (el) => { el.parentElement.hidden = true; const t = document.querySelector('[data-title]'); t.focus(); t.select(); },
       del: (el, go) => { if (confirm('Удалить мечту?')) { S.deleteDream(d.id); go('back'); } },
       came: (el, go, render) => { if (d.cameTrue) { if (!confirm('Снять отметку «Сбылось»?')) return; d.cameTrue = null; } else d.cameTrue = { date: today(), text: '', photos: [] }; S.save(); render(); },
       delph: (el, go, render) => { d.cameTrue.photos = d.cameTrue.photos.filter((x) => x !== el.dataset.id); S.deletePhoto(el.dataset.id); S.save(); render(); },
