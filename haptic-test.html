@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Проверка вибрации</title>
+<style>
+  body { font: 17px/1.4 -apple-system, system-ui, sans-serif; background: #f7f5fe; color: #1c1938; margin: 0; padding: 24px 16px 40px }
+  h1 { font-size: 24px; margin: 0 0 6px }
+  p { margin: 0 0 20px; color: #7c7894; font-size: 15px }
+  button, .real { display: flex; align-items: center; justify-content: space-between; width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 16px; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 6px 20px -12px rgba(60, 40, 140, .35); font: inherit; color: inherit; text-align: left }
+  b { color: #7556ee; font-size: 22px; min-width: 28px }
+  .off { position: fixed; left: -100px; top: 0; opacity: 0 }
+</style>
+</head>
+<body>
+<h1>Проверка вибрации</h1>
+<p>Нажмите по очереди каждую кнопку и запомните, после каких номеров телефон слегка «тикнул».</p>
+
+<button id="b1"><span>Скрытый переключатель в head (как сейчас в приложении)</span><b>1</b></button>
+<button id="b2"><span>Скрытый переключатель в body, за краем экрана</span><b>2</b></button>
+<button id="b3"><span>Переключатель, который остаётся на странице</span><b>3</b></button>
+<button id="b4"><span>navigator.vibrate</span><b>4</b></button>
+<label class="real"><span>Настоящий переключатель — нажмите на него</span><input type="checkbox" switch></label>
+
+<script>
+  // 1 — label с display:none в head, клик по label
+  document.getElementById('b1').addEventListener('click', () => {
+    const l = document.createElement('label'), i = document.createElement('input');
+    i.type = 'checkbox'; i.setAttribute('switch', ''); l.style.display = 'none'; l.appendChild(i);
+    document.head.appendChild(l); l.click(); l.remove();
+  });
+  // 2 — label в body, видимый, но за краем экрана
+  document.getElementById('b2').addEventListener('click', () => {
+    const l = document.createElement('label'), i = document.createElement('input');
+    i.type = 'checkbox'; i.setAttribute('switch', ''); l.className = 'off'; l.appendChild(i);
+    document.body.appendChild(l); l.click(); setTimeout(() => l.remove(), 300);
+  });
+  // 3 — постоянный переключатель за краем экрана, кликаем по его label
+  const keep = document.createElement('label'), ki = document.createElement('input');
+  ki.type = 'checkbox'; ki.setAttribute('switch', ''); keep.className = 'off'; keep.appendChild(ki); document.body.appendChild(keep);
+  document.getElementById('b3').addEventListener('click', () => keep.click());
+  // 4 — стандартная вибрация (на iPhone обычно не работает)
+  document.getElementById('b4').addEventListener('click', () => { if (navigator.vibrate) navigator.vibrate(15); });
+</script>
+</body>
+</html>
