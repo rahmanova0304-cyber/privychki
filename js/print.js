@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=84';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=84';
-import { top, field } from './screens.js?v=84';
-import { aiYearText } from './ai.js?v=84';
+import * as S from './store.js?v=85';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=85';
+import { top, field } from './screens.js?v=85';
+import { aiYearText } from './ai.js?v=85';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
