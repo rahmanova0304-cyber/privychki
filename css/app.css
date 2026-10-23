@@ -613,9 +613,8 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hub-m b, .hub-b b { font-size: 15px; font-weight: 500 }
 .hub-m small, .hub-b small { font-size: 13px; color: var(--muted) }
 .hub-m, .hub-b { background: var(--card); box-shadow: 0 2px 10px -4px rgba(60, 40, 140, .25); height: 96px }
-/* нижние плитки папки — по центру, как Неделя / Месяц / Год; значки одной высоты */
-.fld .hub-m, .fld .hub-b { height: auto; align-items: center; text-align: center; justify-content: flex-start; gap: 6px; padding: 12px 6px }
-.fld .hub-m div, .fld .hub-b div { align-items: center }
+/* нижние плитки папки: текст слева, значки одной высоты — названия стоят на одной линии */
+.fld .hub-m, .fld .hub-b { height: auto; justify-content: flex-start; gap: 10px }
 .fld .hub-ic, .fld .hub-book { height: 34px }
 .fld .hub-ic { width: 34px }
 .hub-m .hub-ic { background: var(--e-bg) }
