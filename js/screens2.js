@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=89';
+import * as S from './store.js?v=90';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=89';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=89';
-import { aiBreakdownGoal } from './ai.js?v=89';
+  MONTHS_NOM, WD } from './util.js?v=90';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=90';
+import { aiBreakdownGoal } from './ai.js?v=90';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -426,7 +426,7 @@ const lv = (p) => p >= 85 ? 4 : p >= 70 ? 3 : p >= 50 ? 2 : 1;
 export function summaryScreen(period, key) {
   const t = today();
   let from, to, label, prevKey, nextKey, yearKey = null;
-  if (period === 'w') { from = weekStart(key || t); to = addDays(from, 6); label = fmtDMshort(from) + ' – ' + fmtDMshort(to); prevKey = addDays(from, -7); nextKey = addDays(from, 7); }
+  if (period === 'w') { from = weekStart(key || t); to = addDays(from, 6); label = from.slice(5, 7) === to.slice(5, 7) ? parse(from).getDate() + '–' + fmtDMshort(to) : fmtDMshort(from) + ' – ' + fmtDMshort(to); prevKey = addDays(from, -7); nextKey = addDays(from, 7); }
   else if (period === 'm') {
     key = key || t.slice(0, 7); const [y, m] = key.split('-').map(Number); from = key + '-01'; to = key + '-' + String(new Date(y, m, 0).getDate()).padStart(2, '0'); label = MONTHS_NOM[m - 1] + ' ' + y;
     const pm = new Date(y, m - 2, 1), nm = new Date(y, m, 1); prevKey = pm.getFullYear() + '-' + String(pm.getMonth() + 1).padStart(2, '0'); nextKey = nm.getFullYear() + '-' + String(nm.getMonth() + 1).padStart(2, '0');
@@ -484,9 +484,10 @@ export function summaryScreen(period, key) {
   const rk = period + ':' + (period === 'w' ? from : key), q = { w: 'Что получилось лучше всего?', m: 'Что изменить в следующем месяце?', y: 'Письмо себе через год' }[period];
   const coach = S.state.ai && S.state.ai.key ? `<div class="card"><div class="h3">Помощник</div><p class="small" style="margin:0">Разберёт ${period === 'w' ? 'неделю' : period === 'm' ? 'месяц' : 'год'}: что получилось, где сбивалась, что поменять.</p><span class="link" data-go="#/ai?ask=${encodeURIComponent('Разбор: ' + label)}&from=${from}&to=${to}">Спросить</span></div>` : '';
   const foot = period === 'w' ? `<div class="foot"><button class="btn pri" data-go="#/day/${addDays(from, 7)}">Заполнить следующую неделю</button></div>` : period === 'y' ? `<div class="foot"><button class="btn pri" data-go="#/print?y=${key}">Книга года</button></div>` : '';
-  const html = `<section class="scr">${top('Итоги')}<div class="body">
+  // период со стрелками — справа в шапке, на одной линии с «Итоги»
+  const pnav = `<div class="weekhead pnav"><span data-go="#/summary/${period}/${prevKey}" data-replace>‹</span>${label}<span data-go="#/summary/${period}/${nextKey}" data-replace>›</span></div>`;
+  const html = `<section class="scr">${top('Итоги', { right: pnav })}<div class="body">
     <div class="seg">${[['w', 'Неделя'], ['m', 'Месяц'], ['y', 'Год']].map(([k, l]) => `<span class="${period === k ? 'on' : ''}" data-go="#/summary/${k}" data-replace>${l}</span>`).join('')}</div>
-    <div class="weekhead" style="justify-content:center"><span data-go="#/summary/${period}/${prevKey}" data-replace>‹</span>${label}<span data-go="#/summary/${period}/${nextKey}" data-replace>›</span></div>
     ${cover}${hlHtml}<div class="h3" style="margin-top:6px">Цифры</div>${gHtml}${hHtml}${tHtml}${eHtml}
     <div class="notecard"><b>${q}</b><textarea class="inp area" rows="1" data-refl placeholder="Напиши здесь…">${esc(S.state.reflections[rk] || '')}</textarea></div>
     ${coach}
