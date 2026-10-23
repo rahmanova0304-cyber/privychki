@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=74';
+import * as S from './store.js?v=75';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=74';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=75';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -468,7 +468,7 @@ export function listScreen() {
   const html = `<section class="scr">
   ${top('Список · ' + y, { back: false, right: (S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : '') + `<button class="ib ibsearch" data-go="#/search" title="Поиск">${ICON.search}</button>` })}
   <div class="body">
-    <div class="jump">${[['goals', 'Цели', goals.length, 'g'], ['habits', 'Привычки', habits.length, 'h'], ['tasks', 'Задачи', open.length, 't'], ['events', 'События', evs.length, 'e']].map(([k, l, n, c]) => `<span data-act="jump" data-k="${k}" style="--c:var(--${c});--cb:var(--${c}-bg)">${l}${n ? ` <i>${n}</i>` : ''}</span>`).join('')}</div>
+    <div class="jump">${[['goals', 'Цели', goals.length, 'g'], ['habits', 'Привычки', habits.length, 'h'], ['tasks', 'Задачи', open.length, 't'], ['events', 'События', evs.length, 'e']].map(([k, l, n, c]) => `<span data-act="jump" data-k="${k}" style="--c:var(--${c});--cb:var(--${c}-bg)">${l}${n ? ` <i>${n > 99 ? '99+' : n}</i>` : ''}</span>`).join('')}</div>
     <div class="blk goals" data-sec="goals"><div class="bh">${ICON.goal}<b>Цели</b><button class="plus" data-go="#/goal/new">+</button></div>
       ${grows ? `<div class="gcards">${grows}</div>` : '<div class="empty">Большое, к чему идёшь шагами: найти работу, сыграть концерт…</div>'}
       ${arch('Архив', garch.map((g) => `<div class="row arch-row" data-go="#/goalcard/${g.id}"><span class="ck done"></span><div class="t"><b>${esc(g.title)}</b><small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : 'в архиве с ' + fmtDM(g.archivedAt)}</small></div></div>`))}
