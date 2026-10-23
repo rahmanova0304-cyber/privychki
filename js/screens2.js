@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=76';
+import * as S from './store.js?v=77';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=76';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=76';
-import { aiBreakdownGoal } from './ai.js?v=76';
+  MONTHS_NOM, WD } from './util.js?v=77';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=77';
+import { aiBreakdownGoal } from './ai.js?v=77';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -392,7 +392,7 @@ export function dreamScreen(id) {
     ${field('Почему хочу', `<textarea class="inp area" rows="1" data-why placeholder="Чтобы помнить, зачем">${esc(d.why || '')}</textarea>`)}
     ${g ? `<div class="hb-goal" data-go="#/goalcard/${g.id}"><span class="hb-gi">${ICON.goal}</span><div class="hb-gt"><small>Стала целью</small><b>${esc(g.title)}</b>${goalLine(g).pct != null ? `<div class="hb-gbar"><i style="width:${goalLine(g).pct}%"></i></div>` : ''}<span>${esc(goalLine(g).text)}</span></div><span class="chev">›</span></div>`
       : `<div class="addcard" style="--c:var(--accent)" data-go="#/goal/new?dream=${d.id}"><div class="addrow"><i></i>Сделать целью</div></div>`}
-    <div class="card plain"><div class="row" style="padding:0" data-act="came"><span class="ck ${ct ? 'done' : ''}"></span><div class="t"><b>Сбылось</b><small>${ct ? fmtDM(ct.date) + ' ' + ct.date.slice(0, 4) : 'отметь — добавишь дату, мысли и фото'}</small></div></div>
+    <div class="card plain"><div class="row" style="padding:0" data-act="came"><span class="ck ${ct ? 'done' : ''}" style="--c:var(--d)"></span><div class="t"><b>Сбылось</b><small>${ct ? fmtDM(ct.date) + ' ' + ct.date.slice(0, 4) : 'отметь — добавишь дату, мысли и фото'}</small></div></div>
       ${ct ? `<input class="inp" type="date" data-ct="date" value="${ct.date}"><textarea class="inp area" rows="1" data-ct="text" placeholder="Как это было">${esc(ct.text || '')}</textarea>${photoGrid(ct.photos || [], 'delph')}` : ''}</div>
   </div></section>`;
   return {
@@ -420,7 +420,7 @@ export function dreamScreen(id) {
 // ---------- ИТОГИ: неделя · месяц · год ----------
 
 const VERDICT_P = (p, w) => p >= 90 ? 'Отличн' + w : p >= 70 ? 'Хорош' + w : p >= 40 ? 'Неплох' + w : 'Трудн' + w;
-const HL_IC = { goal: ['var(--g-bg)', 'var(--g)', ICON.goal], habit: ['var(--h-bg)', 'var(--h)', ICON.habit], star: ['var(--soft)', 'var(--accent)', ICON.star], trip: ['var(--e-bg)', 'var(--e)', ICON.plane], dream: ['var(--soft)', 'var(--accent)', ICON.dream], own: ['var(--soft)', 'var(--accent)', ICON.star] };
+const HL_IC = { goal: ['var(--g-bg)', 'var(--g)', ICON.goal], habit: ['var(--h-bg)', 'var(--h)', ICON.habit], star: ['var(--soft)', 'var(--accent)', ICON.star], trip: ['var(--e-bg)', 'var(--e)', ICON.plane], dream: ['var(--d-bg)', 'var(--d)', ICON.dream], own: ['var(--soft)', 'var(--accent)', ICON.star] };
 const lv = (p) => p >= 85 ? 4 : p >= 70 ? 3 : p >= 50 ? 2 : 1;
 
 export function summaryScreen(period, key) {

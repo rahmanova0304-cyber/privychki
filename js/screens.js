@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=76';
+import * as S from './store.js?v=77';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=76';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=77';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -635,7 +635,7 @@ export function lifeScreen() {
   <div class="body">
     ${dec ? `<button class="btn pri" style="flex:none" data-go="#/list">Планирование ${new Date().getFullYear() + 1}</button>` : ''}
     <div class="card"><div class="h3">Календарь жизни<span class="small">${hor} лет</span></div><div class="life">${cells}</div>
-      <div class="legend"><span style="--c:color-mix(in srgb, var(--muted) 50%, var(--card))">Прошло</span><span style="--c:var(--accent)">Сейчас · ${a} ${plural(a, 'год', 'года', 'лет')}</span><span style="--c:color-mix(in srgb, var(--accent) 35%, var(--card))">До ${lm}</span><span style="--c:var(--soft)">После</span></div></div>
+      <div class="legend"><span style="--c:color-mix(in srgb, var(--muted) 55%, var(--soft))">Прошло</span><span style="--c:var(--accent)">Сейчас · ${a} ${plural(a, 'год', 'года', 'лет')}</span><span style="--c:color-mix(in srgb, var(--accent) 35%, var(--card))">До ${lm}</span><span style="--c:var(--soft)">После</span></div></div>
     <div class="blk dreams"><div class="bh">${ICON.dream}<b>Мои мечты</b><button class="plus" data-act="adddream">+</button></div>
       <div class="rows">${dreams}<div class="row" data-dreamnew hidden><input class="inp" data-dreaminp placeholder="О чём мечтаешь?"></div></div>
       ${!dreams ? '<div class="empty" data-dreamempty>Мечты — без дат и плана. Например: побывать на Байкале.</div>' : ''}

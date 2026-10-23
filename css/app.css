@@ -3,7 +3,7 @@
   --bg: #f4f3f8; --scr2: #f7f5fe; --card: #ffffff; --line: #ece9f4;
   --ink: #1c1938; --muted: #7c7894; --accent: #7556ee; --accent2: #6243e4; --on-accent: #ffffff; --soft: #e6dffc;
   --g: #e0559b; --g-bg: #fbd7ea; --h: #9466ef; --h-bg: #e5d9fc; --t: #3b80ee; --t-bg: #d6e4fb; --e: #1d9fd6; --e-bg: #cfeaf8;
-  --warn: #e5484d; --warn-bg: #fde4e4; --good: #23905d; --good-bg: #e0f3e8;
+  --warn: #e5484d; --warn-bg: #fde4e4; --good: #23905d; --good-bg: #e0f3e8; --d: #e9825a; --d-bg: #fde3d5;
   --note: #fff3c4; --note-ink: #574300; --hatch: #ece8f6; --shadow: 0 6px 20px -12px rgba(60, 40, 140, .25); --toast: var(--card);
   --ui: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, monospace;
@@ -15,7 +15,7 @@
     --bg: #2a2638; --scr2: #15131d; --card: #201d2b; --line: #2f2b3d;
     --ink: #ece9f6; --muted: #9d98b4; --accent: #8a6ff6; --accent2: #7a5cf0; --on-accent: #ffffff; --soft: #2d2647;
     --g: #ee6cad; --g-bg: #3b2333; --h: #a684f6; --h-bg: #2e2546; --t: #5c98f3; --t-bg: #1d2a41; --e: #3db2e4; --e-bg: #16303e;
-    --warn: #f0666b; --warn-bg: #3b2023; --good: #43b880; --good-bg: #1a3428;
+    --warn: #f0666b; --warn-bg: #3b2023; --good: #43b880; --good-bg: #1a3428; --d: #f2976f; --d-bg: #3b2620;
     --note: #3a3219; --note-ink: #f1dc94; --hatch: #272334; --shadow: 0 6px 20px -12px rgba(0, 0, 0, .7); --toast: #2c2840;
     color-scheme: dark;
   }
@@ -24,7 +24,7 @@
     --bg: #2a2638; --scr2: #15131d; --card: #201d2b; --line: #2f2b3d;
     --ink: #ece9f6; --muted: #9d98b4; --accent: #8a6ff6; --accent2: #7a5cf0; --on-accent: #ffffff; --soft: #2d2647;
     --g: #ee6cad; --g-bg: #3b2333; --h: #a684f6; --h-bg: #2e2546; --t: #5c98f3; --t-bg: #1d2a41; --e: #3db2e4; --e-bg: #16303e;
-    --warn: #f0666b; --warn-bg: #3b2023; --good: #43b880; --good-bg: #1a3428;
+    --warn: #f0666b; --warn-bg: #3b2023; --good: #43b880; --good-bg: #1a3428; --d: #f2976f; --d-bg: #3b2620;
     --note: #3a3219; --note-ink: #f1dc94; --hatch: #272334; --shadow: 0 6px 20px -12px rgba(0, 0, 0, .7); --toast: #2c2840;
     color-scheme: dark;
 }
@@ -72,7 +72,9 @@ button { font: inherit; color: inherit }
 .blk.habits { --c: var(--h); --cb: var(--h-bg) }
 .blk.tasks { --c: var(--t); --cb: var(--t-bg) }
 .blk.events { --c: var(--e); --cb: var(--e-bg) }
-.blk.dreams { --c: var(--accent); --cb: var(--soft) }
+.blk.dreams { --c: var(--d); --cb: var(--d-bg) }
+/* «Жизнь» — белые карточки; мечты отмечены персиковым только в звезде и «+», без цветной полосы */
+.blk.dreams .bh { background: var(--card); border-bottom: 1px solid var(--line) }
 .bh { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: linear-gradient(180deg, var(--cb), color-mix(in srgb, var(--cb) 80%, var(--card))) }
 .bh-n { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums }
 .bh-n.full { color: var(--c); font-weight: 500 }
@@ -369,7 +371,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .bk-status { flex-direction: row; align-items: center; gap: 12px }
 .warn-t { color: var(--warn) !important }
 .dr-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 8px 0 4px; flex: none }
-.dr-ic { width: 56px; height: 56px; border-radius: 50% }
+.dr-ic { width: 56px; height: 56px; border-radius: 50%; background: var(--d-bg); color: var(--d) }
 .dr-ic svg { width: 26px; height: 26px }
 .dr-head b, .dr-title { font-size: 24px; font-weight: 500 }
 .dr-title { width: 100%; text-align: center; font-family: inherit; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 2px 8px; outline: none }
@@ -470,7 +472,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .cols12 i.f { background: var(--soft) }
 .life { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px }
 .life i { aspect-ratio: 1; border-radius: 7px; font-size: 11px; font-weight: 500; display: flex; padding: 3px 4px; font-style: normal; cursor: pointer }
-.life i.past { background: color-mix(in srgb, var(--muted) 50%, var(--card)); color: #fff }
+.life i.past { background: color-mix(in srgb, var(--muted) 55%, var(--soft)); color: #fff }
 .life i.now { background: var(--accent); color: #fff }
 .life i.pre { background: color-mix(in srgb, var(--accent) 35%, var(--card)); color: var(--ink) }
 .life i.post { background: var(--soft); color: var(--muted) }
@@ -590,10 +592,10 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .lg-l > span { font-size: 13px; color: var(--muted) }
 .ring small:empty { display: none }
 /* Жизнь: итоги, воспоминания, книга года */
-.hub { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px 10px 12px; border-radius: 14px; background: var(--e-bg) }
+.hub { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px 10px 12px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow) }
 .hub-lbl { font-size: 16px; font-weight: 500; padding: 2px 4px 0 }
 .hub-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
-.hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: var(--card); box-shadow: 0 2px 8px -4px rgba(29, 159, 214, .35); cursor: pointer; position: relative }
+.hub-t { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 12px 6px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 7%, var(--card)); cursor: pointer; position: relative }
 .hub-t b { font-size: 15px; font-weight: 500 }
 .hub-t small { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .hub-t em { font-style: normal; font-size: 16px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums }
@@ -605,10 +607,11 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .hub-m div, .hub-b div { display: flex; flex-direction: column; position: relative }
 .hub-m b, .hub-b b { font-size: 15px; font-weight: 500 }
 .hub-m small, .hub-b small { font-size: 13px; color: var(--muted) }
-.hub-m { background: var(--soft) }
+.hub-m, .hub-b { background: var(--card) }
+.hub-m .hub-ic { background: var(--e-bg) }
+.hub-m .hub-ic svg { stroke: var(--e) }
 .hub-ic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--card); position: relative }
 .hub-ic svg { width: 17px; height: 17px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linejoin: round }
-.hub-b { background: var(--e-bg) }
 .hub-book { width: 30px; height: 38px; border-radius: 2px 5px 5px 2px; background: var(--accent); position: relative; display: grid; place-items: end center; padding-bottom: 5px; box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent) 35%, var(--card)) }
 .hub-book i { position: absolute; left: 3px; top: 0; bottom: 0; width: 1.5px; background: rgba(255, 255, 255, .45) }
 .hub-book em { font-style: normal; font-size: 8px; font-weight: 600; color: #fff; letter-spacing: .02em }
