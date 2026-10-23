@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=87';
+import * as S from './store.js?v=88';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=87';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=87';
-import { aiBreakdownGoal } from './ai.js?v=87';
+  MONTHS_NOM, WD } from './util.js?v=88';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=88';
+import { aiBreakdownGoal } from './ai.js?v=88';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -377,7 +377,7 @@ export function memoriesScreen(params) {
       <div class="opts">${years.map((x) => `<span class="${x === y && !star ? 'on' : ''}" data-go="#/memories?y=${x}">${x}</span>`).join('')}<span class="${star ? 'on' : ''}" data-go="#/memories?y=${y}&star=${star ? 0 : 1}">${ICON.star}Значимые</span></div>
       ${html || '<p class="small">Здесь соберутся «Что запомнилось» из дней, мысли из событий и поездок. Прошлые годы можно дописать через «+».</p>'}
     </div></section>`,
-    mount(root) { root.querySelectorAll('[data-photo]').forEach(async (el) => { const u = await S.photoUrl(el.dataset.photo, el.dataset.size || 'thumb'); if (u) el.style.background = `url(${u}) center / cover`; }); },
+    mount(root) { fillPhotos(root); },
   };
 }
 

@@ -204,7 +204,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .mm-month span { font-size: 13px; font-weight: 500; color: var(--accent); background: var(--soft); border-radius: 99px; padding: 2px 9px }
 .mm-month::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--accent) 20%, transparent) }
 .mm-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; flex: none }
-.mm-cover { position: relative; aspect-ratio: 16 / 9 !important; border-radius: 0 !important; max-width: none !important }
+.mm-cover.ph { position: relative; aspect-ratio: 4 / 3; border-radius: 0 !important; max-width: none !important }
 .mm-date, .mm-count, .mm-star { position: absolute; font-size: 13px; font-weight: 500; padding: 3px 9px; border-radius: 99px; background: rgba(255, 255, 255, .92); color: #1c1938 }
 .mm-date { left: 10px; top: 10px }
 .mm-star { right: 10px; top: 10px; color: var(--accent) }
@@ -567,7 +567,11 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   .pg.cover b { display: block; font-size: 72pt; font-weight: 200; line-height: 1 } .pg.cover span { display: block; font-size: 20pt } .pg.cover small { font-size: 11pt; opacity: .85 }
   .pg .mem { padding: 0 } .pg .mem li { list-style: none; margin: 1.2mm 0 } .pg p { margin: 0 0 3mm }
 }
-.mm-cover.ph { aspect-ratio: 16 / 9; background: var(--hatch) }
+.mm-cover.ph { background: var(--hatch) }
+/* просмотр фото на весь экран */
+.viewer { position: fixed; inset: 0; z-index: 60; background: rgba(10, 8, 20, .94); display: grid; place-items: center; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) }
+.viewer img { max-width: 100%; max-height: 100%; object-fit: contain }
+.viewer i { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, .16); color: #fff; display: grid; place-items: center; font-style: normal; font-size: 18px }
 .row > input.inp { flex: 1 }
 .bh > input.inp { flex: 1 }
 /* iPhone: нажатия по span/div срабатывают только у элементов с cursor: pointer */

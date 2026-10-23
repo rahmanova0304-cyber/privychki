@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=87';
-import * as V from './screens.js?v=87';
-import * as W from './screens2.js?v=87';
-import { aiScreen } from './ai.js?v=87';
-import { printScreen } from './print.js?v=87';
-import { today } from './util.js?v=87';
+import * as S from './store.js?v=88';
+import * as V from './screens.js?v=88';
+import * as W from './screens2.js?v=88';
+import { aiScreen } from './ai.js?v=88';
+import { printScreen } from './print.js?v=88';
+import { today } from './util.js?v=88';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -113,6 +113,20 @@ function go(target, replace, reset) {
   else history.pushState({ depth }, '', target);
   render();
 }
+
+// Нажатие на фото — открыть его на весь экран (крестик «удалить» на фото работает как раньше).
+app.addEventListener('click', (e) => {
+  const ph = e.target.closest('[data-photo]');
+  if (!ph || e.target.closest('[data-act]') || ph.closest('.a4, .bk')) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  S.photoUrl(ph.dataset.photo, 'full').then((u) => {
+    if (!u) return;
+    const v = document.createElement('div');
+    v.className = 'viewer'; v.innerHTML = `<img src="${u}" alt=""><i>✕</i>`;
+    v.addEventListener('click', () => v.remove());
+    document.body.appendChild(v);
+  });
+}, true);
 
 app.addEventListener('click', (e) => {
   const act = e.target.closest('[data-act]');
