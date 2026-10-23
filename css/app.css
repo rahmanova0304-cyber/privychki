@@ -47,6 +47,9 @@ button { font: inherit; color: inherit }
 .ptitle h1 { font-size: 21px; line-height: 1.2; margin: 0; font-weight: 500; text-wrap: balance }
 .ptitle p { color: var(--muted); font-size: 14px; margin: 3px 0 0 }
 
+/* Главные вкладки (Список, День, Жизнь) — большой заголовок, как в приложениях iPhone; внутренние экраны — 17 */
+.top.main .ttl { font-size: 24px; font-weight: 600; letter-spacing: -.01em }
+.top.main .weekhead span { font-size: 24px }
 .weekhead { display: flex; align-items: center; gap: 2px; padding-left: 0 }
 .weekhead span { cursor: pointer; padding: 0 8px; font-size: 19px; color: var(--muted); font-weight: 400 }
 .week { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--card); border-radius: 12px; padding: 8px 4px; box-shadow: var(--shadow) }

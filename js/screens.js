@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=69';
+import * as S from './store.js?v=70';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=69';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=70';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -39,7 +39,7 @@ export function applyTheme(t = (S.state.profile || {}).theme || '') {
 // ---------- общие куски ----------
 
 export const top = (title, { back = true, right = '' } = {}) =>
-  `<div class="top">${back ? '<button class="ib" data-act="back">‹</button>' : ''}<div class="ttl"${back ? '' : ' style="padding-left:4px"'}>${title}</div>${right}</div>`;
+  `<div class="top${back ? '' : ' main'}">${back ? '<button class="ib" data-act="back">‹</button>' : ''}<div class="ttl"${back ? '' : ' style="padding-left:4px"'}>${title}</div>${right}</div>`;
 
 export const tabbar = (on) => '<nav class="tabbar">' + [['list', 'Список'], ['today', 'День'], ['life', 'Жизнь']].map(([k, t]) =>
   `<button data-go="${k === 'today' ? '#/day' : '#/' + k}" class="${k === on ? 'on' : ''}"><svg viewBox="0 0 24 24">${TAB_ICON[k]}</svg>${t}</button>`).join('') + '</nav>';
@@ -210,7 +210,7 @@ export function dayScreen(date) {
     : `<div class="notecard"><b>Что запомнилось ${date === t ? 'сегодня' : 'в этот день'}?</b><textarea class="inp area" data-bind="memory" rows="1" placeholder="Напиши здесь…">${esc(d.memory)}</textarea>${photoGrid(d.photos, 'dayphoto')}</div>`;
 
   const html = `<section class="scr">
-  <div class="top"><div class="ttl">${weekHead(date, 'week')}</div>${S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : ''}</div>
+  <div class="top main"><div class="ttl">${weekHead(date, 'week')}</div>${S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : ''}</div>
   <div class="body">
     ${weekStrip(date)}
     ${banners}
