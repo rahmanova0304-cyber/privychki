@@ -592,6 +592,10 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .lg-l > span { font-size: 13px; color: var(--muted) }
 .ring small:empty { display: none }
 /* Жизнь: итоги, воспоминания, книга года */
+/* заголовок-глава «2026 · этот год» над итогами, воспоминаниями и книгой */
+.yr-h { display: flex; align-items: baseline; gap: 8px; padding: 6px 4px 0; flex: none }
+.yr-h b { font-size: 24px; font-weight: 600 }
+.yr-h span { font-size: 13px; color: var(--muted) }
 .hub { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px 10px 12px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow) }
 .hub-lbl { font-size: 16px; font-weight: 500; padding: 2px 4px 0 }
 .hub-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
