@@ -3,45 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Проверка вибрации</title>
+<title>Проверка вибрации 2</title>
 <style>
   body { font: 17px/1.4 -apple-system, system-ui, sans-serif; background: #f7f5fe; color: #1c1938; margin: 0; padding: 24px 16px 40px }
   h1 { font-size: 24px; margin: 0 0 6px }
   p { margin: 0 0 20px; color: #7c7894; font-size: 15px }
-  button, .real { display: flex; align-items: center; justify-content: space-between; width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 16px; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 6px 20px -12px rgba(60, 40, 140, .35); font: inherit; color: inherit; text-align: left }
-  b { color: #7556ee; font-size: 22px; min-width: 28px }
-  .off { position: fixed; left: -100px; top: 0; opacity: 0 }
+  .row { position: relative; display: flex; align-items: center; gap: 14px; margin: 0 0 12px; padding: 16px; border-radius: 14px; background: #fff; box-shadow: 0 6px 20px -12px rgba(60, 40, 140, .35) }
+  .ck { position: relative; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #7556ee; flex: none }
+  .ck.on { background: #7556ee }
+  .ck input { position: absolute; inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px); margin: 0; cursor: pointer }
+  .o0 input { opacity: 0 }
+  .o1 input { opacity: .01 }
+  b { color: #7556ee; font-size: 22px; margin-left: auto }
+  #log { color: #7c7894; font-size: 14px }
 </style>
 </head>
 <body>
-<h1>Проверка вибрации</h1>
-<p>Нажмите по очереди каждую кнопку и запомните, после каких номеров телефон слегка «тикнул».</p>
+<h1>Проверка вибрации 2</h1>
+<p>Нажмите прямо на кружок в каждой строке. Кружок закрасится. Запомните, в каких строках был «тик».</p>
 
-<button id="b1"><span>Скрытый переключатель в head (как сейчас в приложении)</span><b>1</b></button>
-<button id="b2"><span>Скрытый переключатель в body, за краем экрана</span><b>2</b></button>
-<button id="b3"><span>Переключатель, который остаётся на странице</span><b>3</b></button>
-<button id="b4"><span>navigator.vibrate</span><b>4</b></button>
-<label class="real"><span>Настоящий переключатель — нажмите на него</span><input type="checkbox" switch></label>
+<div class="row"><span class="ck o0" data-n="1"><input type="checkbox" switch></span><span>Невидимый переключатель на кружке</span><b>1</b></div>
+<div class="row"><span class="ck o1" data-n="2"><input type="checkbox" switch></span><span>Почти невидимый переключатель на кружке</span><b>2</b></div>
+<div class="row"><span class="ck o0" data-n="3" data-prevent="1"><input type="checkbox" switch></span><span>Невидимый, но приложение «перехватывает» нажатие</span><b>3</b></div>
+<div class="row"><span class="ck" data-n="4"><input type="checkbox" switch style="opacity:1;inset:auto;width:auto;height:auto;position:static;margin-left:40px"></span><span>Видимый переключатель (для сравнения)</span><b>4</b></div>
+<p id="log"></p>
 
 <script>
-  // 1 — label с display:none в head, клик по label
-  document.getElementById('b1').addEventListener('click', () => {
-    const l = document.createElement('label'), i = document.createElement('input');
-    i.type = 'checkbox'; i.setAttribute('switch', ''); l.style.display = 'none'; l.appendChild(i);
-    document.head.appendChild(l); l.click(); l.remove();
+  document.addEventListener('click', (e) => {
+    const ck = e.target.closest('.ck');
+    if (!ck) return;
+    if (ck.dataset.prevent) e.preventDefault();
+    ck.classList.toggle('on');
+    document.getElementById('log').textContent = 'Нажата строка ' + ck.dataset.n;
   });
-  // 2 — label в body, видимый, но за краем экрана
-  document.getElementById('b2').addEventListener('click', () => {
-    const l = document.createElement('label'), i = document.createElement('input');
-    i.type = 'checkbox'; i.setAttribute('switch', ''); l.className = 'off'; l.appendChild(i);
-    document.body.appendChild(l); l.click(); setTimeout(() => l.remove(), 300);
-  });
-  // 3 — постоянный переключатель за краем экрана, кликаем по его label
-  const keep = document.createElement('label'), ki = document.createElement('input');
-  ki.type = 'checkbox'; ki.setAttribute('switch', ''); keep.className = 'off'; keep.appendChild(ki); document.body.appendChild(keep);
-  document.getElementById('b3').addEventListener('click', () => keep.click());
-  // 4 — стандартная вибрация (на iPhone обычно не работает)
-  document.getElementById('b4').addEventListener('click', () => { if (navigator.vibrate) navigator.vibrate(15); });
 </script>
 </body>
 </html>
