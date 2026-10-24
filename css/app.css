@@ -349,7 +349,8 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .mleg i { width: 14px; height: 5px; border-radius: 3px; background: var(--line) }
 .mleg i.ok { background: var(--h) } .mleg i.no { background: var(--warn) } .mleg i.off { height: 3px; opacity: .7 } .mleg i.fut { background: color-mix(in srgb, var(--h) 18%, var(--card)) }
 .grow { padding: 10px 0; display: flex; flex-direction: column; gap: 6px }
-.grow + .grow { border-top: 1px solid var(--line) }
+.grow + .grow, .gm-in + .grow { border-top: 1px solid var(--line) }
+.grow + .gm-in { padding-bottom: 10px }
 .gbar { position: relative; height: 5px; border-radius: 3px; background: var(--g-bg) }
 .gbar i { position: absolute; top: 0; bottom: 0; left: 0 }
 .gbar i.now { background: var(--g); border-radius: 3px }

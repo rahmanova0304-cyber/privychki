@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=98';
+import * as S from './store.js?v=99';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=98';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=98';
-import { aiBreakdownGoal } from './ai.js?v=98';
+  MONTHS_NOM, WD } from './util.js?v=99';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=99';
+import { aiBreakdownGoal } from './ai.js?v=99';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -489,15 +489,20 @@ export function summaryScreen(period, key) {
     const now = S.goalProgress(g), was = S.goalProgress(g, from), plus = now.pct - was.pct;
     const stepsDone = g.stages.flatMap((s) => s.steps).filter((x) => x.done && x.doneAt >= from && x.doneAt <= to).map((x) => x.title);
     const msNow = S.goalMeasure(g), msWas = S.goalMeasure(g, from);
+    // цель двигалась, если за период: новый результат меры, выполненный шаг или занятия по её привычке
+    const hs = S.goalHabits(g), hst = S.goalHabitStats(g, from, to);
+    const hTxt = hs.length && (hst.minutes || hst.days) ? esc(hs.map((h) => h.title).join(', ')) + ' · ' + [hst.minutes ? fmtMin(hst.minutes) : '', hst.days ? hst.days + ' ' + plural(hst.days, 'занятие', 'занятия', 'занятий') : ''].filter(Boolean).join(' · ') : '';
+    const line = (...xs) => xs.filter(Boolean).join(' · ') || 'не двигалась';
     if (msNow) {
       const nf = (v) => Number(v).toLocaleString('ru-RU'), moved = msNow.cur !== msWas.cur;
-      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div><small class="mrow-s">${moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : 'не двигалась'}</small></div>`;
+      // занималась, а результат за период не записан — тихая ссылка (только пока период не прошёл)
+      const ask = !moved && hTxt && g.status === 'active' && to >= t;
+      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div><small class="mrow-s">${line(moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : '', hTxt)}</small>${ask ? `<div><span class="link" data-act="mlog">Записать результат</span></div>` : ''}</div>${ask ? `<div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval data-gid="${g.id}" placeholder="Сколько сейчас${msNow.unit ? ', ' + esc(msNow.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
     }
     if (!now.total) {
-      const hs = S.goalHabits(g), st = S.goalHabitStats(g, from, to);
-      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${st.minutes ? fmtMin(st.minutes) : st.days ? st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : ''}</span></div><small class="mrow-s">${hs.length ? (st.minutes || st.days ? 'через привычку ' + esc(hs.map((h) => h.title).join(', ')) + (st.minutes && st.days ? ' · ' + st.days + ' ' + plural(st.days, 'занятие', 'занятия', 'занятий') : '') : 'не двигалась') : 'шагов пока нет'}</small></div>`;
+      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${hst.minutes ? fmtMin(hst.minutes) : hst.days ? hst.days + ' ' + plural(hst.days, 'занятие', 'занятия', 'занятий') : ''}</span></div><small class="mrow-s">${hs.length ? (hTxt ? 'через привычку ' + hTxt : 'не двигалась') : 'шагов пока нет'}</small></div>`;
     }
-    return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${now.pct}%</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, now.pct)}%"></i>${plus > 0 ? `<i class="tick" style="left:${was.pct}%"></i>` : ''}</div><small class="mrow-s">${plus > 0 ? `было ${was.pct}% → <b class="gplus">+${plus}%</b> · ${esc(stepsDone.join(', '))}` : 'не двигалась'}</small></div>`;
+    return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${now.pct}%</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, now.pct)}%"></i>${plus > 0 ? `<i class="tick" style="left:${was.pct}%"></i>` : ''}</div><small class="mrow-s">${line(plus > 0 ? `было ${was.pct}% → <b class="gplus">+${plus}%</b> · ${esc(stepsDone.join(', '))}` : '', hTxt)}</small></div>`;
   }).join('')}</div></div>` : '';
   // цифры: привычки
   const habits = S.state.habits.filter((h) => (h.createdAt || '') <= to && (h.status !== 'archived' || (h.archivedAt || '') >= from) && (period === 'y' || inDays.h.has(h.id)));
@@ -539,6 +544,8 @@ export function summaryScreen(period, key) {
       const w = root.querySelector('[data-word]'); if (w) w.addEventListener('change', () => { ym.word = w.value.trim(); S.save(); });
     },
     actions: {
+      mlog: (el) => { const r = el.closest('.grow').nextElementSibling; el.parentElement.hidden = true; r.hidden = false; r.querySelector('input').focus(); },
+      msave: (el, go, render) => { const inp = el.previousElementSibling; if (inp.value === '') return; S.logMeasure(inp.dataset.gid, Number(inp.value)); render(); },
       hide: (el, go, render) => { if (el.dataset.id.startsWith('x:')) ym.manual = ym.manual.filter((m) => 'x:' + m.id !== el.dataset.id); else ym.hidden.push(el.dataset.id); S.save(); render(); },
       own: (el, go, render) => { const v = prompt('Что ещё было главным в этом году?'); if (v && v.trim()) { ym.manual.push({ id: uid(), title: v.trim() }); S.save(); render(); } },
     },
