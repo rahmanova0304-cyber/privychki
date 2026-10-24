@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=100';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=101';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -538,7 +538,7 @@ export function nextOccurrence(t, from = today()) {
 export function saveGoal(data) {
   let g = data.id && goalById(data.id);
   if (!g) { g = { id: uid(), createdAt: today(), status: 'active', stages: [] }; state.goals.push(g); }
-  Object.assign(g, { title: data.title, description: data.description || '', deadline: data.deadline || null, dreamId: data.dreamId || null });
+  Object.assign(g, { title: data.title, description: data.description || '', deadline: data.deadline || null, dreamId: data.dreamId || null, mode: data.mode || g.mode || null });
   if ('measure' in data) g.measure = data.measure ? { ...data.measure, log: (g.measure && g.measure.log) || [] } : null;
   g.stages = data.stages.filter((st) => st.steps.some((s) => s.title.trim())).map((st) => ({ id: st.id || uid(), title: st.title, steps: st.steps.filter((s) => s.title.trim()).map((s) => {
     const old = g.stages.flatMap((x) => x.steps).find((o) => o.id === s.id);
@@ -548,6 +548,9 @@ export function saveGoal(data) {
   save();
   return g;
 }
+
+// Как идти к цели: шагами / к результату (мера) / навык (часы занятий из привычки)
+export const goalMode = (g) => g.mode || (g.measure ? (g.measure.kind === 'time' ? 'skill' : 'measure') : g.stages.length || !goalHabits(g).length ? 'steps' : 'skill');
 
 export function goalProgress(g, upTo) {
   const steps = g.stages.flatMap((s) => s.steps);
@@ -560,6 +563,12 @@ export function goalProgress(g, upTo) {
 export function goalMeasure(g, upTo) {
   const m = g.measure;
   if (!m || m.target == null) return null;
+  // навык: мера — часы занятий из привычек цели, растёт сама
+  if (m.kind === 'time') {
+    const to = upTo ? addDays(upTo, -1) : today();
+    const cur = to < g.createdAt ? 0 : Math.round(goalHabitStats(g, null, to).minutes / 6) / 10;
+    return { kind: 'time', unit: 'ч', start: 0, target: m.target, cur, pct: Math.min(100, Math.round(cur / m.target * 100)), log: [] };
+  }
   const log = (m.log || []).filter((x) => !upTo || x.date < upTo);
   const cur = log.length ? log[log.length - 1].value : m.start;
   const span = m.target - m.start;
@@ -568,7 +577,7 @@ export function goalMeasure(g, upTo) {
 }
 export function logMeasure(gid, value) {
   const g = goalById(gid), t = today();
-  if (!g || !g.measure) return;
+  if (!g || !g.measure || g.measure.kind === 'time') return;
   g.measure.log = (g.measure.log || []).filter((x) => x.date !== t).concat({ date: t, value });
   save();
 }
