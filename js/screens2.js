@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=97';
+import * as S from './store.js?v=98';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=97';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=97';
-import { aiBreakdownGoal } from './ai.js?v=97';
+  MONTHS_NOM, WD } from './util.js?v=98';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=98';
+import { aiBreakdownGoal } from './ai.js?v=98';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -475,8 +475,16 @@ export function summaryScreen(period, key) {
   }
   const hl = S.highlights(from, to, yearKey);
   const hlHtml = `<div class="card"><div class="h3">Главное за ${period === 'w' ? 'неделю' : period === 'm' ? 'месяц' : 'год'}</div>${hl.map((x) => { const [bg, c, ic] = HL_IC[x.icon] || HL_IC.own; return `<div class="hl"><span class="hl-i" style="background:${bg};color:${c}">${ic}</span><div class="t"><b>${esc(x.title)}</b><small>${esc(x.small)}</small></div>${yearKey ? `<span class="dr-del" data-act="hide" data-id="${x.id}">✕</span>` : ''}</div>`; }).join('') || '<p class="small" style="margin:0">Пока пусто: достигнутые цели, значимые события и рекорды привычек появятся здесь сами.</p>'}${yearKey ? '<div class="addrow" style="--c:var(--accent)" data-act="own"><i></i>Добавить своё</div>' : ''}</div>`;
+  // неделя и месяц — только то, что стояло в днях периода (год — весь список)
+  const inDays = { s: new Set(), h: new Set(), e: new Map() };
+  if (period !== 'y') for (let d = from; d <= to; d = addDays(d, 1)) for (const it of S.dayItems(d)) {
+    if (it.type === 's') inDays.s.add(it.ref.goal.id);
+    if (it.type === 'h') inDays.h.add(it.ref.id);
+    if (it.type === 'e' && !inDays.e.has(it.ref.id)) inDays.e.set(it.ref.id, { ev: it.ref, date: d });
+  }
+  const goalInDays = (g) => inDays.s.has(g.id) || S.goalHabits(g).some((h) => inDays.h.has(h.id)) || ((g.measure || {}).log || []).some((x) => x.date >= from && x.date <= to);
   // цифры: цели
-  const goals = S.state.goals.filter((g) => g.createdAt <= to && (g.status === 'active' || (g.achievedAt || g.archivedAt || '') >= from));
+  const goals = S.state.goals.filter((g) => g.createdAt <= to && (g.status === 'active' || (g.achievedAt || g.archivedAt || '') >= from) && (period === 'y' || goalInDays(g)));
   const gHtml = goals.length ? `<div class="blk goals"><div class="bh">${ICON.goal}<b>Цели</b></div><div class="rows">${goals.map((g) => {
     const now = S.goalProgress(g), was = S.goalProgress(g, from), plus = now.pct - was.pct;
     const stepsDone = g.stages.flatMap((s) => s.steps).filter((x) => x.done && x.doneAt >= from && x.doneAt <= to).map((x) => x.title);
@@ -492,7 +500,7 @@ export function summaryScreen(period, key) {
     return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${now.pct}%</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, now.pct)}%"></i>${plus > 0 ? `<i class="tick" style="left:${was.pct}%"></i>` : ''}</div><small class="mrow-s">${plus > 0 ? `было ${was.pct}% → <b class="gplus">+${plus}%</b> · ${esc(stepsDone.join(', '))}` : 'не двигалась'}</small></div>`;
   }).join('')}</div></div>` : '';
   // цифры: привычки
-  const habits = S.state.habits.filter((h) => (h.createdAt || '') <= to && (h.status !== 'archived' || (h.archivedAt || '') >= from));
+  const habits = S.state.habits.filter((h) => (h.createdAt || '') <= to && (h.status !== 'archived' || (h.archivedAt || '') >= from) && (period === 'y' || inDays.h.has(h.id)));
   let hRows = '';
   for (const h of habits) {
     if (period === 'y') { const st = S.habitStats(h, from, to); hRows += `<div class="row"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h).split(' · ')[0])} · ${st.done} из ${st.plan} дней${st.minutes >= 60 ? ' · ' + Math.round(st.minutes / 60) + ' ч' : ''}</small><div class="ybar"><i style="width:${st.pct}%"></i></div></div><span class="hpct">${st.pct}%</span></div>`; continue; }
@@ -509,7 +517,7 @@ export function summaryScreen(period, key) {
   }
   const hHtml = hRows ? `<div class="blk habits"><div class="bh">${ICON.habit}<b>Привычки</b></div><div class="rows">${hRows}</div></div>` : '';
   const tDone = S.state.tasks.filter((x) => x.doneAt && x.doneAt >= from && x.doneAt <= to).length;
-  const evs = S.state.events.filter((e) => !e.repeat && e.start >= from && e.start <= to);
+  const evs = period === 'y' ? S.state.events.filter((e) => !e.repeat && e.start >= from && e.start <= to) : [...inDays.e.values()].map((x) => ({ ...x.ev, start: x.date }));
   const tHtml = `<div class="blk tasks"><div class="bh">${ICON.task}<b>Задачи</b></div><div class="rows"><div class="row"><div class="t"><b>Выполнено</b></div><span class="fact">${tDone}</span></div></div></div>`;
   const eHtml = evs.length ? `<div class="blk events"><div class="bh">${ICON.event}<b>События</b></div><div class="rows">${evs.map((e) => `<div class="row" data-go="#/eventcard/${e.id}"><div class="t"><b>${esc(e.title)}</b><small>${fmtShort(e.start)}</small></div><span class="chev">›</span></div>`).join('')}</div></div>` : '';
   const rk = period + ':' + (period === 'w' ? from : key), q = { w: 'Что получилось лучше всего?', m: 'Что изменить в следующем месяце?', y: 'Письмо себе через год' }[period];
