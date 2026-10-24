@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=101';
+import * as S from './store.js?v=102';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=101';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=101';
-import { aiBreakdownGoal } from './ai.js?v=101';
+  MONTHS_NOM, WD } from './util.js?v=102';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=102';
+import { aiBreakdownGoal } from './ai.js?v=102';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -436,7 +436,7 @@ export function dreamScreen(id) {
     <div class="card plain" style="padding:0"><div class="h3" style="padding:14px 14px 4px">Путь к мечте</div>${goals.map((g, i) => { const gl = goalLine(g), hs = S.goalHabits(g); return `<div class="path-g" data-go="#/goalcard/${g.id}"><div class="top"><span class="num${g.status === 'achieved' ? ' done' : ''}">${g.status === 'achieved' ? '✓' : i + 1}</span><div class="t"><b>${esc(g.title)}</b><small>${g.status === 'achieved' ? 'достигнута ' + fmtDMshort(g.achievedAt) : esc(gl.text) + (gl.pct != null && !S.goalMeasure(g) ? ' · ' + gl.pct + '%' : '')}</small></div><span class="chev">›</span></div>${hs.length && g.status !== 'achieved' ? `<div class="hab">${hs.map((h) => `<span>${esc(h.title)} · ${esc(scheduleText(h).split(' · ')[0])}</span>`).join('')}</div>` : ''}</div>`; }).join('')}</div>` : ''}
     <div class="addcard" style="--c:var(--d)" data-go="#/goal/new?dream=${d.id}"><div class="addrow"><i></i>${goals.length ? 'Добавить цель на пути' : 'Сделать целью'}</div></div>`;
   const html = `<section class="scr">${top('Мечта', { right: menu([['rename', 'Изменить название', 'или просто нажми на название'], ['del', 'Удалить мечту', 'цель, если есть, останется', true]]) })}<div class="body">
-    <div class="dr-head"><span class="dr-ic">${ICON.dream.replace('<svg>', '<svg viewBox="0 0 24 24">')}</span><input class="dr-title" data-title value="${esc(d.title)}" enterkeyhint="done" aria-label="Название мечты"><small>мечта с ${d.createdAt.slice(0, 4)} года</small></div>
+    <div class="dr-head"><span class="dr-ic">${ICON.dream.replace('<svg>', '<svg viewBox="0 0 24 24">')}</span><textarea class="dr-title" data-title rows="1" enterkeyhint="done" aria-label="Название мечты">${esc(d.title)}</textarea><small>мечта с ${d.createdAt.slice(0, 4)} года</small></div>
     ${field('Почему хочу', `<textarea class="inp area" rows="1" data-why placeholder="Чтобы помнить, зачем">${esc(d.why || '')}</textarea>`)}
     ${pathHtml}
     <div class="card plain"><div class="row" style="padding:0" data-act="came"><span class="ck ${ct ? 'done' : ''}" style="--c:var(--d)"></span><div class="t"><b>Сбылось</b><small>${ct ? fmtDM(ct.date) + ' ' + ct.date.slice(0, 4) : 'отметь — добавишь дату, мысли и фото'}</small></div></div>
@@ -450,7 +450,10 @@ export function dreamScreen(id) {
       // название правится прямо в шапке; пустое не сохраняем
       const t = root.querySelector('[data-title]');
       t.addEventListener('change', () => { const v = t.value.trim(); if (v) S.saveDream(d.id, { title: v }); else t.value = d.title; });
-      t.addEventListener('keydown', (e) => { if (e.key === 'Enter') t.blur(); });
+      // длинное название переносится на несколько строк целиком
+      const fit = () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+      fit(); t.addEventListener('input', fit);
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); t.blur(); } });
       root.querySelectorAll('[data-ct]').forEach((i) => i.addEventListener('change', () => { d.cameTrue[i.dataset.ct] = i.value; S.save(); }));
       bindPhotoInput(root, (ids) => { d.cameTrue.photos = [...(d.cameTrue.photos || []), ...ids].slice(0, 6); S.save(); re(); });
     },

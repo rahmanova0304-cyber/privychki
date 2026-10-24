@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=101';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=102';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -592,7 +592,12 @@ export function setGoalHabits(gid, ids) {
 export function goalHabitStats(g, from, to) {
   const f = from && from > g.createdAt ? from : g.createdAt;
   let minutes = 0, days = 0;
-  for (const h of goalHabits(g)) { const st = habitStats(h, f, to || today()); minutes += st.minutes; days += st.done; }
+  // занятие — день, когда привычка отмечена «сделано» или «частично» (пропуски и переносы не в счёт; без потолка по расписанию)
+  const end = to && to < today() ? to : today();
+  for (const h of goalHabits(g)) {
+    minutes += habitStats(h, f, end).minutes;
+    for (let d = f; d <= end; d = addDays(d, 1)) { const s = habitMark(h, d).s; if (s === 'done' || s === 'partial') days++; }
+  }
   return { minutes, days };
 }
 
