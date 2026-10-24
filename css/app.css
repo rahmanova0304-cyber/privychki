@@ -677,7 +677,7 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .gm-scale { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: -4px }
 .gm-hist { display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--muted) }
 .gm-hist b { color: var(--ink); font-weight: 500 }
-.gm-in { display: flex; gap: 8px } .gm-in .btn { flex: none; padding: 10px 16px }
+.gm-in { display: flex; gap: 8px; align-items: center } .gm-in .inp { flex: 1; width: 0 } .gm-in .btn { flex: none; padding: 10px 16px }
 
 /* недельная привычка в строке дня: чёрточки «сколько из N сделано» */
 .wk { display: flex; gap: 4px; margin-top: 5px }
