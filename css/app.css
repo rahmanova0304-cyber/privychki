@@ -711,3 +711,5 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
   .toast { transition: opacity .2s, transform .25s cubic-bezier(.2, .8, .2, 1); transform: translate(-50%, 12px) }
   .toast.on { transform: translate(-50%, 0) }
 }
+.nh { display: flex; flex-direction: column; gap: 12px; margin-top: 8px }
+.nh .row2 { display: flex; gap: 8px } .nh .row2 .btn { flex: 1 }

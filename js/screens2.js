@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=106';
+import * as S from './store.js?v=107';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=106';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=106';
-import { aiBreakdownGoal } from './ai.js?v=106';
+  MONTHS_NOM, WD } from './util.js?v=107';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=107';
+import { aiBreakdownGoal } from './ai.js?v=107';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -50,7 +50,14 @@ export function goalEditScreen(id, params) {
   const MODES = [['steps', 'Шагами', 'Есть понятный план: сделать одно, потом другое. Например, найти работу, сделать ремонт. Полоска — сколько шагов пройдено.'],
     ['measure', 'К результату', 'Есть число, которое должно вырасти или уменьшиться: раз, ₽, кг. Например, подтянуться 5 раз. Результат записываешь сама, когда проверишь.'],
     ['skill', 'Навык', 'Умение растёт от регулярных занятий: скрипка, язык, рисование. Полоска — часы занятий, они считаются сами из привычки. Достигнута ли цель, решаешь ты.']];
-  const habPick = (label, hint) => actHabits.length ? field(label, `<div class="opts">${actHabits.map((h) => `<span class="${f.habitIds.includes(h.id) ? 'on' : ''}" data-act="hab" data-id="${h.id}">${esc(h.title)}</span>`).join('')}</div><small class="small">${hint}</small>`) : '';
+  // привычку можно создать прямо здесь: она появится после «Сохранить», уже привязанной к цели
+  f.newHabs = f.newHabs || [];
+  const nhForm = () => { const n = f.nh; return `<div class="card nh">${field('Новая привычка', `<input class="inp" data-f="nhTitle" value="${esc(f.nhTitle || '')}" placeholder="Например, Чтение">`)}
+      ${field('Дни', `<div class="opts">${WD.map((w, i) => `<span class="${n.days.includes(i) ? 'on' : ''}" data-act="nhday" data-i="${i}">${w}</span>`).join('')}</div>`)}
+      ${field('Как отмечать', `<div class="seg"><span class="${n.kind === 'check' ? 'on' : ''}" data-act="nhkind" data-v="check">Просто сделано</span><span class="${n.kind === 'duration' ? 'on' : ''}" data-act="nhkind" data-v="duration">Сколько времени</span></div>`)}
+      ${n.kind === 'duration' ? field('План на день', `<div class="opts">${[15, 20, 30, 60, 120].map((m) => `<span class="${n.target === m ? 'on' : ''}" data-act="nhdur" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`) : ''}
+      <div class="row2"><button class="btn" data-act="nhcancel">Отмена</button><button class="btn pri" data-act="nhadd">Добавить</button></div></div>`; };
+  const habPick = (label, hint) => field(label, `<div class="opts">${actHabits.map((h) => `<span class="${f.habitIds.includes(h.id) ? 'on' : ''}" data-act="hab" data-id="${h.id}">${esc(h.title)}</span>`).join('')}${f.newHabs.map((h, i) => `<span class="on" data-act="nhdel" data-i="${i}">${esc(h.title)} ✕</span>`).join('')}${f.nh ? '' : '<span data-act="nhopen">+ Новая привычка</span>'}</div>${f.nh ? nhForm() : ''}<small class="small">${hint}</small>`);
   const stepsHtml = () => `${f.stages.map((st, si) => `<div class="blk goals"><div class="bh"><input class="inp" style="min-height:30px;font-weight:500" data-st="${si}" value="${esc(st.title)}">${f.stages.length > 1 ? `<span class="dr-del" data-act="delstage" data-i="${si}">✕</span>` : ''}</div>
       <div class="rows">${st.steps.map((x, ti) => `<div class="row" style="gap:6px"><input class="inp" style="min-height:32px" data-stp="${si}:${ti}" value="${esc(x.title)}" placeholder="Шаг" enterkeyhint="next">${durSel(si, ti, x.duration)}${x.done ? '<span class="dr-del"><span class="ck done" style="--c:var(--g);cursor:default"></span></span>' : `<span class="dr-del" data-act="delstep" data-i="${si}:${ti}">✕</span>`}</div>`).join('')}
       <div class="addrow" style="--c:var(--accent)" data-act="addstep" data-i="${si}"><i></i>Добавить шаг</div></div></div>`).join('')}
@@ -60,8 +67,8 @@ export function goalEditScreen(id, params) {
   const measureHtml = () => `${field('Мера', `<div class="meas"><div><small>Что меряем</small><input class="inp" data-f="mUnit" value="${esc(f.mUnit || '')}" placeholder="раз, ₽, кг"></div><div><small>Сейчас</small><input class="inp" type="number" inputmode="decimal" data-f="mStart" value="${esc(f.mStart ?? '')}" placeholder="0"></div><div><small>Хочу</small><input class="inp" type="number" inputmode="decimal" data-f="mTarget" value="${esc(f.mTarget ?? '')}" placeholder="5"></div></div>`)}
     ${habPick('Привычки для цели · необязательно', 'Занятия этих привычек будут видны у цели и в итогах.')}`;
   const skillHtml = () => {
-    const sel = actHabits.filter((h) => f.habitIds.includes(h.id)), noTime = sel.filter((h) => h.kind !== 'duration');
-    return `${actHabits.length ? habPick('Привычка для занятий', noTime.length ? `У «${esc(noTime.map((h) => h.title).join('», «'))}» не отмечается время — часы считаются только у привычек «Сколько времени».` : 'Время этих привычек пойдёт в цель само.') : field('Привычка для занятий', '<p class="small" style="margin:0">Сначала создай привычку для занятий (например, «Скрипка», «Сколько времени») в Списке, потом вернись сюда.</p>')}
+    const sel = [...actHabits.filter((h) => f.habitIds.includes(h.id)), ...f.newHabs], noTime = sel.filter((h) => h.kind !== 'duration');
+    return `${habPick('Привычка для занятий', noTime.length ? `У «${esc(noTime.map((h) => h.title).join('», «'))}» не отмечается время — часы считаются только у привычек «Сколько времени».` : 'Время этих привычек пойдёт в цель само.')}
     ${field('Сколько часов вложить', `<input class="inp" type="number" inputmode="decimal" data-f="mHours" value="${esc(f.mHours ?? '')}" placeholder="30" style="width:120px">`)}`;
   };
   const form = () => `${field('Название', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Найти новую работу">`)}
@@ -99,6 +106,18 @@ export function goalEditScreen(id, params) {
       addstep: (el) => { sync(); f.stages[+el.dataset.i].steps.push({ id: uid(), title: '', duration: null }); rerender(); const n = rootEl.querySelectorAll(`[data-stp^="${el.dataset.i}:"]`); if (n.length) n[n.length - 1].focus(); },
       delstep: (el) => { sync(); const [a, b] = el.dataset.i.split(':').map(Number); f.stages[a].steps.splice(b, 1); rerender(); },
       mode: (el) => { sync(); f.mode = el.dataset.v; rerender(); },
+      nhopen: () => { sync(); f.nh = { days: [0, 1, 2, 3, 4], kind: f.mode === 'skill' ? 'duration' : 'check', target: 30 }; f.nhTitle = ''; rerender(); const i = rootEl.querySelector('[data-f="nhTitle"]'); if (i) i.focus(); },
+      nhday: (el) => { sync(); const i = +el.dataset.i, d = f.nh.days; f.nh.days = d.includes(i) ? d.filter((x) => x !== i) : [...d, i].sort(); rerender(); },
+      nhkind: (el) => { sync(); f.nh.kind = el.dataset.v; rerender(); },
+      nhdur: (el) => { sync(); f.nh.target = +el.dataset.v; rerender(); },
+      nhcancel: () => { sync(); f.nh = null; rerender(); },
+      nhadd: () => {
+        sync();
+        if (!(f.nhTitle || '').trim()) { alert('Напиши название привычки'); return; }
+        if (!f.nh.days.length) { alert('Выбери хотя бы один день'); return; }
+        f.newHabs.push({ title: f.nhTitle.trim(), days: f.nh.days, kind: f.nh.kind, target: f.nh.kind === 'duration' ? f.nh.target : null }); f.nh = null; f.nhTitle = ''; rerender();
+      },
+      nhdel: (el) => { sync(); f.newHabs.splice(+el.dataset.i, 1); rerender(); },
       hab: (el) => { sync(); const id = el.dataset.id; f.habitIds = f.habitIds.includes(id) ? f.habitIds.filter((x) => x !== id) : [...f.habitIds, id]; rerender(); },
       addstage: () => { sync(); f.stages.push({ id: uid(), title: 'Этап ' + (f.stages.length + 1), steps: [{ id: uid(), title: '', duration: null }] }); rerender(); },
       delstage: (el) => { sync(); f.stages.splice(+el.dataset.i, 1); rerender(); },
@@ -117,13 +136,15 @@ export function goalEditScreen(id, params) {
         if (!f.title.trim()) { alert('Напиши название'); return; }
         if (!f.mode) { alert('Выбери, как идти к цели: шагами, к результату или навык'); return; }
         if (f.mode === 'measure' && (f.mTarget === '' || f.mTarget == null)) { alert('Напиши, сколько хочешь — поле «Хочу»'); return; }
-        if (f.mode === 'skill' && !f.habitIds.length) { alert('Выбери привычку для занятий'); return; }
+        if (f.nh && (f.nhTitle || '').trim()) { alert('Нажми «Добавить» у новой привычки или «Отмена»'); return; }
+        if (f.mode === 'skill' && !f.habitIds.length && !f.newHabs.length) { alert('Выбери или создай привычку для занятий'); return; }
         if (f.mode === 'skill' && !(Number(f.mHours) > 0)) { alert('Напиши, сколько часов хочешь вложить'); return; }
         // шаги остаются только у цели «шагами»; пройденные шаги не стираем без вопроса
         if (f.mode !== 'steps' && f.stages.some((st) => st.steps.some((x) => x.done)) && !confirm('Пройденные шаги этой цели будут удалены. Продолжить?')) return;
         const measure = f.mode === 'measure' ? { unit: (f.mUnit || '').trim(), start: Number(f.mStart) || 0, target: Number(f.mTarget) } : f.mode === 'skill' ? { kind: 'time', target: Number(f.mHours) } : null;
         const saved = S.saveGoal({ id: g && g.id, ...f, measure, title: f.title.trim(), stages: f.mode === 'steps' ? f.stages.filter((st) => st.title.trim() || st.steps.some((x) => x.title.trim())) : [] });
-        S.setGoalHabits(saved.id, f.habitIds);
+        const made = (f.mode === 'steps' || f.mode === 'measure' || f.mode === 'skill' ? f.newHabs : []).map((h) => S.saveHabit({ ...h, goalId: saved.id }).id);
+        S.setGoalHabits(saved.id, [...f.habitIds, ...made]);
         go(g ? 'back' : '#/goalcard/' + saved.id, !g);
       },
     },
