@@ -713,3 +713,4 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 }
 .nh { display: flex; flex-direction: column; gap: 12px; margin-top: 8px }
 .nh .row2 { display: flex; gap: 8px } .nh .row2 .btn { flex: 1 }
+.opts span.opt-add { padding: 5px 11px; color: var(--accent); font-weight: 500; background: transparent; box-shadow: none; border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent) }

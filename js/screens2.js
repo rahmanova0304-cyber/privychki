@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=107';
+import * as S from './store.js?v=108';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=107';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=107';
-import { aiBreakdownGoal } from './ai.js?v=107';
+  MONTHS_NOM, WD } from './util.js?v=108';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=108';
+import { aiBreakdownGoal } from './ai.js?v=108';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -57,7 +57,7 @@ export function goalEditScreen(id, params) {
       ${field('Как отмечать', `<div class="seg"><span class="${n.kind === 'check' ? 'on' : ''}" data-act="nhkind" data-v="check">Просто сделано</span><span class="${n.kind === 'duration' ? 'on' : ''}" data-act="nhkind" data-v="duration">Сколько времени</span></div>`)}
       ${n.kind === 'duration' ? field('План на день', `<div class="opts">${[15, 20, 30, 60, 120].map((m) => `<span class="${n.target === m ? 'on' : ''}" data-act="nhdur" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`) : ''}
       <div class="row2"><button class="btn" data-act="nhcancel">Отмена</button><button class="btn pri" data-act="nhadd">Добавить</button></div></div>`; };
-  const habPick = (label, hint) => field(label, `<div class="opts">${actHabits.map((h) => `<span class="${f.habitIds.includes(h.id) ? 'on' : ''}" data-act="hab" data-id="${h.id}">${esc(h.title)}</span>`).join('')}${f.newHabs.map((h, i) => `<span class="on" data-act="nhdel" data-i="${i}">${esc(h.title)} ✕</span>`).join('')}${f.nh ? '' : '<span data-act="nhopen">+ Новая привычка</span>'}</div>${f.nh ? nhForm() : ''}<small class="small">${hint}</small>`);
+  const habPick = (label, hint) => field(label, `<div class="opts">${actHabits.map((h) => `<span class="${f.habitIds.includes(h.id) ? 'on' : ''}" data-act="hab" data-id="${h.id}">${esc(h.title)}</span>`).join('')}${f.newHabs.map((h, i) => `<span class="on" data-act="nhdel" data-i="${i}">${esc(h.title)} ✕</span>`).join('')}${f.nh ? '' : '<span class="opt-add" data-act="nhopen">+ Новая привычка</span>'}</div>${f.nh ? nhForm() : ''}<small class="small">${hint}</small>`);
   const stepsHtml = () => `${f.stages.map((st, si) => `<div class="blk goals"><div class="bh"><input class="inp" style="min-height:30px;font-weight:500" data-st="${si}" value="${esc(st.title)}">${f.stages.length > 1 ? `<span class="dr-del" data-act="delstage" data-i="${si}">✕</span>` : ''}</div>
       <div class="rows">${st.steps.map((x, ti) => `<div class="row" style="gap:6px"><input class="inp" style="min-height:32px" data-stp="${si}:${ti}" value="${esc(x.title)}" placeholder="Шаг" enterkeyhint="next">${durSel(si, ti, x.duration)}${x.done ? '<span class="dr-del"><span class="ck done" style="--c:var(--g);cursor:default"></span></span>' : `<span class="dr-del" data-act="delstep" data-i="${si}:${ti}">✕</span>`}</div>`).join('')}
       <div class="addrow" style="--c:var(--accent)" data-act="addstep" data-i="${si}"><i></i>Добавить шаг</div></div></div>`).join('')}
