@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=109';
+import * as S from './store.js?v=110';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=109';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=110';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -61,7 +61,7 @@ export function scheduleText(h) {
   else if (!d.length) s = 'без расписания';
   else s = d.map((i) => WD[i]).join(', ');
   const t = S.habitTargetText(h);
-  return s + (t ? ' · ' + t : '');
+  return s + (t ? ' · ' + t : '') + (h.until ? ' · до ' + fmtDMshort(h.until) : '');
 }
 
 export function repeatText(t) {
@@ -168,19 +168,21 @@ function itemRow(it, date) {
     if (r.time && it.s !== 'done') right = `<span class="chip">${esc(r.time)}</span>`;
   } else {
     if (r.repeat) small = small || repeatText(r);
-    if (r.duration && it.s !== 'done') right = `<span class="chip">${fmtMin(r.duration)}</span>`;
+    if ((r.time || r.duration) && it.s !== 'done') right = `<span class="chip">${[r.time, r.duration ? fmtMin(r.duration) : ''].filter(Boolean).join(' · ')}</span>`;
   }
   const tapCk = it.s === 'moved' ? '' : ` data-act="toggle" data-key="${it.key}"`;
   if (it.type === 'e' && !small) small = '';
   return `<div class="${cls.join(' ')}" data-go="#/mark/${date}/${encodeURIComponent(it.key)}"><span class="${ck}"${tapCk}></span><div class="t"><b>${esc(title)}</b>${small ? `<small>${esc(small)}</small>` : ''}${wk}</div>${right}</div>`;
 }
 
+// сделанное — в конец; задачи и события со временем — первыми, по порядку часов
 const order = (it) => it.s === 'done' ? 2 : 0;
+const timeOf = (it) => (it.type === 't' || it.type === 'e') && it.ref.time ? it.ref.time : '99';
 
 function block(kind, title, items, date) {
   const map = { s: ['goals', ICON.goal], h: ['habits', ICON.habit], t: ['tasks', ICON.task], e: ['events', ICON.event] }[kind];
   const done = items.filter((i) => i.s === 'done').length;
-  const rows = items.slice().sort((a, b) => order(a) - order(b)).map((i) => itemRow(i, date)).join('');
+  const rows = items.slice().sort((a, b) => order(a) - order(b) || timeOf(a).localeCompare(timeOf(b))).map((i) => itemRow(i, date)).join('');
   return `<div class="blk ${map[0]}"><div class="bh">${map[1]}<b>${title}${items.length ? ` <span class="bh-n${done === items.length ? ' full' : ''}">${done} из ${items.length}</span>` : ''}</b><button class="plus" data-go="${kind === 'e' ? '#/event/new?date=' + date : '#/pick/' + kind + '/' + date}">+</button></div>${rows ? `<div class="rows">${rows}</div>` : ''}</div>`;
 }
 
@@ -462,7 +464,7 @@ export function listScreen() {
   const done = S.state.tasks.filter((t) => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''));
   const taskSmall = (t) => {
     if (t.repeat) { const n = S.nextOccurrence(t); return repeatText(t) + (n ? ' · следующий ' + fmtDMshort(n) : ''); }
-    if (t.date) return (t.date < today() ? 'просрочено · ' : '') + fmtShort(t.date) + (t.deadline ? ' · до ' + fmtDM(t.deadline) : '');
+    if (t.date) return (t.date < today() ? 'просрочено · ' : '') + fmtShort(t.date) + (t.time ? ' · ' + t.time : '') + (t.deadline ? ' · до ' + fmtDM(t.deadline) : '');
     return 'без даты' + (t.deadline ? ' · до ' + fmtDM(t.deadline) : '');
   };
   open.sort((a, b) => (a.date || a.repeat && S.nextOccurrence(a) || '9999').localeCompare(b.date || b.repeat && S.nextOccurrence(b) || '9999'));
@@ -515,7 +517,7 @@ const KINDS = [['check', 'Просто сделано', 'витамины'], ['d
 
 export function habitScreen(id, params) {
   const h = id !== 'new' ? S.habitById(id) : null;
-  const f = h ? { title: h.title, days: [...(h.days || [])], per: h.per || '', n: h.n || 3, kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '' }
+  const f = h ? { title: h.title, days: [...(h.days || [])], per: h.per || '', n: h.n || 3, kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '', until: h.until || '' }
     : { title: params.get('title') || '', days: [0, 1, 2, 3, 4], per: '', n: 3, kind: 'check', target: null, unit: '' };
   const targetField = () => {
     if (f.kind === 'duration') return field('План на день, минут', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 60"><div class="opts">${[10, 20, 30, 60, 120].map((m) => `<span data-act="preset" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`);
@@ -529,6 +531,7 @@ export function habitScreen(id, params) {
       : field('Дни', `<div class="opts">${WD.map((w, i) => `<span class="${f.days.includes(i) ? 'on' : ''}" data-act="day" data-i="${i}">${w}</span>`).join('')}</div>`)}
     ${field('Как отмечать выполнение', `<div class="kinds">${KINDS.map(([k, t, ex]) => `<span class="${f.kind === k ? 'on' : ''}" data-act="kind" data-k="${k}"><b>${t}</b><small>${ex}</small></span>`).join('')}</div>`)}
     ${targetField()}
+    ${field('До какого числа · необязательно', `<input class="inp" type="date" data-f="until" value="${esc(f.until || '')}"><small class="small">Например, таблетки на месяц. После этой даты привычка сама уйдёт в архив, история останется.</small>`)}
     ${S.state.goals.some((g) => g.status === 'active') ? field('Для какой цели · необязательно', `<select class="inp" data-f="goalId"><option value="">Не связана</option>${S.state.goals.filter((g) => g.status === 'active').map((g) => `<option value="${g.id}"${f.goalId === g.id ? ' selected' : ''}>${esc(g.title)}</option>`).join('')}</select>`) : ''}
     ${h ? `<div class="card plain"><div class="rows">
       <div class="row" data-act="pause"><div class="t"><b>${h.pausedFrom ? 'Снять с паузы' : 'На паузу'}</b><small>${h.pausedFrom ? 'на паузе с ' + fmtDM(h.pausedFrom) : 'временно не ставится в дни'}</small></div></div>
@@ -557,7 +560,7 @@ export function habitScreen(id, params) {
         let target = f.target;
         if (f.kind === 'duration' || f.kind === 'count') { target = Math.max(0, Number(target) || 0); if (!target) { alert('Укажи план на день'); return; } }
         if (f.kind === 'check') target = null;
-        const saved = S.saveHabit({ id: h && h.id, title: f.title.trim(), days: f.days.sort(), per: f.per || null, n: f.per ? f.n : null, kind: f.kind, target, unit: f.unit, goalId: f.goalId });
+        const saved = S.saveHabit({ id: h && h.id, title: f.title.trim(), days: f.days.sort(), per: f.per || null, n: f.per ? f.n : null, kind: f.kind, target, unit: f.unit, goalId: f.goalId, until: f.until || null });
         const dayP = params.get('day');
         if (dayP && !f.per && !f.days.includes(wd(dayP))) S.addHabitToDay(dayP, saved.id);
         go('back');
@@ -571,7 +574,7 @@ export function habitScreen(id, params) {
 export function taskScreen(id, params) {
   const t = id !== 'new' ? S.taskById(id) : null;
   const r = (t && t.repeat) || {};
-  const f = { title: t ? t.title : '', date: t ? t.date : params.get('date') || null, hasDate: t ? !!t.date : !!params.get('date'), deadline: t ? t.deadline : null, duration: t ? t.duration : null,
+  const f = { title: t ? t.title : '', date: t ? t.date : params.get('date') || null, hasDate: t ? !!t.date : !!params.get('date'), deadline: t ? t.deadline : null, duration: t ? t.duration : null, time: t ? t.time || null : null,
     every: r.every || '', weekdays: r.weekdays || [], monthDay: r.monthDay || new Date().getDate(), yearDate: r.yearDate || today().slice(5) };
   const form = () => `${field('Название', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Записаться к стоматологу">`)}
     ${field('Повторять', `<div class="seg">${[['', 'Нет'], ['week', 'Неделя'], ['month', 'Месяц'], ['year', 'Год']].map(([k, l]) => `<span class="${f.every === k ? 'on' : ''}" data-act="every" data-k="${k}">${l}</span>`).join('')}</div>`)}
@@ -580,6 +583,7 @@ export function taskScreen(id, params) {
     ${f.every === 'year' ? field('Какого числа', `<input class="inp" type="date" data-f="yearFull" value="${new Date().getFullYear()}-${f.yearDate}">`) : ''}
     ${!f.every ? field('Дата', `<div class="seg"><span class="${!f.hasDate ? 'on' : ''}" data-act="hasdate" data-v="0">Без даты</span><span class="${f.hasDate ? 'on' : ''}" data-act="hasdate" data-v="1">Выбрать день</span></div>${f.hasDate ? `<input class="inp" type="date" data-f="date" value="${f.date || today()}">` : ''}`) : ''}
     ${!f.every ? field('Срок до · необязательно', `<input class="inp" type="date" data-f="deadline" value="${f.deadline || ''}">`) : ''}
+    ${field('Во сколько · необязательно', `<input class="inp" type="time" data-f="time" value="${esc(f.time || '')}" style="width:140px">`)}
     ${field('Длительность · необязательно', `<div class="opts">${[[null, 'Нет'], ...S.DURATIONS].map(([v, l]) => `<span class="${f.duration === v ? 'on' : ''}" data-act="dur" data-v="${v ?? ''}">${l}</span>`).join('')}</div>`)}`;
   const right = t ? `<button class="ib ibdel" data-act="del" title="Удалить задачу">${ICON.trash}</button>` : '';
   const html = `<section class="scr">${top(t ? 'Задача' : 'Новая задача', { right })}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить</button></div></section>`;
@@ -605,7 +609,7 @@ export function taskScreen(id, params) {
         if (f.every === 'week') { if (!f.weekdays.length) { alert('Выбери дни недели'); return; } repeat = { every: 'week', weekdays: f.weekdays.sort() }; }
         if (f.every === 'month') repeat = { every: 'month', monthDay: Math.min(31, Math.max(1, Number(f.monthDay) || 1)) };
         if (f.every === 'year') repeat = { every: 'year', yearDate: f.yearDate };
-        S.saveTask({ id: t && t.id, title: f.title.trim(), date: repeat ? (t && t.date) || today() : f.hasDate ? f.date : null, deadline: repeat ? null : f.deadline, duration: f.duration, repeat });
+        S.saveTask({ id: t && t.id, title: f.title.trim(), date: repeat ? (t && t.date) || today() : f.hasDate ? f.date : null, deadline: repeat ? null : f.deadline, duration: f.duration, time: f.time, repeat });
         go('back');
       },
     },

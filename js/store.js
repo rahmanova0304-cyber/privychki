@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=109';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=110';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -37,6 +37,8 @@ export async function load() {
     r.onerror = () => res(null);
   });
   if (saved && saved.v) state = Object.assign(emptyState(), saved);
+  // привычка «до какого числа»: после этой даты сама уходит в архив (история остаётся)
+  for (const h of state.habits) if (h.until && h.status !== 'archived' && h.until < today()) { h.status = 'archived'; h.archivedAt = addDays(h.until, 1); }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 }
 
@@ -158,6 +160,7 @@ function habitActive(h, date) {
   if (h.status === 'archived' && (!h.archivedAt || date >= h.archivedAt)) return false;
   if (h.createdAt && date < h.createdAt) return false;
   if (h.pausedFrom && date >= h.pausedFrom) return false;
+  if (h.until && date > h.until) return false;
   return true;
 }
 // Привычка «N раз в неделю» (h.per === 'week', h.n): дни любые. В прошедших днях она стоит только там, где сделана
@@ -418,7 +421,7 @@ export function setNote(date, text) { day(date, true).note = text; save(); }
 export function saveHabit(data) {
   let h = data.id && habitById(data.id);
   if (!h) { h = { id: uid(), createdAt: today(), status: 'active' }; state.habits.push(h); }
-  Object.assign(h, { title: data.title, days: data.days, per: data.per || null, n: data.n || null, kind: data.kind, target: data.target, unit: data.unit || '', goalId: data.goalId || null });
+  Object.assign(h, { title: data.title, days: data.days, per: data.per || null, n: data.n || null, kind: data.kind, target: data.target, unit: data.unit || '', goalId: data.goalId || null, until: data.until || null });
   save();
   return h;
 }
@@ -509,7 +512,7 @@ export function habitStats(h, from, to) {
 export function saveTask(data) {
   let t = data.id && taskById(data.id);
   if (!t) { t = { id: uid(), createdAt: today(), status: 'open' }; state.tasks.push(t); }
-  Object.assign(t, { title: data.title, date: data.date || null, deadline: data.deadline || null, duration: data.duration || null, repeat: data.repeat || null });
+  Object.assign(t, { title: data.title, date: data.date || null, deadline: data.deadline || null, duration: data.duration || null, time: data.time || null, repeat: data.repeat || null });
   save();
   return t;
 }
