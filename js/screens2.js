@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=104';
+import * as S from './store.js?v=105';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=104';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=104';
-import { aiBreakdownGoal } from './ai.js?v=104';
+  MONTHS_NOM, WD } from './util.js?v=105';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=105';
+import { aiBreakdownGoal } from './ai.js?v=105';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -539,7 +539,7 @@ export function summaryScreen(period, key) {
       const nf = (v) => Number(v).toLocaleString('ru-RU'), moved = msNow.kind !== 'time' && msNow.cur !== msWas.cur;
       // занималась, а результат за период не записан — тихая ссылка (только пока период не прошёл)
       const ask = msNow.kind !== 'time' && !moved && hTxt && g.status === 'active' && to >= t;
-      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div>${(() => { const wk = period !== 'y' && msNow.kind !== 'time' ? goalWork(g, from, to) : null; return wk ? `<small class="mrow-s">${moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : 'результат пока тот же'}</small>${wk.html}` : `<small class="mrow-s">${line(moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : '', hTxt)}</small>`; })()}${ask ? `<div><span class="link" data-act="mlog">Записать результат</span></div>` : ''}</div>${ask ? `<div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval data-gid="${g.id}" placeholder="Сколько сейчас${msNow.unit ? ', ' + esc(msNow.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
+      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div>${(() => { const wk = period !== 'y' && msNow.kind !== 'time' ? goalWork(g, from, to) : null; return wk ? `${moved ? `<small class="mrow-s">было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b></small>` : ''}${wk.html}` : `<small class="mrow-s">${line(moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : '', hTxt)}</small>`; })()}${ask ? `<div><span class="link" data-act="mlog">Записать результат</span></div>` : ''}</div>${ask ? `<div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval data-gid="${g.id}" placeholder="Сколько сейчас${msNow.unit ? ', ' + esc(msNow.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
     }
     if (!now.total) {
       return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${hst.minutes ? fmtMin(hst.minutes) : hst.days ? hst.days + ' ' + plural(hst.days, 'занятие', 'занятия', 'занятий') : ''}</span></div><small class="mrow-s">${hs.length ? (hTxt ? 'через привычку ' + hTxt : 'не двигалась') : 'шагов пока нет'}</small></div>`;
