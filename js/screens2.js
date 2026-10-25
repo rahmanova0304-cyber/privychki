@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=102';
+import * as S from './store.js?v=103';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=102';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=102';
-import { aiBreakdownGoal } from './ai.js?v=102';
+  MONTHS_NOM, WD } from './util.js?v=103';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=103';
+import { aiBreakdownGoal } from './ai.js?v=103';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -499,7 +499,8 @@ export function summaryScreen(period, key) {
       <div class="yc-word">Слово года — <input class="inp" data-word value="${esc(ym.word)}" placeholder="одно слово" style="display:inline-block;width:150px;min-height:30px;padding:4px 8px"></div><div class="yt-grid">${tiles}</div></div>`;
   }
   const hl = S.highlights(from, to, yearKey);
-  const hlHtml = `<div class="card"><div class="h3">Главное за ${period === 'w' ? 'неделю' : period === 'm' ? 'месяц' : 'год'}</div>${hl.map((x) => { const [bg, c, ic] = HL_IC[x.icon] || HL_IC.own; return `<div class="hl"><span class="hl-i" style="background:${bg};color:${c}">${ic}</span><div class="t"><b>${esc(x.title)}</b><small>${esc(x.small)}</small></div>${yearKey ? `<span class="dr-del" data-act="hide" data-id="${x.id}">✕</span>` : ''}</div>`; }).join('') || '<p class="small" style="margin:0">Пока пусто: достигнутые цели, значимые события и рекорды привычек появятся здесь сами.</p>'}${yearKey ? '<div class="addrow" style="--c:var(--accent)" data-act="own"><i></i>Добавить своё</div>' : ''}</div>`;
+  // за неделю и месяц пустое «Главное» не показываем
+  const hlHtml = !hl.length && !yearKey ? '' : `<div class="card"><div class="h3">Главное за ${period === 'w' ? 'неделю' : period === 'm' ? 'месяц' : 'год'}</div>${hl.map((x) => { const [bg, c, ic] = HL_IC[x.icon] || HL_IC.own; return `<div class="hl"><span class="hl-i" style="background:${bg};color:${c}">${ic}</span><div class="t"><b>${esc(x.title)}</b><small>${esc(x.small)}</small></div>${yearKey ? `<span class="dr-del" data-act="hide" data-id="${x.id}">✕</span>` : ''}</div>`; }).join('') || '<p class="small" style="margin:0">Пока пусто: достигнутые цели, значимые события и рекорды привычек появятся здесь сами.</p>'}${yearKey ? '<div class="addrow" style="--c:var(--accent)" data-act="own"><i></i>Добавить своё</div>' : ''}</div>`;
   // неделя и месяц — только то, что стояло в днях периода (год — весь список)
   const inDays = { s: new Set(), h: new Set(), e: new Map() };
   if (period !== 'y') for (let d = from; d <= to; d = addDays(d, 1)) for (const it of S.dayItems(d)) {
