@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=103';
+import * as S from './store.js?v=104';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=103';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=103';
-import { aiBreakdownGoal } from './ai.js?v=103';
+  MONTHS_NOM, WD } from './util.js?v=104';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=104';
+import { aiBreakdownGoal } from './ai.js?v=104';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -130,6 +130,21 @@ export function goalEditScreen(id, params) {
   };
 }
 
+// «Работа» у цели «к результату»: отрезки по дням — занималась по привычке цели (фиолетовый), пропуск по расписанию (красный),
+// день без занятий вне расписания (тонкий), впереди (бледный). Результат может стоять неделями — работа видна каждый день.
+function goalWork(g, from, to) {
+  const hs = S.goalHabits(g), t = today();
+  if (!hs.length) return null;
+  let segs = '', n = 0, days = 0;
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    days++;
+    const did = hs.some((h) => { const s = S.habitMark(h, d).s; return s === 'done' || s === 'partial'; });
+    if (did) n++;
+    segs += `<i class="${did ? 'ok' : d >= t ? 'fut' : d < g.createdAt ? 'off' : hs.some((h) => S.habitScheduled(h, d)) ? 'no' : 'off'}"></i>`;
+  }
+  return { n, html: `<div class="gwork"><small class="mrow-s">Работа · ${n} ${plural(n, 'занятие', 'занятия', 'занятий')}</small><div class="mdots" style="grid-template-columns:repeat(${days},1fr)">${segs}</div></div>` };
+}
+
 // ---------- ЦЕЛЬ: карточка ----------
 
 export function goalCardScreen(id) {
@@ -141,6 +156,7 @@ export function goalCardScreen(id) {
   const ms = S.goalMeasure(g), nf = (v) => Number(v).toLocaleString('ru-RU');
   const measHtml = !ms ? '' : `<div class="gm-big"><b>${nf(ms.cur)}</b><span>из ${nf(ms.target)}${ms.unit ? ' ' + esc(ms.unit) : ''}${ms.kind === 'time' ? ' занятий' : ''}</span></div>
     <div class="gm-bar"><i style="width:${Math.max(2, ms.pct)}%"></i></div>${ms.kind === 'time' ? `<small class="small">Часы считаются сами из ${habits.length > 1 ? 'привычек' : 'привычки'} ${esc(habits.map((h) => '«' + h.title + '»').join(', '))}. Достигнута ли цель, решаешь ты.</small>` : `<div class="gm-scale"><span>было ${nf(ms.start)}</span><span>цель ${nf(ms.target)}</span></div>`}
+    ${ms.kind === 'time' ? '' : (goalWork(g, addDays(today(), -27), today()) || {}).html?.replace('Работа ·', 'Работа за 4 недели ·') || ''}
     ${ms.kind === 'time' ? '' : ms.log.length ? `<div class="gm-hist">${ms.log.slice(-5).map((x) => `<span>${fmtDMshort(x.date)} <b>${nf(x.value)}</b></span>`).join('<span>·</span>')}</div>` : ''}
     ${g.status === 'active' && ms.kind !== 'time' ? `<button class="btn" style="flex:none" data-act="mlog">Записать результат</button><div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval placeholder="Сколько сейчас${ms.unit ? ', ' + esc(ms.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
   const minutes = allHist.reduce((m, x) => m + (x.what === 'сделано' || x.what === 'частично' ? Number(x.fact) || 0 : 0), 0) + hst.minutes;
@@ -523,7 +539,7 @@ export function summaryScreen(period, key) {
       const nf = (v) => Number(v).toLocaleString('ru-RU'), moved = msNow.kind !== 'time' && msNow.cur !== msWas.cur;
       // занималась, а результат за период не записан — тихая ссылка (только пока период не прошёл)
       const ask = msNow.kind !== 'time' && !moved && hTxt && g.status === 'active' && to >= t;
-      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div><small class="mrow-s">${line(moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : '', hTxt)}</small>${ask ? `<div><span class="link" data-act="mlog">Записать результат</span></div>` : ''}</div>${ask ? `<div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval data-gid="${g.id}" placeholder="Сколько сейчас${msNow.unit ? ', ' + esc(msNow.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
+      return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${nf(msNow.cur)} из ${nf(msNow.target)}${msNow.unit ? ' ' + esc(msNow.unit) : ''}</span></div><div class="gbar"><i class="now" style="width:${Math.max(1, msNow.pct)}%"></i></div>${(() => { const wk = period !== 'y' && msNow.kind !== 'time' ? goalWork(g, from, to) : null; return wk ? `<small class="mrow-s">${moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : 'результат пока тот же'}</small>${wk.html}` : `<small class="mrow-s">${line(moved ? `было ${nf(msWas.cur)} → <b class="gplus">${nf(msNow.cur)}</b>` : '', hTxt)}</small>`; })()}${ask ? `<div><span class="link" data-act="mlog">Записать результат</span></div>` : ''}</div>${ask ? `<div class="gm-in" hidden><input class="inp" type="number" inputmode="decimal" data-mval data-gid="${g.id}" placeholder="Сколько сейчас${msNow.unit ? ', ' + esc(msNow.unit) : ''}"><button class="btn pri" data-act="msave">Записать</button></div>` : ''}`;
     }
     if (!now.total) {
       return `<div class="grow" data-go="#/goalcard/${g.id}"><div class="mrow-h"><b>${esc(g.title)}</b><small></small><span style="color:var(--g)">${hst.minutes ? fmtMin(hst.minutes) : hst.days ? hst.days + ' ' + plural(hst.days, 'занятие', 'занятия', 'занятий') : ''}</span></div><small class="mrow-s">${hs.length ? (hTxt ? 'через привычку ' + hTxt : 'не двигалась') : 'шагов пока нет'}</small></div>`;

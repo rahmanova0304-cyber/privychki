@@ -342,6 +342,7 @@ mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: in
 .mdots i.ok { background: var(--h) }
 .mdots i.no { background: var(--warn) }
 .mdots i.off { height: 3px; opacity: .7 }
+.gwork { display: flex; flex-direction: column; gap: 6px; margin-top: 2px }
 .mdots i.fut { background: color-mix(in srgb, var(--h) 18%, var(--card)) }
 .mrow-s { font-size: 13px; color: var(--muted) }
 .mleg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--muted); padding: 8px 0 4px; border-top: 1px solid var(--line) }
