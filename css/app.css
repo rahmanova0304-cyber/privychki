@@ -80,6 +80,8 @@ button { font: inherit; color: inherit }
 /* маркер мечты в списке: персиковое колечко; сбывшаяся — закрашенное */
 .dr-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--d); background: transparent; flex: none; margin: 0 2px }
 .dr-dot.on { background: var(--d) }
+.dr-dot.path { background: linear-gradient(to top, var(--d) 50%, transparent 50%) }
+.dr-grp { font-size: 13px; color: var(--muted); padding: 10px 14px 0 }
 .bh { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: linear-gradient(180deg, var(--cb), color-mix(in srgb, var(--cb) 80%, var(--card))) }
 .bh-n { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums }
 .bh-n.full { color: var(--c); font-weight: 500 }

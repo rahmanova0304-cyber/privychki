@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=108';
+import * as S from './store.js?v=109';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=108';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=109';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -650,7 +650,13 @@ export function lifeScreen() {
     cells += `<i class="${c}"${c === 'now' ? ' data-go="#/summary/y/' + yr + '"' : c === 'past' ? ' data-go="#/year/' + yr + '"' : ''}>${i}</i>`;
   }
   const dec = new Date().getMonth() === 11;
-  const dreams = S.state.dreams.map((d) => `<div class="row" data-go="#/dream/${d.id}"><i class="dr-dot${d.cameTrue ? ' on' : ''}"></i><div class="t"><b>${esc(d.title)}</b>${d.cameTrue ? `<small>сбылось · ${d.cameTrue.date.slice(0, 4)}</small>` : S.dreamGoals(d).length ? `<small>${(() => { const gs = S.dreamGoals(d), a = gs.filter((x) => x.status === 'achieved').length; return gs.length === 1 ? 'цель: ' + esc(goalLine(gs[0]).text) : 'путь: ' + a + ' из ' + gs.length + ' целей'; })()}</small>` : ''}</div><span class="chev">›</span></div>`).join('');
+  // мечты по группам: «В пути» (есть цель) → «Мечтаю» (без цели) → свёрнутые «Сбылись»
+  const drRow = (d, cls) => `<div class="row" data-go="#/dream/${d.id}"><i class="dr-dot${cls}"></i><div class="t"><b>${esc(d.title)}</b>${d.cameTrue ? `<small>сбылось · ${d.cameTrue.date.slice(0, 4)}</small>` : S.dreamGoals(d).length ? `<small>${(() => { const gs = S.dreamGoals(d), a = gs.filter((x) => x.status === 'achieved').length; return gs.length === 1 ? 'цель: ' + esc(goalLine(gs[0]).text) : 'путь: ' + a + ' из ' + gs.length + ' целей'; })()}</small>` : ''}</div><span class="chev">›</span></div>`;
+  const drPath = S.state.dreams.filter((d) => !d.cameTrue && S.dreamGoals(d).length), drWish = S.state.dreams.filter((d) => !d.cameTrue && !S.dreamGoals(d).length), drTrue = S.state.dreams.filter((d) => d.cameTrue);
+  const grpL = drPath.length && drWish.length;
+  const dreams = (drPath.length ? (grpL ? '<div class="dr-grp">В пути</div>' : '') + drPath.map((d) => drRow(d, ' path')).join('') : '')
+    + (drWish.length ? (grpL ? '<div class="dr-grp">Мечтаю</div>' : '') + drWish.map((d) => drRow(d, '')).join('') : '');
+  const drArch = drTrue.length ? `<div class="arch" data-act="arch">Сбылись · ${drTrue.length}<span>›</span></div><div class="rows" hidden>${drTrue.map((d) => drRow(d, ' on')).join('')}</div>` : '';
   const html = `<section class="scr">
   ${top('Моя жизнь', { back: false, right: `<button class="ib ibgear" data-go="#/settings" title="Настройки">${ICON.gear}</button>` })}
   <div class="body">
@@ -658,8 +664,8 @@ export function lifeScreen() {
     <div class="card"><div class="h3">Календарь жизни<span class="small">${hor} лет</span></div><div class="life">${cells}</div>
       <div class="legend"><span style="--c:color-mix(in srgb, var(--muted) 55%, var(--soft))">Прошло</span><span style="--c:var(--accent)">Сейчас · ${a} ${plural(a, 'год', 'года', 'лет')}</span><span style="--c:color-mix(in srgb, var(--accent) 35%, var(--card))">До ${lm}</span><span style="--c:var(--soft)">После</span></div></div>
     <div class="blk dreams"><div class="bh">${ICON.dream}<b>Мои мечты${S.state.dreams.length ? ` <span class="bh-n">${S.state.dreams.length}</span>` : ''}</b><button class="plus" data-act="adddream">+</button></div>
-      <div class="rows">${dreams}<div class="row" data-dreamnew hidden><input class="inp" data-dreaminp placeholder="О чём мечтаешь?"></div></div>
-      ${!dreams ? '<div class="empty" data-dreamempty>Куда хочешь прийти — без дат и плана. Например: побывать на Байкале. Потом наметишь путь: цели и привычки.</div>' : ''}
+      <div class="rows">${dreams}<div class="row" data-dreamnew hidden><input class="inp" data-dreaminp placeholder="О чём мечтаешь?"></div></div>${drArch}
+      ${!dreams && !drArch ? '<div class="empty" data-dreamempty>Куда хочешь прийти — без дат и плана. Например: побывать на Байкале. Потом наметишь путь: цели и привычки.</div>' : ''}
     </div>
     ${lifeHub()}
   </div>
@@ -677,6 +683,7 @@ export function lifeScreen() {
     },
     actions: {
       adddream: () => { const r = rootEl.querySelector('[data-dreamnew]'); r.hidden = false; const e = rootEl.querySelector('[data-dreamempty]'); if (e) e.hidden = true; r.querySelector('input').focus(); },
+      arch: (el) => { el.nextElementSibling.hidden = !el.nextElementSibling.hidden; el.classList.toggle('open'); },
       deldream: (el, go, render) => { if (confirm('Удалить мечту?')) { S.deleteDream(el.dataset.id); render(); } },
     },
   };
