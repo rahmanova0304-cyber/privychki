@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=110';
+import * as S from './store.js?v=111';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=110';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=111';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -235,7 +235,7 @@ export function dayScreen(date) {
     ${block('e', 'События', by('e'), date)}
     ${note}
     ${date === t && !d.closedAt && st.total ? '<button class="btn pri" style="flex:none" data-act="close">Завершить день</button>' : ''}
-    ${date === t && d.closedAt ? '<p class="small" style="text-align:center;margin:0">День закрыт. Отметки можно поправить, нажав на строку.</p>' : ''}
+    ${date === t && d.closedAt ? '<p class="small" style="text-align:center;margin:0">День закрыт. Отметки можно поправить, нажав на строку.<br><span class="link" data-act="reopen">Открыть день снова</span></p>' : ''}
   </div>
   ${tabbar('today')}
 </section>`;
@@ -251,7 +251,13 @@ export function dayScreen(date) {
       week: (el, go) => go('#/day/' + el.dataset.d),
       pickday: (el, go) => go('#/day/' + el.dataset.d, true),
       toggle: (el, go, render) => { S.toggle(date, el.dataset.key); render(); },
-      close: (el, go, render) => { S.closeDay(date); render(); },
+      // неотмеченное после закрытия станет «не сделано» — спросить, чтобы случайное нажатие не закрыло день
+      close: (el, go, render) => {
+        const left = S.dayItems(date).filter((i) => !i.s).length;
+        if (left && !confirm(`Не отмечено: ${left}. После завершения это станет «не сделано». Завершить день?`)) return;
+        S.closeDay(date); render();
+      },
+      reopen: (el, go, render) => { S.reopenDay(date); render(); },
       dayphoto: (el, go, render) => { if (confirm('Убрать фото?')) { const dd = S.day(date, true); dd.photos = dd.photos.filter((x) => x !== el.dataset.id); S.deletePhoto(el.dataset.id); S.save(); render(); } },
     },
   };

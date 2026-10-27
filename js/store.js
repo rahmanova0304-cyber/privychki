@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=110';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=111';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -413,6 +413,8 @@ export function setStepDayDur(date, key, min) {
 }
 
 export function closeDay(date) { checkpoint('День завершён'); day(date, true).closedAt = new Date().toISOString(); save(); }
+// закрытый сегодняшний день можно открыть снова: «не сделано» не хранится, а считается от закрытия — оно исчезнет
+export function reopenDay(date) { checkpoint('День снова открыт'); day(date, true).closedAt = null; save(); }
 export function setMemory(date, text) { day(date, true).memory = text; save(); }
 export function setNote(date, text) { day(date, true).note = text; save(); }
 
