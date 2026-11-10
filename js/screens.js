@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=113';
+import * as S from './store.js?v=114';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=113';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=114';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -112,13 +112,8 @@ export function fillPhotos(root, size = 'thumb') {
     const u = await S.photoUrl(el.dataset.photo, el.dataset.size || size);
     if (!u) return;
     el.style.background = `url(${u}) center / cover`; el.style.backgroundSize = 'cover';
-    // обложка воспоминания — в пропорциях самого фото (от 4:5 до 16:9), чтобы не резать вертикальные снимки
-    if (el.classList.contains('mm-cover')) { const im = new Image(); im.onload = () => { el.style.aspectRatio = Math.min(16 / 9, Math.max(3 / 4, im.naturalWidth / im.naturalHeight)); }; im.src = u; }
-    // листаемая обложка: фото целиком (без обрезки), высота — по первому фото
-    if (el.classList.contains('mm-slide')) {
-      el.style.backgroundSize = 'contain'; el.style.backgroundRepeat = 'no-repeat';
-      if (!el.previousElementSibling) { const im = new Image(); im.onload = () => { el.parentElement.style.aspectRatio = Math.min(16 / 9, Math.max(3 / 4, im.naturalWidth / im.naturalHeight)); }; im.src = u; }
-    }
+    // обложки воспоминаний — одного размера 4:3, фото целиком на размытом фоне из него же
+    if (el.classList.contains('mm-cover') || el.classList.contains('mm-slide')) el.style.setProperty('--img', `url(${u})`);
   });
 }
 export function bindPhotoInput(root, onAdd) {

@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=113';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=114';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -738,14 +738,13 @@ export function memories(year, onlySignificant) {
       g.entries.push(en); g.photos.push(...(en.photos || []));
     } else out.push({ kind: 'memory', entry: en, date: en.date, text: en.text, photos: en.photos || [], significant: en.significant, title: en.title });
   }
-  // поездка: дорога — в свой день, жильё и итоговая сумма — в первый день
+  // поездка целиком — отдельная карточка над её днями: даты, дорога, жильё, итоговая сумма
   for (const e of trips) {
-    if (!e.start.startsWith(Y) && !e.end.startsWith(Y)) continue;
-    for (const l of e.legs || []) { const d = (l.datetime || '').slice(0, 10) || e.start; if (d.startsWith(Y)) { const g = group(e, d); (g.legs = g.legs || []).push(l); } }
-    if (e.start.startsWith(Y) && ((e.places || []).length || eventTotal(e).total)) { const g = group(e, e.start); g.stay = e.places || []; g.total = eventTotal(e).total; }
+    if (!e.end.startsWith(Y)) continue;
+    out.push({ kind: 'event', summary: true, event: e, date: e.end, day: null, text: '', photos: [], entries: [], significant: !!e.significant, legs: e.legs || [], stay: (e.places || []).filter((p) => p.name || p.address), total: eventTotal(e).total });
   }
   for (const g of groups.values()) { g.text = [g.dayMemory, ...g.entries.map((x) => x.text)].filter(Boolean).join(' '); out.push(g); }
-  return out.filter((m) => !onlySignificant || m.significant).sort((a, b) => b.date.localeCompare(a.date));
+  return out.filter((m) => !onlySignificant || m.significant).sort((a, b) => b.date.localeCompare(a.date) || (b.summary ? 1 : 0) - (a.summary ? 1 : 0));
 }
 
 // ---------- мечты и профиль ----------

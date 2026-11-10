@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=113';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=113';
-import { top, field } from './screens.js?v=113';
-import { aiYearText } from './ai.js?v=113';
+import * as S from './store.js?v=114';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=114';
+import { top, field } from './screens.js?v=114';
+import { aiYearText } from './ai.js?v=114';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -26,9 +26,9 @@ const rub = (n) => Number(n).toLocaleString('ru-RU') + ' ₽';
 function bookItems(list) {
   const out = [], trips = new Map();
   for (const x of list) {
-    if (x.kind === 'event' && x.day) {
+    if (x.kind === 'event' && (x.day || x.summary)) {
       if (!trips.has(x.event.id)) { const t = { trip: true, event: x.event, date: x.event.start, days: [] }; trips.set(x.event.id, t); out.push(t); }
-      trips.get(x.event.id).days.push(x);
+      if (x.day) trips.get(x.event.id).days.push(x);
     } else out.push(x);
   }
   return out;

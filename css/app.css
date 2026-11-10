@@ -764,3 +764,18 @@ p, .tl > div, .mem li { white-space: pre-line }
 .mm-ri svg { width: 13px !important; height: 13px !important; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round }
 .mm-total { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px; margin-top: 4px }
 .mm-total b { color: var(--ink); font-weight: 600; font-size: 15px }
+
+/* v114: обложки воспоминаний одного размера (фото целиком на размытом фоне), записи — отдельными полями, карточка «поездка целиком» */
+.mm-cover.ph, .mm-track { aspect-ratio: 4 / 3 !important }
+.mm-cover.ph, .mm-slide.ph { background: var(--hatch) !important; overflow: hidden }
+.mm-cover.ph::before, .mm-slide.ph::before { content: ""; position: absolute; inset: -20px; background: var(--img) center / cover no-repeat; filter: blur(18px); opacity: .55 }
+.mm-cover.ph::after, .mm-slide.ph::after { content: ""; position: absolute; inset: 0; background: var(--img) center / contain no-repeat }
+.mm-slide.ph { position: relative }
+.mm-date, .mm-count, .mm-star { z-index: 2 }
+.mm-en { background: color-mix(in srgb, var(--e-bg) 60%, var(--card)); border-radius: 10px; padding: 8px 10px; margin-top: 6px }
+.mm-et { font-size: 12px; font-weight: 500; color: var(--e) }
+.mm-body .mm-en p, .mm-nophoto .mm-body .mm-en p { color: var(--ink) }
+.mm-body p.mm-dm { font-style: italic }
+.mm-trip { border-left: 3px solid var(--e) }
+.mm-rt { display: flex; flex-direction: column; flex: 1; min-width: 0 }
+.mm-rt small { font-size: 12px; color: var(--muted); font-weight: 400 }
