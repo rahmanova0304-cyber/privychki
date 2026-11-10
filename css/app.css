@@ -30,7 +30,7 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
-html, body { height: 100%; margin: 0 }
+html, body { height: 100%; margin: 0; overflow: hidden }
 html { background: var(--scr2) }
 body { background: var(--scr2); color: var(--ink); font: 15px/1.4 var(--ui); overscroll-behavior: none; -webkit-text-size-adjust: 100% }
 button { font: inherit; color: inherit }
@@ -40,7 +40,7 @@ button { font: inherit; color: inherit }
 .top .ttl { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .ib { width: 36px; height: 36px; border-radius: 50%; background: var(--card); border: 0; box-shadow: var(--shadow); display: grid; place-items: center; cursor: pointer; flex: none; font-size: 19px; line-height: 1; font-weight: 400 }
 .aib { border-radius: 99px; width: auto; padding: 0 12px; color: var(--accent); font-size: 13px; font-weight: 500 }
-.body { flex: 1; overflow: auto; padding: 4px 16px 18px; display: flex; flex-direction: column; gap: 14px }
+.body { flex: 1; overflow: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; padding: 4px 16px 18px; display: flex; flex-direction: column; gap: 14px }
 .body > * { flex-shrink: 0 }
 .foot { padding: 10px 16px max(12px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px }
 .foot.col { flex-direction: column }
@@ -548,7 +548,7 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 @media print {
   @page { size: A4; margin: 15mm 16mm }
   @page :first { margin: 0 }
-  html, body { background: #fff !important; height: auto }
+  html, body { background: #fff !important; height: auto; overflow: visible !important }
   #app { display: none !important }
   #print { display: block; color: #1c1938; font: 10.5pt/1.45 var(--ui) }
   .pg { position: relative }
@@ -725,7 +725,8 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .mm-car { position: relative }
 .mm-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none }
 .mm-track::-webkit-scrollbar { display: none }
-.mm-slide.ph { flex: 0 0 100%; aspect-ratio: 4 / 3; border-radius: 0 !important; max-width: none !important; scroll-snap-align: center; background: var(--hatch) }
+.mm-track { aspect-ratio: 4 / 3; background: var(--hatch) }
+.mm-slide.ph { flex: 0 0 100%; width: 100%; height: 100%; aspect-ratio: auto !important; background-position: center !important; border-radius: 0 !important; max-width: none !important; scroll-snap-align: center; background: var(--hatch) }
 .mm-en { display: flex; flex-direction: column; gap: 2px; margin-top: 4px }
 .mm-en .ev-tag { font-size: 13px }
 .mm-body .mm-en p { margin: 0 }
@@ -748,3 +749,18 @@ input[type="date"].inp, input[type="time"].inp, input[type="datetime-local"].inp
 .opts.ev-days span i { font-style: normal; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--e-bg); color: var(--e); display: inline-grid; place-items: center }
 .opts.ev-days span.on i { background: rgba(255, 255, 255, .25); color: inherit }
 .opts.ev-days span.ev-d0 { color: var(--muted) }
+
+/* v113: абзацы в тексте сохраняются; фильтры воспоминаний; дорога и жильё в воспоминаниях */
+p, .tl > div, .mem li { white-space: pre-line }
+.opts.mm-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px; flex: none }
+.opts.mm-row::-webkit-scrollbar { display: none }
+.opts.mm-row span { white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 6px }
+.opts.mm-row span i { font-style: normal; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--soft); color: var(--accent); display: inline-grid; place-items: center }
+.opts.mm-row span.on i { background: rgba(255, 255, 255, .25); color: inherit }
+.opts.mm-row span.mm-0 { opacity: .4; box-shadow: none; cursor: default }
+.mm-road { font-size: 13px; margin-top: 2px }
+.mm-road .ev-price { white-space: nowrap; padding-left: 8px }
+.mm-ri { width: 22px; height: 22px; border-radius: 50%; background: var(--e-bg); display: grid; place-items: center; flex: none }
+.mm-ri svg { width: 13px !important; height: 13px !important; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round }
+.mm-total { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px; margin-top: 4px }
+.mm-total b { color: var(--ink); font-weight: 600; font-size: 15px }

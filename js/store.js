@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=112';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=113';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -737,6 +737,12 @@ export function memories(year, onlySignificant) {
       const g = group(e, en.date);
       g.entries.push(en); g.photos.push(...(en.photos || []));
     } else out.push({ kind: 'memory', entry: en, date: en.date, text: en.text, photos: en.photos || [], significant: en.significant, title: en.title });
+  }
+  // поездка: дорога — в свой день, жильё и итоговая сумма — в первый день
+  for (const e of trips) {
+    if (!e.start.startsWith(Y) && !e.end.startsWith(Y)) continue;
+    for (const l of e.legs || []) { const d = (l.datetime || '').slice(0, 10) || e.start; if (d.startsWith(Y)) { const g = group(e, d); (g.legs = g.legs || []).push(l); } }
+    if (e.start.startsWith(Y) && ((e.places || []).length || eventTotal(e).total)) { const g = group(e, e.start); g.stay = e.places || []; g.total = eventTotal(e).total; }
   }
   for (const g of groups.values()) { g.text = [g.dayMemory, ...g.entries.map((x) => x.text)].filter(Boolean).join(' '); out.push(g); }
   return out.filter((m) => !onlySignificant || m.significant).sort((a, b) => b.date.localeCompare(a.date));

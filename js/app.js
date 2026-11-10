@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=112';
-import * as V from './screens.js?v=112';
-import * as W from './screens2.js?v=112';
-import { aiScreen } from './ai.js?v=112';
-import { printScreen } from './print.js?v=112';
-import { today } from './util.js?v=112';
+import * as S from './store.js?v=113';
+import * as V from './screens.js?v=113';
+import * as W from './screens2.js?v=113';
+import { aiScreen } from './ai.js?v=113';
+import { printScreen } from './print.js?v=113';
+import { today } from './util.js?v=113';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -54,10 +54,13 @@ function render() {
   const scroll = same && prevBody ? prevBody.scrollTop : 0;
   // кольца на том же экране дорастают от прежнего процента, на новом — от нуля
   const oldRings = same ? [...app.querySelectorAll('.ring')].map((r) => r.style.getPropertyValue('--rp')) : [];
+  if (!same && currentRoute) dropDraft();
+  else if (same && draftDirty) saveDraft();
   current = route();
   currentRoute = location.hash;
   app.innerHTML = current.html;
   if (current.mount) current.mount(app);
+  if (same && draftDirty) restoreDraft();
   const body = app.querySelector('.body');
   if (body && scroll) body.scrollTop = scroll;
   app.querySelectorAll('.ring').forEach((r, i) => { if (oldRings[i]) r.style.setProperty('--rp0', oldRings[i]); });
@@ -192,13 +195,45 @@ toast.addEventListener('click', (e) => {
   if (S.undo()) render();
 });
 // После полуночи «сегодня» меняется — перерисуем, когда приложение снова открыли.
-document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+// Только главные вкладки: в редакторе перерисовка стёрла бы несохранённый текст.
+const MAIN = /^#\/(day|list|life)?(\/|$|\?)/;
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraft(); else if (MAIN.test(location.hash || '#/day')) render(); });
+
+// ---------- черновик: несохранённый текст переживает уход в браузер и перезапуск ----------
+// iPhone может выгрузить приложение из памяти — тогда при открытии вернёмся на тот же экран и вернём набранное.
+const DRAFT = 'privychki-draft';
+const fieldsOf = () => [...app.querySelectorAll('input:not([type=file]):not([type=checkbox]):not(.hap), textarea')];
+const keyOf = (el, i) => Object.entries(el.dataset).map(([k, v]) => k + '=' + v).join('&') || 'i' + i;
+let draftDirty = false;
+function saveDraft() {
+  if (!draftDirty || MAIN.test(currentRoute)) return;
+  const vals = {}; fieldsOf().forEach((el, i) => { vals[keyOf(el, i)] = el.value; });
+  try { localStorage.setItem(DRAFT, JSON.stringify({ route: currentRoute, at: Date.now(), vals })); } catch (e) {}
+}
+function readDraft() { try { return JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) { return null; } }
+function dropDraft() { draftDirty = false; try { localStorage.removeItem(DRAFT); } catch (e) {} }
+function restoreDraft() {
+  const d = readDraft();
+  if (!d || d.route !== currentRoute) return false;
+  let n = 0;
+  fieldsOf().forEach((el, i) => { const v = d.vals[keyOf(el, i)]; if (v != null && v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); n++; } });
+  draftDirty = true;
+  return n > 0;
+}
+let draftTimer;
+app.addEventListener('input', (e) => { if (!e.isTrusted) return; draftDirty = true; clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 400); });
 
 S.load().then(() => {
   V.applyTheme();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => V.applyTheme());
   if (!history.state) history.replaceState({ depth: 0 }, '', location.hash || '#/day');
+  // приложение перезапустилось, а в редакторе остался несохранённый текст — вернуться туда
+  const d = readDraft();
+  if (d && Date.now() - d.at < 3 * 864e5 && MAIN.test(location.hash || '#/day') && !MAIN.test(d.route)) {
+    history.replaceState({ depth: 0 }, '', '#/day'); history.pushState({ depth: 1 }, '', d.route);
+  }
   render();
+  if (restoreDraft()) { toast.innerHTML = '<span>Несохранённый текст возвращён</span>'; toast.classList.add('on'); setTimeout(() => toast.classList.remove('on'), 3000); }
 });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

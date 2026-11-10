@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=112';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=112';
-import { top, field } from './screens.js?v=112';
-import { aiYearText } from './ai.js?v=112';
+import * as S from './store.js?v=113';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=113';
+import { top, field } from './screens.js?v=113';
+import { aiYearText } from './ai.js?v=113';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -20,6 +20,26 @@ async function pickPhotos(year) {
 }
 
 const img = async (id) => id ? `<img src="${await S.photoUrl(id, 'full')}">` : '';
+
+// Поездка в книге — одним пунктом: даты, дорога, жильё, записи по дням и итоговая сумма.
+const rub = (n) => Number(n).toLocaleString('ru-RU') + ' ₽';
+function bookItems(list) {
+  const out = [], trips = new Map();
+  for (const x of list) {
+    if (x.kind === 'event' && x.day) {
+      if (!trips.has(x.event.id)) { const t = { trip: true, event: x.event, date: x.event.start, days: [] }; trips.set(x.event.id, t); out.push(t); }
+      trips.get(x.event.id).days.push(x);
+    } else out.push(x);
+  }
+  return out;
+}
+function tripLi(t) {
+  const e = t.event, legs = e.legs || [], stay = (e.places || []).filter((p) => p.name || p.address), tot = S.eventTotal(e).total;
+  const road = legs.length ? `<br>Дорога: ${legs.map((l) => esc([l.transport, l.route].filter(Boolean).join(' ')) + (l.price ? ' — ' + rub(l.price) : '')).join('; ')}.` : '';
+  const live = stay.length ? `<br>Жильё: ${stay.map((p) => esc(p.name || p.address) + (p.price ? ' — ' + rub(p.price) : '')).join('; ')}.` : '';
+  const days = t.days.filter((d) => d.text || d.entries.some((x) => x.place && x.place.name)).map((d) => `<br><small>${fmtDM(d.day)}</small> ${d.entries.filter((x) => x.place && x.place.name).map((x) => esc([x.place.kind, x.place.name].filter(Boolean).join(' ')) + (x.place.price ? ' (' + rub(x.place.price) + ')' : '')).join(', ')}${d.entries.some((x) => x.place && x.place.name) && d.text ? '. ' : ''}${esc(d.text || '')}`).join('');
+  return `<li><small>${fmtDM(e.start)} – ${fmtDM(e.end)}</small> <b>${esc(e.title)}.</b>${road}${live}${days}${tot ? `<br><b>Вся поездка: ${rub(tot)}</b>` : ''}</li>`;
+}
 
 async function buildBook(year, myText) {
   const from = year + '-01-01', to = year + '-12-31', p = S.periodPct(from, to), ym = S.yearMeta(year);
@@ -46,7 +66,7 @@ async function buildBook(year, myText) {
       const k = String(m).padStart(2, '0'), list = mem.filter((x) => x.date.slice(5, 7) === k);
       if (!list.length) continue;
       const ph = (photos[k] || []);
-      pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${ph.length ? `<div class="phs">${(await Promise.all(ph.map(img))).join('')}</div>` : ''}<ul class="mem">${list.map((x) => `<li><small>${fmtDM(x.date)}</small> ${x.kind === 'event' ? `<b>${esc(x.event.title)}.</b> ` : x.title ? `<b>${esc(x.title)}.</b> ` : ''}${esc(x.text || '')}</li>`).join('')}</ul></section>`);
+      pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${ph.length ? `<div class="phs">${(await Promise.all(ph.map(img))).join('')}</div>` : ''}<ul class="mem">${bookItems(list).map((x) => x.trip ? tripLi(x) : `<li><small>${fmtDM(x.date)}</small> ${x.kind === 'event' ? `<b>${esc(x.event.title)}.</b> ` : x.title ? `<b>${esc(x.title)}.</b> ` : ''}${esc(x.text || '')}</li>`).join('')}</ul></section>`);
     }
   }
   if (opts.photos && all.length > 2) pages.push(`<section class="pg"><h1>Лучшие кадры</h1><div class="collage">${(await Promise.all(all.slice(0, 12).map(img))).join('')}</div></section>`);

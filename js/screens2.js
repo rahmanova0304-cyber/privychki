@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=112';
+import * as S from './store.js?v=113';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=112';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=112';
-import { aiBreakdownGoal } from './ai.js?v=112';
+  MONTHS_NOM, WD } from './util.js?v=113';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=113';
+import { aiBreakdownGoal } from './ai.js?v=113';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -447,11 +447,22 @@ export function entryScreen(eventId, entryId, params) {
 
 export function memoriesScreen(params) {
   const years = [...new Set([new Date().getFullYear(), ...Object.keys(S.state.days).map((d) => +d.slice(0, 4)), ...S.state.entries.map((x) => +x.date.slice(0, 4))])].sort();
-  const y = +(params.get('y') || new Date().getFullYear()), star = params.get('star') === '1';
-  const list = S.memories(y, star);
-  let html = '', cur = '';
+  const y = +(params.get('y') || new Date().getFullYear()), star = params.get('star') === '1', kind = params.get('k') || 'all';
+  const KF = [['all', 'Всё'], ['trip', 'Поездки'], ['event', 'События'], ['day', 'Дни'], ['memory', 'Свои']];
+  const isK = (m) => kind === 'all' || (kind === 'trip' ? m.kind === 'event' && m.event.type === 'trip' : kind === 'event' ? m.kind === 'event' && m.event.type !== 'trip' : m.kind === kind);
+  const all = S.memories(y, star).filter(isK);
   const counts = {};
-  list.forEach((m) => { const k = m.date.slice(0, 7); counts[k] = (counts[k] || 0) + 1; });
+  all.forEach((m) => { const k = m.date.slice(5, 7); counts[k] = (counts[k] || 0) + 1; });
+  // месяц по умолчанию — текущий, если в нём что-то есть, иначе последний месяц с воспоминаниями
+  const curM = String(new Date().getMonth() + 1).padStart(2, '0'), months = Object.keys(counts).sort();
+  let mon = params.get('m') || (y === new Date().getFullYear() && counts[curM] ? curM : months[months.length - 1] || 'all');
+  if (mon !== 'all' && !counts[mon]) mon = 'all';
+  const list = mon === 'all' ? all : all.filter((m) => m.date.slice(5, 7) === mon);
+  const q = (o) => { const p = { y, m: mon, k: kind, star: star ? 1 : 0, ...o }; return '#/memories?y=' + p.y + '&m=' + p.m + '&k=' + p.k + '&star=' + p.star; };
+  const filters = `${years.length > 1 ? `<div class="opts mm-row">${years.map((x) => `<span class="${x === y ? 'on' : ''}" data-act="mf" data-h="${q({ y: x, m: 'all' })}">${x}</span>`).join('')}</div>` : ''}
+    <div class="opts mm-row mm-mon"><span class="${mon === 'all' ? 'on' : ''}" data-act="mf" data-h="${q({ m: 'all' })}">Весь ${y}</span>${Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((k) => `<span class="${mon === k ? 'on' : ''}${counts[k] ? '' : ' mm-0'}" ${counts[k] ? `data-act="mf" data-h="${q({ m: k })}"` : ''}>${MONTHS_NOM[+k - 1].slice(0, 3)}${counts[k] ? `<i>${counts[k]}</i>` : ''}</span>`).join('')}</div>
+    <div class="opts mm-row">${KF.map(([k, l]) => `<span class="${kind === k ? 'on' : ''}" data-act="mf" data-h="${q({ k, m: 'all' })}">${l}</span>`).join('')}<span class="${star ? 'on' : ''}" data-act="mf" data-h="${q({ star: star ? 0 : 1, m: 'all' })}">${ICON.star}Значимые</span></div>`;
+  let html = '', cur = '';
   const tripDay = (m) => { const e = m.event; return Math.round((parse(m.day) - parse(e.start)) / 864e5) + 1 + ' из ' + (Math.round((parse(e.end) - parse(e.start)) / 864e5) + 1); };
   const enHtml = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="mm-en">${p ? `<div class="ev-tag">${PIN}${esc([p.kind, p.name].filter(Boolean).join(' · '))}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}</div>`; };
   const cover = (m) => {
@@ -462,11 +473,14 @@ export function memoriesScreen(params) {
   };
   for (const m of list) {
     const k = m.date.slice(0, 7);
-    if (k !== cur) { cur = k; const n = counts[k]; html += `<div class="mm-month">${MONTHS_NOM[+k.slice(5) - 1]}<span>${n} ${plural(n, 'воспоминание', 'воспоминания', 'воспоминаний')}</span></div>`; }
+    if (k !== cur && mon === 'all') { cur = k; const n = counts[k.slice(5)]; html += `<div class="mm-month">${MONTHS_NOM[+k.slice(5) - 1]}<span>${n} ${plural(n, 'воспоминание', 'воспоминания', 'воспоминаний')}</span></div>`; }
     const go = m.kind === 'event' ? '#/eventcard/' + m.event.id + (m.day ? '?d=' + m.day : '') : m.kind === 'memory' ? '#/entry/memory/' + m.entry.id : '#/day/' + m.date;
     const title = m.kind === 'event' ? m.event.title : m.title;
     const src = m.kind === 'event' ? (m.event.type === 'trip' ? 'Поездка' + (m.day ? ' · день ' + tripDay(m) : '') : m.event.kind || 'Событие') : 'Воспоминание';
-    const text = m.kind === 'event' ? (m.dayMemory ? `<p class="mm-dm">«${esc(m.dayMemory)}»</p>` : '') + m.entries.map(enHtml).join('') : m.text ? `<p>${esc(m.text)}</p>` : '';
+    const road = m.kind === 'event' ? (m.legs || []).map((l) => `<div class="ev-tag mm-road"><span class="mm-ri">${trSvg(l.transport)}</span>${esc([l.transport, l.route, l.datetime ? l.datetime.slice(11, 16) : ''].filter(Boolean).join(' · '))}${l.price ? `<span class="ev-price">${money(l.price)}</span>` : ''}</div>`).join('')
+      + (m.stay || []).map((p) => `<div class="ev-tag mm-road"><span class="mm-ri">${PIN}</span>Жильё · ${esc(p.name || p.address)}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>`).join('')
+      + (m.total ? `<div class="mm-total">Вся поездка<b>${money(m.total)}</b></div>` : '') : '';
+    const text = road + (m.kind === 'event' ? (m.dayMemory ? `<p class="mm-dm">«${esc(m.dayMemory)}»</p>` : '') + m.entries.map(enHtml).join('') : m.text ? `<p>${esc(m.text)}</p>` : '');
     if (m.photos.length) {
       html += `<div class="mm-card" data-go="${go}">${cover(m)}<div class="mm-body">${m.kind !== 'day' ? `<div class="mm-src" style="color:var(--e)">${esc(src)}</div>` : ''}${title ? `<b>${esc(title)}</b>` : ''}${text}</div></div>`;
     } else if (m.kind === 'day') {
@@ -477,11 +491,13 @@ export function memoriesScreen(params) {
   }
   return {
     html: `<section class="scr">${top('Воспоминания', { right: `<button class="ib ibplus" data-go="#/entry/memory/new">+</button>` })}<div class="body">
-      <div class="opts">${years.map((x) => `<span class="${x === y && !star ? 'on' : ''}" data-go="#/memories?y=${x}">${x}</span>`).join('')}<span class="${star ? 'on' : ''}" data-go="#/memories?y=${y}&star=${star ? 0 : 1}">${ICON.star}Значимые</span></div>
-      ${html || '<p class="small">Здесь соберутся «Что запомнилось» из дней, мысли из событий и поездок. Прошлые годы можно дописать через «+».</p>'}
+      ${filters}
+      ${html || (all.length ? '' : kind !== 'all' || star ? '<p class="small">По этому фильтру пока пусто.</p>' : '') || '<p class="small">Здесь соберутся «Что запомнилось» из дней, мысли из событий и поездок. Прошлые годы можно дописать через «+».</p>'}
     </div></section>`,
+    actions: { mf: (el, go) => go(el.dataset.h, true) },
     mount(root) {
       fillPhotos(root);
+      const on = root.querySelector('.mm-mon .on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' });
       // счётчик «2 / 5» на листаемой обложке
       root.querySelectorAll('.mm-car').forEach((c) => { const tr = c.querySelector('.mm-track'), n = c.querySelector('.mm-count'); tr.addEventListener('scroll', () => { n.textContent = Math.round(tr.scrollLeft / tr.clientWidth) + 1 + ' / ' + tr.children.length; }, { passive: true }); });
     },
