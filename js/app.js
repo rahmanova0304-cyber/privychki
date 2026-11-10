@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=111';
-import * as V from './screens.js?v=111';
-import * as W from './screens2.js?v=111';
-import { aiScreen } from './ai.js?v=111';
-import { printScreen } from './print.js?v=111';
-import { today } from './util.js?v=111';
+import * as S from './store.js?v=112';
+import * as V from './screens.js?v=112';
+import * as W from './screens2.js?v=112';
+import { aiScreen } from './ai.js?v=112';
+import { printScreen } from './print.js?v=112';
+import { today } from './util.js?v=112';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -34,7 +34,7 @@ function route() {
     case 'goalcard': return W.goalCardScreen(parts[1]);
     case 'habitcard': return W.habitCardScreen(parts[1]);
     case 'event': return W.eventEditScreen(parts[1], params);
-    case 'eventcard': return W.eventCardScreen(parts[1]);
+    case 'eventcard': return W.eventCardScreen(parts[1], params);
     case 'entry': return W.entryScreen(parts[1], parts[2], params);
     case 'memories': return W.memoriesScreen(params);
     case 'search': return W.searchScreen();
@@ -124,18 +124,22 @@ function go(target, replace, reset) {
   render();
 }
 
-// Нажатие на фото — открыть его на весь экран (крестик «удалить» на фото работает как раньше).
+// Нажатие на фото — открыть на весь экран; соседние фото того же блока листаются свайпом.
 app.addEventListener('click', (e) => {
   const ph = e.target.closest('[data-photo]');
   if (!ph || e.target.closest('[data-act]') || ph.closest('.a4, .bk')) return;
   e.preventDefault(); e.stopImmediatePropagation();
-  S.photoUrl(ph.dataset.photo, 'full').then((u) => {
-    if (!u) return;
-    const v = document.createElement('div');
-    v.className = 'viewer'; v.innerHTML = `<img src="${u}" alt=""><i>✕</i>`;
-    v.addEventListener('click', () => v.remove());
-    document.body.appendChild(v);
-  });
+  const ids = [...ph.parentElement.querySelectorAll(':scope > [data-photo]')].map((x) => x.dataset.photo);
+  const start = Math.max(0, ids.indexOf(ph.dataset.photo));
+  const v = document.createElement('div');
+  v.className = 'viewer';
+  v.innerHTML = `<div class="vw-track">${ids.map(() => '<div class="vw-slide"><img alt=""></div>').join('')}</div><i>✕</i>${ids.length > 1 ? `<span class="vw-n">${start + 1} / ${ids.length}</span>` : ''}`;
+  const tr = v.querySelector('.vw-track'), n = v.querySelector('.vw-n');
+  ids.forEach((id, k) => S.photoUrl(id, 'full').then((u) => { if (u) tr.children[k].firstChild.src = u; }));
+  tr.addEventListener('scroll', () => { if (n) n.textContent = Math.round(tr.scrollLeft / tr.clientWidth) + 1 + ' / ' + ids.length; }, { passive: true });
+  v.addEventListener('click', () => v.remove());
+  document.body.appendChild(v);
+  tr.scrollLeft = start * tr.clientWidth;
 }, true);
 
 app.addEventListener('click', (e) => {

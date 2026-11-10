@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=111';
+import * as S from './store.js?v=112';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=111';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=112';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -182,8 +182,17 @@ const timeOf = (it) => (it.type === 't' || it.type === 'e') && it.ref.time ? it.
 function block(kind, title, items, date) {
   const map = { s: ['goals', ICON.goal], h: ['habits', ICON.habit], t: ['tasks', ICON.task], e: ['events', ICON.event] }[kind];
   const done = items.filter((i) => i.s === 'done').length;
-  const rows = items.slice().sort((a, b) => order(a) - order(b) || timeOf(a).localeCompare(timeOf(b))).map((i) => itemRow(i, date)).join('');
+  const rows = items.slice().sort((a, b) => order(a) - order(b) || timeOf(a).localeCompare(timeOf(b))).map((i) => itemRow(i, date) + (i.type === 'e' ? eventInDay(i.ref, date) : '')).join('');
   return `<div class="blk ${map[0]}"><div class="bh">${map[1]}<b>${title}${items.length ? ` <span class="bh-n${done === items.length ? ' full' : ''}">${done} из ${items.length}</span>` : ''}</b><button class="plus" data-go="${kind === 'e' ? '#/event/new?date=' + date : '#/pick/' + kind + '/' + date}">+</button></div>${rows ? `<div class="rows">${rows}</div>` : ''}</div>`;
+}
+
+// Записи события прямо в дне: рестораны, такси, мысли, фото — без захода в список.
+const PIN_S = '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+function eventInDay(e, date) {
+  if (date > today()) return '';
+  const list = S.state.entries.filter((x) => x.eventId === e.id && x.date === date).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  const ens = list.map((x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="eid-en" data-go="#/entry/${e.id}/${x.id}">${p || x.time ? `<div class="ev-tag">${x.time ? `<span class="eid-t">${esc(x.time)}</span>` : ''}${p ? PIN_S + esc([p.kind, p.name].filter(Boolean).join(' · ')) : ''}${p && p.price ? `<span class="ev-price">${Number(p.price).toLocaleString('ru-RU')} ₽</span>` : ''}</div>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}${photoGrid(x.photos, null, { add: false })}</div>`; }).join('');
+  return `<div class="ev-inday">${ens}<div class="eid-act"><span class="eid-add" data-go="#/entry/${e.id}/new?date=${date}"><i></i>${e.type === 'trip' ? 'Добавить запись' : 'Мысль или фото'}</span><span class="link" style="color:var(--e)" data-go="#/eventcard/${e.id}${e.type === 'trip' ? '?d=' + date : ''}">${e.type === 'trip' ? 'Вся поездка' : 'Открыть'}</span></div></div>`;
 }
 
 // ---------- ДЕНЬ ----------

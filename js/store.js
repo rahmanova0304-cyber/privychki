@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=111';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=112';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -711,24 +711,34 @@ export function photosOnDay(eventId, date, exceptEntryId) {
 }
 
 // Лента воспоминаний года: «Что запомнилось», записи событий, ручные воспоминания.
+// Событие = одна карточка со всеми записями; поездка = карточка на каждый день (туда же «Что запомнилось» этого дня).
 export function memories(year, onlySignificant) {
-  const out = [];
+  const out = [], Y = String(year);
+  const trips = state.events.filter((e) => e.type === 'trip' && e.end);
+  const tripOn = (date) => trips.find((e) => date >= e.start && date <= e.end);
+  const groups = new Map();
+  const group = (e, date) => {
+    const trip = e.type === 'trip', key = e.id + (trip ? '|' + date : '');
+    if (!groups.has(key)) groups.set(key, { kind: 'event', event: e, date: trip ? date : e.start, day: trip ? date : null, dayMemory: '', text: '', photos: [], significant: !!e.significant, entries: [] });
+    return groups.get(key);
+  };
   for (const [date, d] of Object.entries(state.days)) {
-    if (!date.startsWith(String(year)) || (!d.memory && !(d.photos || []).length)) continue;
+    if (!date.startsWith(Y) || (!d.memory && !(d.photos || []).length)) continue;
+    const tr = tripOn(date);
+    if (tr) { const g = group(tr, date); g.dayMemory = d.memory || ''; g.photos.unshift(...(d.photos || [])); continue; }
     out.push({ kind: 'day', date, text: d.memory, photos: d.photos || [], significant: !!d.significant });
   }
-  const byEvent = new Map();
-  for (const en of state.entries) {
-    if (!en.date.startsWith(String(year))) continue;
+  const ents = state.entries.slice().sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  for (const en of ents) {
+    if (!en.date.startsWith(Y)) continue;
     if (en.eventId) {
       const e = eventById(en.eventId);
       if (!e) continue;
-      if (!byEvent.has(e.id)) byEvent.set(e.id, { kind: 'event', event: e, date: e.start, text: '', photos: [], significant: e.significant, entries: [] });
-      const g = byEvent.get(e.id);
-      g.entries.push(en); g.photos.push(...(en.photos || [])); if (!g.text) g.text = en.text;
+      const g = group(e, en.date);
+      g.entries.push(en); g.photos.push(...(en.photos || []));
     } else out.push({ kind: 'memory', entry: en, date: en.date, text: en.text, photos: en.photos || [], significant: en.significant, title: en.title });
   }
-  out.push(...byEvent.values());
+  for (const g of groups.values()) { g.text = [g.dayMemory, ...g.entries.map((x) => x.text)].filter(Boolean).join(' '); out.push(g); }
   return out.filter((m) => !onlySignificant || m.significant).sort((a, b) => b.date.localeCompare(a.date));
 }
 
