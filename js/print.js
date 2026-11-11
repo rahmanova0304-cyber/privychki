@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=121';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=121';
-import { top, field } from './screens.js?v=121';
-import { aiYearText } from './ai.js?v=121';
+import * as S from './store.js?v=122';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=122';
+import { top, field } from './screens.js?v=122';
+import { aiYearText } from './ai.js?v=122';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -54,12 +54,14 @@ async function tripBlock(t) {
     + stay.map((p) => `<div class="brow"><span>${esc(p.name || p.address)}<small>жильё</small></span>${p.price ? `<b>${rub(p.price)}</b>` : ''}</div>`).join('')
     + (tot ? `<div class="brow btot"><span>Вся поездка</span><b>${rub(tot)}</b></div>` : '');
   const n = Math.round((new Date(e.end) - new Date(e.start)) / 864e5) + 1;
-  let days = '';
+  const days = [];
   for (const d of t.days.slice().sort((a, b) => a.day.localeCompare(b.day))) {
     const k = Math.round((new Date(d.day) - new Date(e.start)) / 864e5) + 1;
-    days += `<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos)}</div>`;
+    days.push(`<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos)}</div>`);
   }
-  return `<div class="btrip"><div class="bm"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>${days}</div>`;
+  const head = `<div class="bm bthead"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>`;
+  // шапка поездки и первый день — одним неразрывным куском, чтобы шапка не оставалась одна внизу листа
+  return `<div class="btrip"><div class="bgrp">${head}${days[0] || ''}</div>${days.slice(1).join('')}</div>`;
 }
 
 async function buildBook(year, myText) {
@@ -82,13 +84,13 @@ async function buildBook(year, myText) {
   }
   if (opts.months) {
     const mem = S.memories(year).reverse();
-    if (mem.length) pages.push('<h1 class="pgh">По месяцам</h1>');
+    let first = true;
     for (let m = 1; m <= 12; m++) {
       const k = String(m).padStart(2, '0'), list = mem.filter((x) => x.date.slice(5, 7) === k);
       if (!list.length) continue;
       let blocks = '';
       for (const x of bookItems(list)) blocks += x.trip ? await tripBlock(x) : await memBlock(x);
-      pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${blocks}</section>`);
+      pages.push(`<section class="pg mon">${first ? '<h1>По месяцам</h1>' : ''}<h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${blocks}</section>`); first = false;
     }
   }
   // Обложка — отдельный лист, остальное идёт сплошным потоком без пустых мест.

@@ -558,7 +558,7 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   .pg h1 { font-size: 22pt; font-weight: 300; color: #7556ee; margin: 0 0 4mm }
   .pg h2 { font-size: 12.5pt; font-weight: 500; margin: 5mm 0 1.5mm }
   .pg h2.mh { font-size: 15pt; font-weight: 400; color: #7556ee; margin: 0 0 2mm; padding-bottom: 1mm; border-bottom: .3mm solid #e6dffc }
-  .flow .pg.mon { margin-top: 6mm }
+  .flow .pg.mon { margin-top: 0; break-before: page; page-break-before: always }
   .pg h2 small { color: #7c7894; font-weight: 400 }
   .pg ul { padding-left: 5mm; margin: 0 } .pg li { margin: 1.5mm 0 } .pg li span, .pg li small { color: #7c7894 }
   .pg .big { font-size: 34pt; font-weight: 300; margin: 0 0 6mm } .pg .big small { font-size: 11pt; color: #7c7894 }
@@ -591,7 +591,8 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   /* дни поездки: фото снизу строкой, одной высоты, каждое целиком */
   .pg .bday .bphs { width: auto; display: flex; flex-wrap: wrap; gap: 2.5mm; margin-top: 3mm; column-count: auto }
   .pg .bday .bphs img { height: 52mm; width: auto; max-width: 100%; max-height: none; margin: 0; border-radius: 2mm; display: block }
-  .pg .btrip { margin: 0 0 4mm; font-size: 0 } .pg .btrip > .bm { font-size: 10.5pt } .pg .btrip > .bm:first-child { background: #eaf6fc; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-after: avoid; page-break-after: avoid }
+  .pg .btrip { margin: 0 0 4mm; font-size: 0 } .pg .btrip > .bm, .pg .bgrp { font-size: 10.5pt }
+  .pg .bgrp { display: inline-block; width: 100%; vertical-align: top; break-inside: avoid; page-break-inside: avoid; margin-bottom: 4mm } .pg .bgrp > .bm { display: block } .pg .bgrp > .bm:last-child { margin-bottom: 0 } .pg .bthead { background: #eaf6fc; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-after: avoid; page-break-after: avoid }
   .pg .binfo { margin-top: 2mm; border-radius: 2mm; overflow: hidden; background: #fff } .pg .brow { display: flex; justify-content: space-between; gap: 4mm; padding: 1.8mm 3mm } .pg .brow:nth-child(even) { background: #d9eff9 }
   .pg .brow small { color: #7c7894; font-size: 9pt; margin-left: 2mm } .pg .brow b { font-weight: 500; white-space: nowrap } .pg .brow.btot b { font-weight: 700 } .pg .brow.btot span { color: #7c7894 }
 }
