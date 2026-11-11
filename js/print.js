@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=117';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=117';
-import { top, field } from './screens.js?v=117';
-import { aiYearText } from './ai.js?v=117';
+import * as S from './store.js?v=118';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=118';
+import { top, field } from './screens.js?v=118';
+import { aiYearText } from './ai.js?v=118';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -33,12 +33,29 @@ function bookItems(list) {
   }
   return out;
 }
-function tripLi(t) {
+// Фото — рядом со своим текстом, рядом в строку, каждое в своих пропорциях (без обрезки).
+async function phRow(ids, n = 3) {
+  if (!opts.photos || !ids || !ids.length) return '';
+  return `<div class="bphs">${(await Promise.all(ids.slice(0, n).map(img))).join('')}</div>`;
+}
+const enLine = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="ben">${x.time || p ? `<small>${[x.time, p ? [p.kind, p.name].filter(Boolean).join(' · ') : ''].filter(Boolean).join(' · ')}${p && p.price ? ' · ' + rub(p.price) : ''}</small>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}</div>`; };
+async function memBlock(x) {
+  const title = x.kind === 'event' ? x.event.title : x.title;
+  const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${esc(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.text ? `<div class="ben"><p>${esc(x.text)}</p></div>` : '';
+  return `<div class="bm"><div class="bh"><small>${fmtDM(x.date)}</small>${title ? `<b>${esc(title)}</b>` : ''}${x.significant ? '<span>★</span>' : ''}</div>${body}${await phRow(x.photos, x.significant ? 4 : 3)}</div>`;
+}
+async function tripBlock(t) {
   const e = t.event, legs = e.legs || [], stay = (e.places || []).filter((p) => p.name || p.address), tot = S.eventTotal(e).total;
-  const road = legs.length ? `<br>Дорога: ${legs.map((l) => esc([l.transport, l.route].filter(Boolean).join(' ')) + (l.price ? ' — ' + rub(l.price) : '')).join('; ')}.` : '';
-  const live = stay.length ? `<br>Жильё: ${stay.map((p) => esc(p.name || p.address) + (p.price ? ' — ' + rub(p.price) : '')).join('; ')}.` : '';
-  const days = t.days.filter((d) => d.text || d.entries.some((x) => x.place && x.place.name)).map((d) => `<br><small>${fmtDM(d.day)}</small> ${d.entries.filter((x) => x.place && x.place.name).map((x) => esc([x.place.kind, x.place.name].filter(Boolean).join(' ')) + (x.place.price ? ' (' + rub(x.place.price) + ')' : '')).join(', ')}${d.entries.some((x) => x.place && x.place.name) && d.text ? '. ' : ''}${esc(d.text || '')}`).join('');
-  return `<li><small>${fmtDM(e.start)} – ${fmtDM(e.end)}</small> <b>${esc(e.title)}.</b>${road}${live}${days}${tot ? `<br><b>Вся поездка: ${rub(tot)}</b>` : ''}</li>`;
+  const info = legs.map((l) => `<div class="brow"><span>${esc(l.route || l.transport)}<small>${esc(l.transport.toLowerCase())}${l.datetime ? ' · ' + fmtDM(l.datetime.slice(0, 10)) + ', ' + l.datetime.slice(11, 16) : ''}</small></span>${l.price ? `<b>${rub(l.price)}</b>` : ''}</div>`).join('')
+    + stay.map((p) => `<div class="brow"><span>${esc(p.name || p.address)}<small>жильё</small></span>${p.price ? `<b>${rub(p.price)}</b>` : ''}</div>`).join('')
+    + (tot ? `<div class="brow btot"><span>Вся поездка</span><b>${rub(tot)}</b></div>` : '');
+  const n = Math.round((new Date(e.end) - new Date(e.start)) / 864e5) + 1;
+  let days = '';
+  for (const d of t.days.slice().sort((a, b) => a.day.localeCompare(b.day))) {
+    const k = Math.round((new Date(d.day) - new Date(e.start)) / 864e5) + 1;
+    days += `<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos, 3)}</div>`;
+  }
+  return `<div class="btrip"><div class="bm"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>${days}</div>`;
 }
 
 async function buildBook(year, myText) {
@@ -65,8 +82,9 @@ async function buildBook(year, myText) {
     for (let m = 1; m <= 12; m++) {
       const k = String(m).padStart(2, '0'), list = mem.filter((x) => x.date.slice(5, 7) === k);
       if (!list.length) continue;
-      const ph = (photos[k] || []);
-      pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${ph.length ? `<div class="phs">${(await Promise.all(ph.map(img))).join('')}</div>` : ''}<ul class="mem">${bookItems(list).map((x) => x.trip ? tripLi(x) : `<li><small>${fmtDM(x.date)}</small> ${x.kind === 'event' ? `<b>${esc(x.event.title)}.</b> ` : x.title ? `<b>${esc(x.title)}.</b> ` : ''}${esc(x.text || '')}</li>`).join('')}</ul></section>`);
+      let blocks = '';
+      for (const x of bookItems(list)) blocks += x.trip ? await tripBlock(x) : await memBlock(x);
+      pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${blocks}</section>`);
     }
   }
   if (opts.photos && all.length > 2) pages.push(`<section class="pg"><h1>Лучшие кадры</h1><div class="collage">${(await Promise.all(all.slice(0, 12).map(img))).join('')}</div></section>`);
@@ -90,7 +108,7 @@ export function printScreen(params) {
   const row = (k, t, s) => `<div class="row" data-act="opt" data-k="${k}"><span class="ck sq ${opts[k] ? 'done' : ''}"></span><div class="t"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</div></div>`;
   const html = `<section class="scr">${top('Книга года ' + year)}<div class="body">
     <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — откроется окно печати: можно распечатать или «Поделиться» → «Сохранить в Файлы» как PDF.</p>
-    <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">1–2 кадра на месяц: сначала значимые события и поездки. В конце — коллаж лучших кадров.</small></div>
+    <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят рядом со своими записями: до 3 на воспоминание или день поездки. В конце — коллаж лучших кадров.</small></div>
     <div class="card plain"><div class="h3">Что включить</div><div class="rows">
       ${row('cover', 'Обложка и слово года')}${row('numbers', 'Год в цифрах', 'месяцы, главное, привычки за год')}${row('text', 'Текст «Мой ' + year + '»', S.state.ai && S.state.ai.key ? 'напишет помощник, можно поправить' : 'напиши сама ниже')}${row('goals', 'Цели и путь к ним')}${row('months', 'По месяцам: события и воспоминания')}
     </div></div>
