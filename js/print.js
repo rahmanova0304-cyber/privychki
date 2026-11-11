@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=119';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=119';
-import { top, field } from './screens.js?v=119';
-import { aiYearText } from './ai.js?v=119';
+import * as S from './store.js?v=120';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=120';
+import { top, field } from './screens.js?v=120';
+import { aiYearText } from './ai.js?v=120';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -57,7 +57,7 @@ async function tripBlock(t) {
   let days = '';
   for (const d of t.days.slice().sort((a, b) => a.day.localeCompare(b.day))) {
     const k = Math.round((new Date(d.day) - new Date(e.start)) / 864e5) + 1;
-    days += wrapBm('bday', `<div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>`, (d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : '') + d.entries.map(enLine).join(''), await phRow(d.photos));
+    days += `<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos)}</div>`;
   }
   return `<div class="btrip"><div class="bm"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>${days}</div>`;
 }
