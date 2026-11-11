@@ -1,10 +1,13 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=124';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=124';
-import { top, field } from './screens.js?v=124';
-import { aiYearText } from './ai.js?v=124';
+import * as S from './store.js?v=125';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=125';
+import { top, field } from './screens.js?v=125';
+import { aiYearText } from './ai.js?v=125';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
+
+// все фото года (из воспоминаний) — для выбора обложки
+function yearPhotos(year) { return [...new Set(S.memories(year).flatMap((m) => m.photos))]; }
 
 async function pickPhotos(year) {
   // 1–2 фото на месяц: сначала значимые события и поездки, потом остальные воспоминания.
@@ -69,7 +72,8 @@ async function buildBook(year, myText) {
   const photos = opts.photos ? await pickPhotos(year) : {};
   const all = Object.values(photos).flat(); // для обложки
   const pages = [];
-  if (opts.cover) pages.push(`<section class="pg cover">${all[0] ? await img(all[0]) : ''}<div class="cv"><b>${year}</b><span>${esc(ym.word || '')}</span><small>${esc((S.state.profile || {}).name || '')}</small></div></section>`);
+  const coverId = ym.cover && yearPhotos(year).includes(ym.cover) ? ym.cover : all[0];
+  if (opts.cover) pages.push(`<section class="pg cover">${coverId ? await img(coverId) : ''}<div class="cv"><b>${year}</b><span>${esc(ym.word || '')}</span><small>${esc((S.state.profile || {}).name || '')}</small></div></section>`);
   if (opts.numbers) {
     let tiles = '';
     for (let m = 1; m <= 12; m++) { const mk = year + '-' + String(m).padStart(2, '0'); const st = S.periodPct(mk + '-01', mk + '-' + String(new Date(+year, m, 0).getDate()).padStart(2, '0')); tiles += `<div class="t l${st.total ? Math.min(4, Math.max(1, Math.ceil(st.pct / 25))) : 0}"><small>${MONTHS_NOM[m - 1]}</small><b>${st.total ? st.pct + '%' : '—'}</b></div>`; }
@@ -99,10 +103,10 @@ async function buildBook(year, myText) {
 
 // Раскладка по страницам. iPhone при печати игнорирует «не разрывать», поэтому разрывы ставим сами:
 // всё, что не помещается в остаток страницы (блок, фото, заголовок), уходит на новый лист.
-// Высота страницы 250 мм — с запасом меньше A4 и Letter, так что сам iPhone страницу не режет.
+// Высота страницы 228 мм — с запасом меньше A4 и Letter, так что сам iPhone страницу не режет.
 function paginate(box) {
   box.querySelectorAll('.pb').forEach((x) => x.remove());
-  const px = (mm) => mm * 96 / 25.4, H = px(250);
+  const px = (mm) => mm * 96 / 25.4, H = px(228);
   const y0 = () => box.getBoundingClientRect().top;
   const rect = (el) => { const r = el.getBoundingClientRect(), o = y0(); return { t: r.top - o, b: r.bottom - o }; };
   let start = 0;
@@ -136,7 +140,8 @@ export function printScreen(params) {
   const row = (k, t, s) => `<div class="row" data-act="opt" data-k="${k}"><span class="ck sq ${opts[k] ? 'done' : ''}"></span><div class="t"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</div></div>`;
   const html = `<section class="scr">${top('Книга года ' + year)}<div class="body">
     <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — откроется окно печати: можно распечатать или «Поделиться» → «Сохранить в Файлы» как PDF.</p>
-    <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят справа от своих записей: до 4 на воспоминание или день поездки. На обложке — одно фото года.</small></div>
+    <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят справа от своих записей: до 4 на воспоминание или день поездки. </small></div>
+    ${(() => { const ids = yearPhotos(year); if (!ids.length) return ''; const cur = S.yearMeta(year).cover && ids.includes(S.yearMeta(year).cover) ? S.yearMeta(year).cover : null; return `<div class="field"><label>Фото на обложку</label><div class="bk-cv">${ids.map((id, i) => `<div class="ph${(cur ? id === cur : false) ? ' on' : ''}" data-photo-pick="${id}" data-act="cover" data-id="${id}"></div>`).join('')}</div><small class="small">${cur ? 'Выбрано своё фото.' : 'Нажми на фото, чтобы поставить его на обложку. Пока стоит фото из самого значимого события.'}</small></div>`; })()}
     <div class="card plain"><div class="h3">Что включить</div><div class="rows">
       ${row('cover', 'Обложка и слово года')}${row('numbers', 'Год в цифрах', 'месяцы, главное, привычки за год')}${row('text', 'Текст «Мой ' + year + '»', S.state.ai && S.state.ai.key ? 'напишет помощник, можно поправить' : 'напиши сама ниже')}${row('goals', 'Цели и путь к ним')}${row('months', 'По месяцам: события и воспоминания')}
     </div></div>
@@ -147,6 +152,8 @@ export function printScreen(params) {
     html,
     mount(root) {
       rootEl = root;
+      // превью для выбора обложки (не через data-photo, чтобы нажатие не открывало просмотр)
+      root.querySelectorAll('[data-photo-pick]').forEach(async (el) => { const u = await S.photoUrl(el.dataset.photoPick); if (u) el.style.background = `url(${u}) center / cover`; });
       const ta = root.querySelector('[data-mytext]');
       const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; }; fit();
       ta.addEventListener('input', () => { fit(); S.yearMeta(year).text = ta.value; S.save(); });
@@ -154,6 +161,7 @@ export function printScreen(params) {
     actions: {
       opt: (el) => { opts[el.dataset.k] = !opts[el.dataset.k]; el.querySelector('.ck').classList.toggle('done', opts[el.dataset.k]); },
       ph: (el, go, render) => { opts.photos = el.dataset.v === '1'; render(); },
+      cover: (el, go, render) => { const ym = S.yearMeta(year); ym.cover = ym.cover === el.dataset.id ? null : el.dataset.id; S.save(); render(); },
       aitext: async (el) => {
         el.textContent = 'Пишу…';
         try { const t = await aiYearText(year); const ta = rootEl.querySelector('[data-mytext]'); ta.value = t; S.yearMeta(year).text = t; S.save(); ta.dispatchEvent(new Event('input')); }
