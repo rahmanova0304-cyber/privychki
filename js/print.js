@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=128';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=128';
-import { top, field } from './screens.js?v=128';
-import { aiYearText } from './ai.js?v=128';
+import * as S from './store.js?v=129';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=129';
+import { top, field } from './screens.js?v=129';
+import { aiYearText } from './ai.js?v=129';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -76,7 +76,7 @@ async function buildBook(year, myText) {
   const pages = [];
   const coverId = ym.cover && yearPhotos(year).includes(ym.cover) ? ym.cover : all[0];
   const coverUrl = coverId ? await S.photoUrl(coverId, 'full') : '';
-  if (opts.cover) pages.push(`<section class="pg cover">${coverUrl ? `<div class="cvimg" style="background-image:url(${coverUrl})"></div>` : ''}<div class="cv"><b>${year}</b><span>${esc(ym.word || '')}</span><small>${esc((S.state.profile || {}).name || '')}</small></div></section>`);
+  if (opts.cover) pages.push(`<section class="pg cover">${coverUrl ? `<div class="cvimg" style="background-image:url(${coverUrl})"></div>` : ''}<div class="cv"><b>${year}</b>${ym.word ? `<span>${esc(ym.word)}</span>` : ''}</div></section>`);
   if (opts.numbers) {
     let tiles = '';
     for (let m = 1; m <= 12; m++) { const mk = year + '-' + String(m).padStart(2, '0'); const st = S.periodPct(mk + '-01', mk + '-' + String(new Date(+year, m, 0).getDate()).padStart(2, '0')); tiles += `<div class="t l${st.total ? Math.min(4, Math.max(1, Math.ceil(st.pct / 25))) : 0}"><small>${MONTHS_NOM[m - 1]}</small><b>${st.total ? st.pct + '%' : '—'}</b></div>`; }
