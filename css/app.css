@@ -788,5 +788,7 @@ p, .tl > div, .mem li { white-space: pre-line }
 .opts.mm-days span.on small { color: inherit; opacity: .8 }
 
 /* v116: фильтры воспоминаний закреплены сверху при прокрутке */
-.mm-filters { position: sticky; top: -4px; z-index: 5; margin: -4px -16px 0; padding: 4px 0 8px; background: var(--scr2); display: flex; flex-direction: column; gap: 10px }
-.mm-filters .opts.mm-row { margin: 0 }
+.mm-filters { flex: none; padding: 0 0 10px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--line) }
+.mm-filters:empty { display: none }
+.mm-filters .opts.mm-row { margin: 0; padding: 2px 16px 4px }
+.mm-filters + .body { padding-top: 12px }
