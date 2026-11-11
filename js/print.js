@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=127';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=127';
-import { top, field } from './screens.js?v=127';
-import { aiYearText } from './ai.js?v=127';
+import * as S from './store.js?v=128';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=128';
+import { top, field } from './screens.js?v=128';
+import { aiYearText } from './ai.js?v=128';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -65,8 +65,8 @@ async function tripBlock(t) {
     days.push(`<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${nl(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos)}</div>`);
   }
   const head = `<div class="bm bthead"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>`;
-  // шапка поездки и первый день — одним неразрывным куском, чтобы шапка не оставалась одна внизу листа
-  return `<div class="btrip"><div class="bgrp">${head}${days[0] || ''}</div>${days.slice(1).join('')}</div>`;
+  // шапка поездки (таблица с итогом) — отдельный блок: остаётся на листе, где есть место; дни переносятся сами
+  return `<div class="btrip">${head}${days.join('')}</div>`;
 }
 
 async function buildBook(year, myText) {
@@ -164,7 +164,7 @@ async function makePdf(year, myText, progress) {
   const pages = splitPages(box);
   const holder = document.createElement('div'); holder.className = 'bkpages';
   document.body.appendChild(holder);
-  const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true }), shots = [];
   try {
     for (let i = 0; i < pages.length; i++) {
       progress(i + 1, pages.length);
@@ -173,11 +173,27 @@ async function makePdf(year, myText, progress) {
       w.className = 'bkpage' + (pg.querySelector('.pg.cover') ? ' bkcover' : '');
       w.appendChild(pg); holder.replaceChildren(w);
       const canvas = await window.html2canvas(w, { scale: 2, backgroundColor: '#ffffff', logging: false, windowWidth: 900, windowHeight: 1300, scrollX: 0, scrollY: 0 });
+      const jpg = canvas.toDataURL('image/jpeg', 0.9); shots.push(jpg);
       if (i) pdf.addPage();
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
+      pdf.addImage(jpg, 'JPEG', 0, 0, 210, 297);
     }
   } finally { holder.remove(); box.innerHTML = ''; box.className = 'book'; }
-  return { file: new File([pdf.output('blob')], 'Книга ' + year + '.pdf', { type: 'application/pdf' }), n: pages.length };
+  return { file: new File([pdf.output('blob')], 'Книга ' + year + '.pdf', { type: 'application/pdf' }), n: pages.length, shots };
+}
+
+// Просмотр готовой книги прямо в приложении: листы по порядку, внизу «Поделиться PDF».
+// «Поделиться» — по нажатию в этом окне (iPhone открывает его только сразу после нажатия).
+function showPreview({ file, n, shots }, year) {
+  const v = document.createElement('div');
+  v.className = 'bkprev';
+  v.innerHTML = `<div class="bkp-top"><b>Книга ${year} · ${n} стр.</b><button class="ib" data-x>✕</button></div>
+    <div class="bkp-list">${shots.map((src, i) => `<figure><img src="${src}" alt=""><figcaption>${i + 1}</figcaption></figure>`).join('')}</div>
+    <div class="bkp-foot"><button class="btn pri" data-share>Поделиться PDF</button></div>`;
+  v.querySelector('[data-x]').addEventListener('click', () => v.remove());
+  v.querySelector('[data-share]').addEventListener('click', async () => {
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] }); else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); } } catch (e) { /* закрыли окно */ }
+  });
+  document.body.appendChild(v);
 }
 
 function bookText(year) {
@@ -194,7 +210,7 @@ export function printScreen(params) {
   let myText = (S.yearMeta(year).text) || '';
   const row = (k, t, s) => `<div class="row" data-act="opt" data-k="${k}"><span class="ck sq ${opts[k] ? 'done' : ''}"></span><div class="t"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</div></div>`;
   const html = `<section class="scr">${top('Книга года ' + year)}<div class="body">
-    <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — приложение соберёт файл A4, потом «Поделиться PDF» → «Сохранить в Файлы», отправить или распечатать.</p>
+    <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — приложение соберёт книгу A4 и покажет её; если всё нравится — «Поделиться PDF» → «Сохранить в Файлы», отправить или распечатать.</p>
     <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят справа от своих записей: до 4 на воспоминание или день поездки. </small></div>
     ${(() => { const ids = yearPhotos(year); if (!ids.length) return ''; const cur = S.yearMeta(year).cover && ids.includes(S.yearMeta(year).cover) ? S.yearMeta(year).cover : null; return `<div class="field"><label>Фото на обложку</label><div class="bk-cv">${ids.map((id, i) => `<div class="ph${(cur ? id === cur : false) ? ' on' : ''}" data-photo-pick="${id}" data-act="cover" data-id="${id}"></div>`).join('')}</div><small class="small">${cur ? 'Выбрано своё фото.' : 'Нажми на фото, чтобы поставить его на обложку. Пока стоит фото из самого значимого события.'}</small></div>`; })()}
     <div class="card plain"><div class="h3">Что включить</div><div class="rows">
@@ -228,17 +244,12 @@ export function printScreen(params) {
         try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] }); else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); } } catch (e) { /* закрыли окно */ }
       },
       pdf: async (el) => {
-        if (el._file) { // готовый PDF — отдать в «Поделиться» (нужно отдельное нажатие: так требует iPhone)
-          const f = el._file;
-          try { if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] }); else { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); } } catch (e) { /* закрыли окно */ }
-          return;
-        }
         el.disabled = true;
         try {
-          const { file, n } = await makePdf(year, rootEl.querySelector('[data-mytext]').value.trim(), (i, k) => { el.textContent = 'Собираю ' + i + ' из ' + k + '…'; });
-          el._file = file; el.textContent = 'Поделиться PDF · ' + n + ' стр.';
-        } catch (e) { alert('Не получилось собрать PDF: ' + e.message); el.textContent = 'Создать PDF'; }
-        el.disabled = false;
+          const book = await makePdf(year, rootEl.querySelector('[data-mytext]').value.trim(), (i, k) => { el.textContent = 'Собираю ' + i + ' из ' + k + '…'; });
+          showPreview(book, year);
+        } catch (e) { alert('Не получилось собрать PDF: ' + e.message); }
+        el.textContent = 'Создать PDF'; el.disabled = false;
       },
     },
   };
