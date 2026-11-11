@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=115';
+import * as S from './store.js?v=116';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=115';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=115';
-import { aiBreakdownGoal } from './ai.js?v=115';
+  MONTHS_NOM, WD } from './util.js?v=116';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=116';
+import { aiBreakdownGoal } from './ai.js?v=116';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -501,7 +501,7 @@ export function memoriesScreen(params) {
   }
   return {
     html: `<section class="scr">${top('Воспоминания', { right: `<button class="ib ibplus" data-go="#/entry/memory/new">+</button>` })}<div class="body">
-      ${filters}
+      <div class="mm-filters">${filters}</div>
       ${html || (all.length ? '' : '') || '<p class="small">Здесь соберутся «Что запомнилось» из дней, мысли из событий и поездок. Прошлые годы можно дописать через «+».</p>'}
     </div></section>`,
     actions: { mf: (el, go) => go(el.dataset.h, true) },
