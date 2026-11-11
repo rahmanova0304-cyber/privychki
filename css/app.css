@@ -826,3 +826,7 @@ p, .tl > div, .mem li { white-space: pre-line }
 .bk-cv::-webkit-scrollbar { display: none }
 .bk-cv .ph { flex: none; width: 64px; height: 64px; border-radius: 10px; cursor: pointer; background: var(--hatch) }
 .bk-cv .ph.on { box-shadow: 0 0 0 3px var(--accent) }
+
+/* v126: линейка для измерения листа */
+#print .ruler div { height: 5mm; box-sizing: border-box; border-bottom: .2mm solid #b9b3d6; font-size: 9pt; line-height: 5mm; text-align: right; padding-right: 2mm; color: #1c1938 }
+#print .ruler div:nth-child(2n) { background: #f3f0fd }

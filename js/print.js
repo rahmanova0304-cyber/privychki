@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=125';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=125';
-import { top, field } from './screens.js?v=125';
-import { aiYearText } from './ai.js?v=125';
+import * as S from './store.js?v=126';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=126';
+import { top, field } from './screens.js?v=126';
+import { aiYearText } from './ai.js?v=126';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -106,7 +106,8 @@ async function buildBook(year, myText) {
 // Высота страницы 228 мм — с запасом меньше A4 и Letter, так что сам iPhone страницу не режет.
 function paginate(box) {
   box.querySelectorAll('.pb').forEach((x) => x.remove());
-  const px = (mm) => mm * 96 / 25.4, H = px(228);
+  // высота листа: измеренная на телефоне пользователя («Измерить лист»), иначе 228 мм с запасом
+  const px = (mm) => mm * 96 / 25.4, H = px(S.state.printH || 228);
   const y0 = () => box.getBoundingClientRect().top;
   const rect = (el) => { const r = el.getBoundingClientRect(), o = y0(); return { t: r.top - o, b: r.bottom - o }; };
   let start = 0;
@@ -146,6 +147,10 @@ export function printScreen(params) {
       ${row('cover', 'Обложка и слово года')}${row('numbers', 'Год в цифрах', 'месяцы, главное, привычки за год')}${row('text', 'Текст «Мой ' + year + '»', S.state.ai && S.state.ai.key ? 'напишет помощник, можно поправить' : 'напиши сама ниже')}${row('goals', 'Цели и путь к ним')}${row('months', 'По месяцам: события и воспоминания')}
     </div></div>
     ${field('Текст «Мой ' + year + '»', `<textarea class="inp area" rows="3" data-mytext placeholder="Каким был этот год…">${esc(myText)}</textarea>${S.state.ai && S.state.ai.key ? '<span class="link" data-act="aitext">✦ Написать с помощником</span>' : ''}`)}
+    <div class="card plain"><div class="h3" style="margin:0">Размер листа</div><p class="small" style="margin:0">Чтобы фото не резались и листы заполнялись плотно, приложению нужно знать, сколько помещается на лист твоего телефона. ${S.state.printH ? 'Сейчас: <b>' + S.state.printH + ' мм</b>.' : 'Пока стоит с запасом 228 мм.'}</p>
+      <div class="opts"><span data-act="calib">1. Распечатать линейку</span></div>
+      <p class="small" style="margin:0">2. Посмотри последнее число внизу <b>первой</b> страницы и впиши его:</p>
+      <div style="display:flex;gap:8px"><input class="inp" type="number" inputmode="numeric" data-calib placeholder="например, 255" value=""><button class="btn sm" data-act="calibsave" style="flex:none">Сохранить</button></div></div>
   </div><div class="foot"><button class="btn" data-act="txt">Текстом</button><button class="btn pri" data-act="pdf">Создать PDF</button></div></section>`;
   let rootEl;
   return {
@@ -171,6 +176,17 @@ export function printScreen(params) {
       txt: async () => {
         const name = 'moy-' + year + '.txt', file = new File([bookText(year)], name, { type: 'text/plain' });
         try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] }); else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); } } catch (e) { /* закрыли окно */ }
+      },
+      // линейка: строки по 5 мм с подписью; последнее число на первой странице = рабочая высота листа
+      calib: () => {
+        const box = document.getElementById('print');
+        box.innerHTML = `<div class="ruler">${Array.from({ length: 64 }, (_, i) => `<div>${(i + 1) * 5}</div>`).join('')}</div>`;
+        window.print();
+      },
+      calibsave: (el, go, render) => {
+        const v = Number(rootEl.querySelector('[data-calib]').value);
+        if (!(v >= 150 && v <= 300)) { alert('Впиши число с линейки, например 255'); return; }
+        S.state.printH = v - 5; S.save(); render(); // минус одна строка линейки — на всякий случай
       },
       pdf: async (el) => {
         el.textContent = 'Собираю…';

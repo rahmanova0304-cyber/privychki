@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=125';
-import * as V from './screens.js?v=125';
-import * as W from './screens2.js?v=125';
-import { aiScreen } from './ai.js?v=125';
-import { printScreen } from './print.js?v=125';
-import { today } from './util.js?v=125';
+import * as S from './store.js?v=126';
+import * as V from './screens.js?v=126';
+import * as W from './screens2.js?v=126';
+import { aiScreen } from './ai.js?v=126';
+import { printScreen } from './print.js?v=126';
+import { today } from './util.js?v=126';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
