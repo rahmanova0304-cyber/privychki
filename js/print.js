@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=123';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=123';
-import { top, field } from './screens.js?v=123';
-import { aiYearText } from './ai.js?v=123';
+import * as S from './store.js?v=124';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=124';
+import { top, field } from './screens.js?v=124';
+import { aiYearText } from './ai.js?v=124';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -84,18 +84,41 @@ async function buildBook(year, myText) {
   }
   if (opts.months) {
     const mem = S.memories(year).reverse();
-    let first = true;
     for (let m = 1; m <= 12; m++) {
       const k = String(m).padStart(2, '0'), list = mem.filter((x) => x.date.slice(5, 7) === k);
       if (!list.length) continue;
       let blocks = '';
       for (const x of bookItems(list)) blocks += x.trip ? await tripBlock(x) : await memBlock(x);
-      pages.push(`<section class="pg mon">${first ? '<h1>По месяцам</h1>' : ''}<h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${blocks}</section>`); first = false;
+      pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${blocks}</section>`);
     }
   }
   // Обложка — отдельный лист, остальное идёт сплошным потоком без пустых мест.
   const cover = opts.cover ? pages.shift() : '';
   return cover + `<div class="flow">${pages.join('')}</div>`;
+}
+
+// Раскладка по страницам. iPhone при печати игнорирует «не разрывать», поэтому разрывы ставим сами:
+// всё, что не помещается в остаток страницы (блок, фото, заголовок), уходит на новый лист.
+// Высота страницы 250 мм — с запасом меньше A4 и Letter, так что сам iPhone страницу не режет.
+function paginate(box) {
+  box.querySelectorAll('.pb').forEach((x) => x.remove());
+  const px = (mm) => mm * 96 / 25.4, H = px(250);
+  const y0 = () => box.getBoundingClientRect().top;
+  const rect = (el) => { const r = el.getBoundingClientRect(), o = y0(); return { t: r.top - o, b: r.bottom - o }; };
+  let start = 0;
+  const brk = (el) => { const d = document.createElement('div'); d.className = 'pb'; el.parentNode.insertBefore(d, el); start = rect(el).t; };
+  const kids = (el) => [...el.children].filter((k) => k.offsetHeight > 0 && !k.classList.contains('pb') && !k.classList.contains('cv'));
+  const place = (el, force) => {
+    let { t, b } = rect(el);
+    if (force && t > start + 1) { brk(el); ({ t, b } = rect(el)); }
+    if (b - start <= H) return;
+    if (b - t <= H) { brk(el); return; }
+    const ks = kids(el);
+    if (ks.length && !el.classList.contains('bcols')) { ks.forEach((k) => place(k)); return; }
+    while (b - start > H) start += H; // огромный текст — пусть перенесётся сам
+  };
+  const secs = [...box.querySelectorAll(':scope > .pg, :scope > .flow > .pg')];
+  secs.forEach((sec, i) => place(sec, i > 0 && (sec.classList.contains('mon') || secs[i - 1].classList.contains('cover'))));
 }
 
 function bookText(year) {
@@ -144,8 +167,11 @@ export function printScreen(params) {
       pdf: async (el) => {
         el.textContent = 'Собираю…';
         const box = document.getElementById('print');
+        box.classList.add('measure');
         box.innerHTML = await buildBook(year, rootEl.querySelector('[data-mytext]').value.trim());
         await Promise.all([...box.querySelectorAll('img')].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })));
+        paginate(box);
+        box.classList.remove('measure');
         el.textContent = 'Создать PDF';
         window.print();
       },
