@@ -1,7 +1,7 @@
 // Офлайн: приложение целиком хранится в кэше телефона. При изменении файлов поднять VERSION.
 // cache: 'reload' — мимо HTTP-кэша браузера (GitHub Pages отдаёт max-age=600, иначе в новую версию попадают старые файлы).
-const VERSION = 'v121';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'css/app.css', 'js/app.js', 'js/store.js', 'js/screens.js', 'js/util.js', 'js/screens2.js', 'js/ai.js', 'js/print.js', 'vendor/anthropic-sdk-0.131.0.js', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'v122';
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'css/app.css', 'js/app.js', 'js/store.js', 'js/screens.js', 'js/util.js', 'js/screens2.js', 'js/ai.js', 'js/print.js', 'vendor/anthropic-sdk-0.131.0.js', 'vendor/html2canvas-1.4.1.min.js', 'vendor/jspdf-2.5.1.umd.min.js', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));

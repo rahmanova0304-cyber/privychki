@@ -543,58 +543,65 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 .toast.undo button { border: 0; background: var(--soft); color: var(--accent); font: inherit; font-weight: 500; padding: 6px 12px; border-radius: 99px; cursor: pointer; flex: none }
 .dr-del { color: var(--muted); font-size: 19px; padding: 0 4px; cursor: pointer; flex: none; min-width: 28px; height: 28px; display: grid; place-items: center }
 
-/* ---- книга года: печать ----
-   Страницы раскладывает само приложение (print.js → paginate): блок или фото, которые не влезают, переносятся
-   на новый лист явным разрывом. Ширина 182 мм и высота страницы 228 мм подходят и к A4, и к Letter (iPhone). */
-#print { display: none; color: #1c1938; font: 10.5pt/1.45 var(--ui); width: 182mm }
-#print.measure { display: block; position: absolute; left: -10000px; top: 0; visibility: hidden }
-#print .pb { display: block; height: 0; break-before: page; page-break-before: always }
-#print, #print * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
+/* ---- книга года ----
+   PDF собирает само приложение (print.js → makePdf): книга верстается невидимо шириной 182 мм, paginate ставит
+   разрывы по листу A4 (поля 12/14 мм, рабочая высота 273 мм), splitPages режет на листы, html2canvas рисует каждый лист. */
+#print { display: none }
+#print.measure { display: block; position: absolute; left: -10000px; top: 0 }
+.book p, .book li, .book div { white-space: normal }
+.book { color: #1c1938; font: 10.5pt/1.45 var(--ui); width: 182mm; background: #fff }
+.bkpages { position: absolute; left: 0; top: 0; z-index: -1 }
+.bkpage { width: 210mm; height: 297mm; padding: 12mm 14mm; box-sizing: border-box; background: #fff; overflow: hidden }
+.bkpage.bkcover { padding: 0 } .bkpage.bkcover .book { width: 210mm }
+.bkpage.bkcover .book .pg.cover { width: 210mm; height: 297mm; border-radius: 0; display: block }
+.book .pg.cover .cvimg { position: absolute; inset: 0; background: center / cover no-repeat }
+.book .pb { display: block; height: 0; break-before: page; page-break-before: always }
+.book, .book * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
 /* фото никогда не режется между листами: строчная картинка переносится целиком */
-  #print img { break-inside: avoid; page-break-inside: avoid }
-  #print .pg { position: relative }
-  #print .flow .pg + .pg, #print .flow .pgh { margin-top: 9mm }
-  #print .pg h1, #print .pg h2 { break-after: avoid; page-break-after: avoid }
-  #print .pg li, #print .pg p, #print .pg .tiles, #print .pg .phs, #print .pg .collage img { break-inside: avoid; page-break-inside: avoid }
-  #print .pg h1 { font-size: 22pt; font-weight: 300; color: #7556ee; margin: 0 0 4mm }
-  #print .pg h2 { font-size: 12.5pt; font-weight: 500; margin: 5mm 0 1.5mm }
-  #print .pg h2.mh { font-size: 15pt; font-weight: 400; color: #7556ee; margin: 0 0 2mm; padding-bottom: 1mm; border-bottom: .3mm solid #e6dffc }
-  #print .pg h2 small { color: #7c7894; font-weight: 400 }
-  #print .pg ul { padding-left: 5mm; margin: 0 } #print .pg li { margin: 1.5mm 0 } #print .pg li span, #print .pg li small { color: #7c7894 }
-  #print .pg .big { font-size: 34pt; font-weight: 300; margin: 0 0 6mm } #print .pg .big small { font-size: 11pt; color: #7c7894 }
-  #print .pg .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm }
-  #print .pg .t { border-radius: 3mm; padding: 3mm; background: #f4f3f8 } #print .pg .t small { display: block; font-size: 9pt; color: inherit; opacity: .8 } #print .pg .t b { font-size: 15pt; font-weight: 500 }
-  #print .pg .t.l1 { background: #e7e1fb } #print .pg .t.l2 { background: #cbbdf7 } #print .pg .t.l3 { background: #a68ef3; color: #fff } #print .pg .t.l4 { background: #7556ee; color: #fff }
-  #print .pg .phs { float: right; width: 58mm; display: flex; flex-direction: column; gap: 2.5mm; margin: 1mm 0 2mm 5mm } #print .pg .phs img { width: 100%; height: auto; display: block; border-radius: 2.5mm; display: block }
-  #print .pg.mon { display: flow-root }
-/* коллаж — колонками, каждое фото в своих пропорциях, без обрезки */ .pg .collage { column-count: 3; column-gap: 2.5mm } #print .pg .collage img { display: block; width: 100%; height: auto; margin-bottom: 2.5mm; border-radius: 2mm; break-inside: avoid; page-break-inside: avoid }
-  #print .pg.cover { display: inline-block; vertical-align: top; width: 100%; height: 222mm; overflow: hidden; border-radius: 4mm; background: #7556ee; break-inside: avoid; page-break-inside: avoid }
-  #print .pg.cover { position: relative } #print .pg.cover img { display: block; width: 100%; height: 222mm; max-height: 222mm; object-fit: cover }
-  #print .pg.cover .cv { position: absolute; left: 18mm; bottom: 24mm; color: #fff; text-shadow: 0 1mm 4mm rgba(0,0,0,.35) }
-  #print .pg.cover b { display: block; font-size: 72pt; font-weight: 200; line-height: 1 } #print .pg.cover span { display: block; font-size: 20pt } #print .pg.cover small { font-size: 11pt; opacity: .85 }
-  #print .pg .mem { padding: 0 } #print .pg .mem li { list-style: none; margin: 1.2mm 0 } #print .pg p { margin: 0 0 3mm }
+  .book img { break-inside: avoid; page-break-inside: avoid }
+  .book .pg { position: relative }
+  .book .flow .pg + .pg, .book .flow .pgh { margin-top: 9mm }
+  .book .pg h1, .book .pg h2 { break-after: avoid; page-break-after: avoid }
+  .book .pg li, .book .pg p, .book .pg .tiles, .book .pg .phs, .book .pg .collage img { break-inside: avoid; page-break-inside: avoid }
+  .book .pg h1 { font-size: 22pt; font-weight: 300; color: #7556ee; margin: 0 0 4mm }
+  .book .pg h2 { font-size: 12.5pt; font-weight: 500; margin: 5mm 0 1.5mm }
+  .book .pg h2.mh { font-size: 15pt; font-weight: 400; color: #7556ee; margin: 0 0 2mm; padding-bottom: 1mm; border-bottom: .3mm solid #e6dffc }
+  .book .pg h2 small { color: #7c7894; font-weight: 400 }
+  .book .pg ul { padding-left: 5mm; margin: 0 } .book .pg li { margin: 1.5mm 0 } .book .pg li span, .book .pg li small { color: #7c7894 }
+  .book .pg .big { font-size: 34pt; font-weight: 300; margin: 0 0 6mm } .book .pg .big small { font-size: 11pt; color: #7c7894 }
+  .book .pg .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm }
+  .book .pg .t { border-radius: 3mm; padding: 3mm; background: #f4f3f8 } .book .pg .t small { display: block; font-size: 9pt; color: inherit; opacity: .8 } .book .pg .t b { font-size: 15pt; font-weight: 500 }
+  .book .pg .t.l1 { background: #e7e1fb } .book .pg .t.l2 { background: #cbbdf7 } .book .pg .t.l3 { background: #a68ef3; color: #fff } .book .pg .t.l4 { background: #7556ee; color: #fff }
+  .book .pg .phs { float: right; width: 58mm; display: flex; flex-direction: column; gap: 2.5mm; margin: 1mm 0 2mm 5mm } .book .pg .phs img { width: 100%; height: auto; display: block; border-radius: 2.5mm; display: block }
+  .book .pg.mon { display: flow-root }
+/* коллаж — колонками, каждое фото в своих пропорциях, без обрезки */ .pg .collage { column-count: 3; column-gap: 2.5mm } .book .pg .collage img { display: block; width: 100%; height: auto; margin-bottom: 2.5mm; border-radius: 2mm; break-inside: avoid; page-break-inside: avoid }
+  .book .pg.cover { display: inline-block; vertical-align: top; width: 100%; height: 273mm; overflow: hidden; border-radius: 4mm; background: #7556ee; break-inside: avoid; page-break-inside: avoid }
+  .book .pg.cover { position: relative } 
+  .book .pg.cover .cv { position: absolute; left: 18mm; bottom: 24mm; color: #fff; text-shadow: 0 1mm 4mm rgba(0,0,0,.35) }
+  .book .pg.cover b { display: block; font-size: 72pt; font-weight: 200; line-height: 1 } .book .pg.cover span { display: block; font-size: 20pt } .book .pg.cover small { font-size: 11pt; opacity: .85 }
+  .book .pg .mem { padding: 0 } .book .pg .mem li { list-style: none; margin: 1.2mm 0 } .book .pg p { margin: 0 0 3mm }
 /* месяцы: каждое воспоминание — свой блок с отступами; блок и фото не разрываются между листами */
-  #print .pg .bm { display: inline-block; width: 100%; box-sizing: border-box; vertical-align: top; break-inside: avoid; page-break-inside: avoid; background: #f7f5fd; border-radius: 3mm; padding: 3.5mm 4mm; margin: 0 0 4mm }
-  #print .pg .bh { display: flex; align-items: baseline; gap: 3mm; margin-bottom: 1.5mm }
-  #print .pg .bh small { color: #7c7894; font-size: 9pt; white-space: nowrap } #print .pg .bh b { font-size: 11.5pt; font-weight: 500 } #print .pg .bh span { color: #7556ee; margin-left: auto }
-  #print .pg .ben { margin: 0 0 2.5mm } #print .pg .ben:last-child { margin-bottom: 0 }
-  #print .pg .ben small { display: block; color: #1d9fd6; font-size: 9pt; margin-bottom: .5mm }
-  #print .pg .ben p { margin: 0 }
-  #print .pg .bcols { display: flex; gap: 5mm; align-items: flex-start }
-  #print .pg .btxt { flex: 1; min-width: 0 }
-  #print .pg .bphs { flex: none; width: 56mm; display: grid; gap: 2.5mm; break-inside: avoid; page-break-inside: avoid }
-  #print .pg .bphs.n1 { justify-items: end }
-  #print .pg .bphs.n1 img { width: auto; height: auto; max-width: 100%; max-height: 70mm; border-radius: 2mm; display: inline-block; vertical-align: top }
+  .book .pg .bm { display: block; box-sizing: border-box; break-inside: avoid; page-break-inside: avoid; background: #f7f5fd; border-radius: 3mm; padding: 3.5mm 4mm; margin: 0 0 4mm }
+  .book .pg .bh { display: flex; align-items: baseline; gap: 3mm; margin-bottom: 1.5mm }
+  .book .pg .bh small { color: #7c7894; font-size: 9pt; white-space: nowrap } .book .pg .bh b { font-size: 11.5pt; font-weight: 500 } .book .pg .bh span { color: #7556ee; margin-left: auto }
+  .book .pg .ben { margin: 0 0 2.5mm } .book .pg .ben:last-child { margin-bottom: 0 }
+  .book .pg .ben small { display: block; color: #1d9fd6; font-size: 9pt; margin-bottom: .5mm }
+  .book .pg .ben p { margin: 0 }
+  .book .pg .bcols { display: flex; gap: 5mm; align-items: flex-start }
+  .book .pg .btxt { flex: 1; min-width: 0 }
+  .book .pg .bphs { flex: none; width: 56mm; display: grid; gap: 2.5mm; break-inside: avoid; page-break-inside: avoid }
+  .book .pg .bphs.n1 { justify-items: end }
+  .book .pg .bphs.n1 img { width: auto; height: auto; max-width: 100%; max-height: 70mm; border-radius: 2mm; display: inline-block; vertical-align: top }
 /* несколько фото — две колонки «столбиками», каждое в своих пропорциях, без дыр */
-  #print .pg .bphs.n2 { display: block; column-count: 2; column-gap: 2.5mm }
-  #print .pg .bphs.n2 img { width: 100%; height: auto; border-radius: 2mm; display: inline-block; vertical-align: top; margin-bottom: 2.5mm; break-inside: avoid; page-break-inside: avoid }
+  .book .pg .bphs.n2 { display: block; column-count: 2; column-gap: 2.5mm }
+  .book .pg .bphs.n2 img { width: 100%; height: auto; border-radius: 2mm; display: inline-block; vertical-align: top; margin-bottom: 2.5mm; break-inside: avoid; page-break-inside: avoid }
 /* дни поездки: фото снизу строкой, одной высоты, каждое целиком */
-  #print .pg .bday .bphs { width: auto; display: block; margin-top: 3mm; column-count: auto; font-size: 0 }
-  #print .pg .bday .bphs img { height: 52mm; width: auto; max-width: 100%; max-height: none; margin: 0 2.5mm 2.5mm 0; border-radius: 2mm; display: inline-block; vertical-align: top }
-  #print .pg .btrip { margin: 0 0 4mm; font-size: 0 } #print .pg .btrip > .bm, #print .pg .bgrp { font-size: 10.5pt }
-  #print .pg .bgrp { display: inline-block; width: 100%; vertical-align: top; break-inside: avoid; page-break-inside: avoid; margin-bottom: 4mm } #print .pg .bgrp > .bm { display: block } #print .pg .bgrp > .bm:last-child { margin-bottom: 0 } #print .pg .bthead { background: #eaf6fc; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-after: avoid; page-break-after: avoid }
-  #print .pg .binfo { margin-top: 2mm; border-radius: 2mm; overflow: hidden; background: #fff } #print .pg .brow { display: flex; justify-content: space-between; gap: 4mm; padding: 1.8mm 3mm } #print .pg .brow:nth-child(even) { background: #d9eff9 }
-  #print .pg .brow small { color: #7c7894; font-size: 9pt; margin-left: 2mm } #print .pg .brow b { font-weight: 500; white-space: nowrap } #print .pg .brow.btot b { font-weight: 700 } #print .pg .brow.btot span { color: #7c7894 }
+  .book .pg .bday .bphs { width: auto; display: block; margin-top: 3mm; column-count: auto; font-size: 0 }
+  .book .pg .bday .bphs img { height: 52mm; width: auto; max-width: 100%; max-height: none; margin: 0 2.5mm 2.5mm 0; border-radius: 2mm; display: inline-block; vertical-align: top }
+  .book .pg .btrip { margin: 0 0 4mm } .book .pg .btrip > .bm, .book .pg .bgrp { font-size: 10.5pt }
+  .book .pg .bgrp { display: block; break-inside: avoid; page-break-inside: avoid; margin-bottom: 4mm } .book .pg .bgrp > .bm { display: block } .book .pg .bgrp > .bm:last-child { margin-bottom: 0 } .book .pg .bthead { background: #eaf6fc; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-after: avoid; page-break-after: avoid }
+  .book .pg .binfo { margin-top: 2mm; border-radius: 2mm; overflow: hidden; background: #fff } .book .pg .brow { display: flex; justify-content: space-between; gap: 4mm; padding: 1.8mm 3mm } .book .pg .brow:nth-child(even) { background: #d9eff9 }
+  .book .pg .brow small { color: #7c7894; font-size: 9pt; margin-left: 2mm } .book .pg .brow b { font-weight: 500; white-space: nowrap } .book .pg .brow.btot b { font-weight: 700 } .book .pg .brow.btot span { color: #7c7894 }
 @media print {
   @page { size: A4; margin: 10mm 14mm }
   html, body { background: #fff !important; height: auto; overflow: visible !important }
@@ -827,6 +834,3 @@ p, .tl > div, .mem li { white-space: pre-line }
 .bk-cv .ph { flex: none; width: 64px; height: 64px; border-radius: 10px; cursor: pointer; background: var(--hatch) }
 .bk-cv .ph.on { box-shadow: 0 0 0 3px var(--accent) }
 
-/* v126: линейка для измерения листа */
-#print .ruler div { height: 5mm; box-sizing: border-box; border-bottom: .2mm solid #b9b3d6; font-size: 9pt; line-height: 5mm; text-align: right; padding-right: 2mm; color: #1c1938 }
-#print .ruler div:nth-child(2n) { background: #f3f0fd }

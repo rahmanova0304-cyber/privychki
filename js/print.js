@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=126';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=126';
-import { top, field } from './screens.js?v=126';
-import { aiYearText } from './ai.js?v=126';
+import * as S from './store.js?v=127';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=127';
+import { top, field } from './screens.js?v=127';
+import { aiYearText } from './ai.js?v=127';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -22,6 +22,8 @@ async function pickPhotos(year) {
   return out;
 }
 
+// переносы строк — явными <br> (html2canvas не рисует текст с white-space: pre-line)
+const nl = (t) => esc(t).replace(/\n/g, '<br>');
 const img = async (id) => id ? `<img src="${await S.photoUrl(id, 'full')}">` : '';
 
 // Поездка в книге — одним пунктом: даты, дорога, жильё, записи по дням и итоговая сумма.
@@ -45,10 +47,10 @@ async function phRow(ids, n = 4) {
 }
 // блок: шапка сверху, ниже текст слева и фото справа
 const wrapBm = (cls, head, body, ph) => `<div class="bm ${cls}${ph ? ' hasph' : ''}">${head}${ph ? `<div class="bcols"><div class="btxt">${body}</div>${ph}</div>` : body}</div>`;
-const enLine = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="ben">${x.time || p ? `<small>${[x.time, p ? [p.kind, p.name].filter(Boolean).join(' · ') : ''].filter(Boolean).join(' · ')}${p && p.price ? ' · ' + rub(p.price) : ''}</small>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}</div>`; };
+const enLine = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="ben">${x.time || p ? `<small>${[x.time, p ? [p.kind, p.name].filter(Boolean).join(' · ') : ''].filter(Boolean).join(' · ')}${p && p.price ? ' · ' + rub(p.price) : ''}</small>` : ''}${x.text ? `<p>${nl(x.text)}</p>` : ''}</div>`; };
 async function memBlock(x) {
   const title = x.kind === 'event' ? x.event.title : x.title;
-  const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${esc(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.text ? `<div class="ben"><p>${esc(x.text)}</p></div>` : '';
+  const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${nl(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.text ? `<div class="ben"><p>${nl(x.text)}</p></div>` : '';
   return wrapBm('', `<div class="bh"><small>${fmtDM(x.date)}</small>${title ? `<b>${esc(title)}</b>` : ''}${x.significant ? '<span>★</span>' : ''}</div>`, body, await phRow(x.photos));
 }
 async function tripBlock(t) {
@@ -60,7 +62,7 @@ async function tripBlock(t) {
   const days = [];
   for (const d of t.days.slice().sort((a, b) => a.day.localeCompare(b.day))) {
     const k = Math.round((new Date(d.day) - new Date(e.start)) / 864e5) + 1;
-    days.push(`<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos)}</div>`);
+    days.push(`<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${nl(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos)}</div>`);
   }
   const head = `<div class="bm bthead"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>`;
   // шапка поездки и первый день — одним неразрывным куском, чтобы шапка не оставалась одна внизу листа
@@ -73,7 +75,8 @@ async function buildBook(year, myText) {
   const all = Object.values(photos).flat(); // для обложки
   const pages = [];
   const coverId = ym.cover && yearPhotos(year).includes(ym.cover) ? ym.cover : all[0];
-  if (opts.cover) pages.push(`<section class="pg cover">${coverId ? await img(coverId) : ''}<div class="cv"><b>${year}</b><span>${esc(ym.word || '')}</span><small>${esc((S.state.profile || {}).name || '')}</small></div></section>`);
+  const coverUrl = coverId ? await S.photoUrl(coverId, 'full') : '';
+  if (opts.cover) pages.push(`<section class="pg cover">${coverUrl ? `<div class="cvimg" style="background-image:url(${coverUrl})"></div>` : ''}<div class="cv"><b>${year}</b><span>${esc(ym.word || '')}</span><small>${esc((S.state.profile || {}).name || '')}</small></div></section>`);
   if (opts.numbers) {
     let tiles = '';
     for (let m = 1; m <= 12; m++) { const mk = year + '-' + String(m).padStart(2, '0'); const st = S.periodPct(mk + '-01', mk + '-' + String(new Date(+year, m, 0).getDate()).padStart(2, '0')); tiles += `<div class="t l${st.total ? Math.min(4, Math.max(1, Math.ceil(st.pct / 25))) : 0}"><small>${MONTHS_NOM[m - 1]}</small><b>${st.total ? st.pct + '%' : '—'}</b></div>`; }
@@ -81,7 +84,7 @@ async function buildBook(year, myText) {
     const habits = S.state.habits.map((h) => { const s = S.habitStats(h, from, to); return s.plan ? `<li><b>${esc(h.title)}</b> <span>${s.done} из ${s.plan} дней · ${s.pct}%</span></li>` : ''; }).join('');
     pages.push(`<section class="pg"><h1>Год в цифрах</h1><p class="big">${p.pct}% <small>выполнено · ${p.done} из ${p.total}</small></p><div class="tiles">${tiles}</div><h2>Главное</h2><ul>${hl || '<li>—</li>'}</ul>${habits ? `<h2>Привычки</h2><ul>${habits}</ul>` : ''}</section>`);
   }
-  if (opts.text && myText) pages.push(`<section class="pg"><h1>Мой ${year}</h1>${myText.split(/\n+/).map((x) => `<p>${esc(x)}</p>`).join('')}${S.state.reflections['y:' + year] ? `<h2>Письмо себе через год</h2><p>${esc(S.state.reflections['y:' + year])}</p>` : ''}</section>`);
+  if (opts.text && myText) pages.push(`<section class="pg"><h1>Мой ${year}</h1>${myText.split(/\n+/).map((x) => `<p>${nl(x)}</p>`).join('')}${S.state.reflections['y:' + year] ? `<h2>Письмо себе через год</h2><p>${nl(S.state.reflections['y:' + year])}</p>` : ''}</section>`);
   if (opts.goals) {
     const goals = S.state.goals.filter((g) => g.createdAt <= to);
     if (goals.length) pages.push(`<section class="pg"><h1>Цели</h1>${goals.map((g) => { const pr = S.goalProgress(g), hs = S.goalHabits(g), hst = S.goalHabitStats(g), ms = S.goalMeasure(g); if (ms) return `<h2>${esc(g.title)} <small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : ''}</small></h2><p>${ms.start} → ${ms.cur} из ${ms.target}${ms.unit ? ' ' + esc(ms.unit) : ''}${hs.length ? ' · через привычки ' + esc(hs.map((h) => h.title).join(', ')) : ''}</p>`; if (!pr.total) return `<h2>${esc(g.title)} <small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : ''}</small></h2>${hs.length ? `<p>Через привычку ${esc(hs.map((h) => h.title).join(', '))}${hst.minutes ? ' · ' + Math.round(hst.minutes / 60) + ' ч' : hst.days ? ' · занятий: ' + hst.days : ''}</p>` : ''}`; return `<h2>${esc(g.title)} <small>${g.status === 'achieved' ? 'достигнута ' + fmtDM(g.achievedAt) : pr.pct + '%'}</small></h2><ul>${g.stages.map((st) => `<li><b>${esc(st.title)}</b>: ${st.steps.map((x) => (x.done ? '✓ ' : '') + esc(x.title)).join(', ')}</li>`).join('')}</ul>`; }).join('')}</section>`);
@@ -101,13 +104,11 @@ async function buildBook(year, myText) {
   return cover + `<div class="flow">${pages.join('')}</div>`;
 }
 
-// Раскладка по страницам. iPhone при печати игнорирует «не разрывать», поэтому разрывы ставим сами:
-// всё, что не помещается в остаток страницы (блок, фото, заголовок), уходит на новый лист.
-// Высота страницы 228 мм — с запасом меньше A4 и Letter, так что сам iPhone страницу не режет.
-function paginate(box) {
+// Раскладка по страницам: всё, что не помещается в остаток листа (блок, фото, заголовок), уходит на новый лист.
+// Лист A4 с полями 12 мм сверху/снизу — рабочая высота 273 мм. PDF собирает само приложение, поэтому границы точные.
+function paginate(box, Hmm) {
   box.querySelectorAll('.pb').forEach((x) => x.remove());
-  // высота листа: измеренная на телефоне пользователя («Измерить лист»), иначе 228 мм с запасом
-  const px = (mm) => mm * 96 / 25.4, H = px(S.state.printH || 228);
+  const px = (mm) => mm * 96 / 25.4, H = px(Hmm);
   const y0 = () => box.getBoundingClientRect().top;
   const rect = (el) => { const r = el.getBoundingClientRect(), o = y0(); return { t: r.top - o, b: r.bottom - o }; };
   let start = 0;
@@ -126,6 +127,59 @@ function paginate(box) {
   secs.forEach((sec, i) => place(sec, i > 0 && (sec.classList.contains('mon') || secs[i - 1].classList.contains('cover'))));
 }
 
+// Разрезать книгу по разрывам .pb на отдельные листы: всё после разрыва переезжает в копию «родителей».
+function splitPages(box) {
+  const pages = [];
+  let rest = box;
+  for (const m of [...box.querySelectorAll('.pb')]) {
+    const root = rest, next = root.cloneNode(false);
+    next.removeAttribute('id'); next.classList.remove('measure');
+    let child = m, parent = m.parentNode, carry = null;
+    for (;;) {
+      const clone = parent === root ? next : parent.cloneNode(false);
+      if (carry) clone.appendChild(carry);
+      for (let sib = child.nextSibling; sib;) { const n = sib.nextSibling; clone.appendChild(sib); sib = n; }
+      if (child === m) m.remove();
+      if (parent === root) break;
+      carry = clone; child = parent; parent = parent.parentNode;
+    }
+    pages.push(root); rest = next;
+  }
+  pages.push(rest);
+  return pages;
+}
+
+const loaded = {};
+const loadScript = (src) => loaded[src] || (loaded[src] = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = () => { delete loaded[src]; rej(new Error('Не загрузилась библиотека PDF')); }; document.head.appendChild(sc); }));
+
+// PDF собирается в приложении: каждый лист рисуется картинкой и кладётся на страницу A4. Печать iPhone не участвует —
+// поэтому нет его серой строки с адресом, и листы режутся ровно там, где решило приложение.
+async function makePdf(year, myText, progress) {
+  await Promise.all([loadScript('vendor/html2canvas-1.4.1.min.js'), loadScript('vendor/jspdf-2.5.1.umd.min.js')]);
+  const box = document.getElementById('print');
+  box.className = 'book measure';
+  box.innerHTML = await buildBook(year, myText);
+  await Promise.all([...box.querySelectorAll('img')].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })));
+  paginate(box, 273);
+  const pages = splitPages(box);
+  const holder = document.createElement('div'); holder.className = 'bkpages';
+  document.body.appendChild(holder);
+  const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  try {
+    for (let i = 0; i < pages.length; i++) {
+      progress(i + 1, pages.length);
+      const pg = pages[i]; pg.removeAttribute('id'); pg.classList.remove('measure');
+      const w = document.createElement('div');
+      w.className = 'bkpage' + (pg.querySelector('.pg.cover') ? ' bkcover' : '');
+      w.appendChild(pg); holder.replaceChildren(w);
+      const canvas = await window.html2canvas(w, { scale: 2, backgroundColor: '#ffffff', logging: false, windowWidth: 900, windowHeight: 1300, scrollX: 0, scrollY: 0 });
+      if (i) pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
+    }
+  } finally { holder.remove(); box.innerHTML = ''; box.className = 'book'; }
+  return { file: new File([pdf.output('blob')], 'Книга ' + year + '.pdf', { type: 'application/pdf' }), n: pages.length };
+}
+
 function bookText(year) {
   const from = year + '-01-01', to = year + '-12-31';
   const lines = [`Мой ${year}`, 'Слово года: ' + (S.yearMeta(year).word || '—'), '', 'Главное:'];
@@ -140,17 +194,13 @@ export function printScreen(params) {
   let myText = (S.yearMeta(year).text) || '';
   const row = (k, t, s) => `<div class="row" data-act="opt" data-k="${k}"><span class="ck sq ${opts[k] ? 'done' : ''}"></span><div class="t"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</div></div>`;
   const html = `<section class="scr">${top('Книга года ' + year)}<div class="body">
-    <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — откроется окно печати: можно распечатать или «Поделиться» → «Сохранить в Файлы» как PDF.</p>
+    <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — приложение соберёт файл A4, потом «Поделиться PDF» → «Сохранить в Файлы», отправить или распечатать.</p>
     <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят справа от своих записей: до 4 на воспоминание или день поездки. </small></div>
     ${(() => { const ids = yearPhotos(year); if (!ids.length) return ''; const cur = S.yearMeta(year).cover && ids.includes(S.yearMeta(year).cover) ? S.yearMeta(year).cover : null; return `<div class="field"><label>Фото на обложку</label><div class="bk-cv">${ids.map((id, i) => `<div class="ph${(cur ? id === cur : false) ? ' on' : ''}" data-photo-pick="${id}" data-act="cover" data-id="${id}"></div>`).join('')}</div><small class="small">${cur ? 'Выбрано своё фото.' : 'Нажми на фото, чтобы поставить его на обложку. Пока стоит фото из самого значимого события.'}</small></div>`; })()}
     <div class="card plain"><div class="h3">Что включить</div><div class="rows">
       ${row('cover', 'Обложка и слово года')}${row('numbers', 'Год в цифрах', 'месяцы, главное, привычки за год')}${row('text', 'Текст «Мой ' + year + '»', S.state.ai && S.state.ai.key ? 'напишет помощник, можно поправить' : 'напиши сама ниже')}${row('goals', 'Цели и путь к ним')}${row('months', 'По месяцам: события и воспоминания')}
     </div></div>
     ${field('Текст «Мой ' + year + '»', `<textarea class="inp area" rows="3" data-mytext placeholder="Каким был этот год…">${esc(myText)}</textarea>${S.state.ai && S.state.ai.key ? '<span class="link" data-act="aitext">✦ Написать с помощником</span>' : ''}`)}
-    <div class="card plain"><div class="h3" style="margin:0">Размер листа</div><p class="small" style="margin:0">Чтобы фото не резались и листы заполнялись плотно, приложению нужно знать, сколько помещается на лист твоего телефона. ${S.state.printH ? 'Сейчас: <b>' + S.state.printH + ' мм</b>.' : 'Пока стоит с запасом 228 мм.'}</p>
-      <div class="opts"><span data-act="calib">1. Распечатать линейку</span></div>
-      <p class="small" style="margin:0">2. Посмотри последнее число внизу <b>первой</b> страницы и впиши его:</p>
-      <div style="display:flex;gap:8px"><input class="inp" type="number" inputmode="numeric" data-calib placeholder="например, 255" value=""><button class="btn sm" data-act="calibsave" style="flex:none">Сохранить</button></div></div>
   </div><div class="foot"><button class="btn" data-act="txt">Текстом</button><button class="btn pri" data-act="pdf">Создать PDF</button></div></section>`;
   let rootEl;
   return {
@@ -177,27 +227,18 @@ export function printScreen(params) {
         const name = 'moy-' + year + '.txt', file = new File([bookText(year)], name, { type: 'text/plain' });
         try { if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] }); else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); } } catch (e) { /* закрыли окно */ }
       },
-      // линейка: строки по 5 мм с подписью; последнее число на первой странице = рабочая высота листа
-      calib: () => {
-        const box = document.getElementById('print');
-        box.innerHTML = `<div class="ruler">${Array.from({ length: 64 }, (_, i) => `<div>${(i + 1) * 5}</div>`).join('')}</div>`;
-        window.print();
-      },
-      calibsave: (el, go, render) => {
-        const v = Number(rootEl.querySelector('[data-calib]').value);
-        if (!(v >= 150 && v <= 300)) { alert('Впиши число с линейки, например 255'); return; }
-        S.state.printH = v - 5; S.save(); render(); // минус одна строка линейки — на всякий случай
-      },
       pdf: async (el) => {
-        el.textContent = 'Собираю…';
-        const box = document.getElementById('print');
-        box.classList.add('measure');
-        box.innerHTML = await buildBook(year, rootEl.querySelector('[data-mytext]').value.trim());
-        await Promise.all([...box.querySelectorAll('img')].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })));
-        paginate(box);
-        box.classList.remove('measure');
-        el.textContent = 'Создать PDF';
-        window.print();
+        if (el._file) { // готовый PDF — отдать в «Поделиться» (нужно отдельное нажатие: так требует iPhone)
+          const f = el._file;
+          try { if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] }); else { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); } } catch (e) { /* закрыли окно */ }
+          return;
+        }
+        el.disabled = true;
+        try {
+          const { file, n } = await makePdf(year, rootEl.querySelector('[data-mytext]').value.trim(), (i, k) => { el.textContent = 'Собираю ' + i + ' из ' + k + '…'; });
+          el._file = file; el.textContent = 'Поделиться PDF · ' + n + ' стр.';
+        } catch (e) { alert('Не получилось собрать PDF: ' + e.message); el.textContent = 'Создать PDF'; }
+        el.disabled = false;
       },
     },
   };
