@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=118';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=118';
-import { top, field } from './screens.js?v=118';
-import { aiYearText } from './ai.js?v=118';
+import * as S from './store.js?v=119';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=119';
+import { top, field } from './screens.js?v=119';
+import { aiYearText } from './ai.js?v=119';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -34,15 +34,19 @@ function bookItems(list) {
   return out;
 }
 // Фото — рядом со своим текстом, рядом в строку, каждое в своих пропорциях (без обрезки).
-async function phRow(ids, n = 3) {
+// Фото — справа от текста: одно крупно, несколько — сеткой в две колонки. Не больше 4.
+async function phRow(ids, n = 4) {
   if (!opts.photos || !ids || !ids.length) return '';
-  return `<div class="bphs">${(await Promise.all(ids.slice(0, n).map(img))).join('')}</div>`;
+  const list = ids.slice(0, n);
+  return `<div class="bphs n${Math.min(list.length, 2)}">${(await Promise.all(list.map(img))).join('')}</div>`;
 }
+// блок: шапка сверху, ниже текст слева и фото справа
+const wrapBm = (cls, head, body, ph) => `<div class="bm ${cls}${ph ? ' hasph' : ''}">${head}${ph ? `<div class="bcols"><div class="btxt">${body}</div>${ph}</div>` : body}</div>`;
 const enLine = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="ben">${x.time || p ? `<small>${[x.time, p ? [p.kind, p.name].filter(Boolean).join(' · ') : ''].filter(Boolean).join(' · ')}${p && p.price ? ' · ' + rub(p.price) : ''}</small>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}</div>`; };
 async function memBlock(x) {
   const title = x.kind === 'event' ? x.event.title : x.title;
   const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${esc(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.text ? `<div class="ben"><p>${esc(x.text)}</p></div>` : '';
-  return `<div class="bm"><div class="bh"><small>${fmtDM(x.date)}</small>${title ? `<b>${esc(title)}</b>` : ''}${x.significant ? '<span>★</span>' : ''}</div>${body}${await phRow(x.photos, x.significant ? 4 : 3)}</div>`;
+  return wrapBm('', `<div class="bh"><small>${fmtDM(x.date)}</small>${title ? `<b>${esc(title)}</b>` : ''}${x.significant ? '<span>★</span>' : ''}</div>`, body, await phRow(x.photos));
 }
 async function tripBlock(t) {
   const e = t.event, legs = e.legs || [], stay = (e.places || []).filter((p) => p.name || p.address), tot = S.eventTotal(e).total;
@@ -53,7 +57,7 @@ async function tripBlock(t) {
   let days = '';
   for (const d of t.days.slice().sort((a, b) => a.day.localeCompare(b.day))) {
     const k = Math.round((new Date(d.day) - new Date(e.start)) / 864e5) + 1;
-    days += `<div class="bm bday"><div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>${d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : ''}${d.entries.map(enLine).join('')}${await phRow(d.photos, 3)}</div>`;
+    days += wrapBm('bday', `<div class="bh"><small>${fmtDM(d.day)}</small><b>День ${k} из ${n}</b></div>`, (d.dayMemory ? `<div class="ben"><p>${esc(d.dayMemory)}</p></div>` : '') + d.entries.map(enLine).join(''), await phRow(d.photos));
   }
   return `<div class="btrip"><div class="bm"><div class="bh"><small>${fmtDM(e.start)} – ${fmtDM(e.end)} · поездка</small><b>${esc(e.title)}</b>${e.significant ? '<span>★</span>' : ''}</div>${info ? `<div class="binfo">${info}</div>` : ''}</div>${days}</div>`;
 }
@@ -61,7 +65,7 @@ async function tripBlock(t) {
 async function buildBook(year, myText) {
   const from = year + '-01-01', to = year + '-12-31', p = S.periodPct(from, to), ym = S.yearMeta(year);
   const photos = opts.photos ? await pickPhotos(year) : {};
-  const all = Object.values(photos).flat();
+  const all = Object.values(photos).flat(); // для обложки
   const pages = [];
   if (opts.cover) pages.push(`<section class="pg cover">${all[0] ? await img(all[0]) : ''}<div class="cv"><b>${year}</b><span>${esc(ym.word || '')}</span><small>${esc((S.state.profile || {}).name || '')}</small></div></section>`);
   if (opts.numbers) {
@@ -87,10 +91,9 @@ async function buildBook(year, myText) {
       pages.push(`<section class="pg mon"><h2 class="mh">${MONTHS_NOM[m - 1]}</h2>${blocks}</section>`);
     }
   }
-  if (opts.photos && all.length > 2) pages.push(`<section class="pg"><h1>Лучшие кадры</h1><div class="collage">${(await Promise.all(all.slice(0, 12).map(img))).join('')}</div></section>`);
   // Обложка — отдельный лист, остальное идёт сплошным потоком без пустых мест.
   const cover = opts.cover ? pages.shift() : '';
-  return (cover || '<style>@page :first { margin: 15mm 16mm }</style>') + `<div class="flow">${pages.join('')}</div>`;
+  return cover + `<div class="flow">${pages.join('')}</div>`;
 }
 
 function bookText(year) {
@@ -108,7 +111,7 @@ export function printScreen(params) {
   const row = (k, t, s) => `<div class="row" data-act="opt" data-k="${k}"><span class="ck sq ${opts[k] ? 'done' : ''}"></span><div class="t"><b>${t}</b>${s ? `<small>${s}</small>` : ''}</div></div>`;
   const html = `<section class="scr">${top('Книга года ' + year)}<div class="body">
     <p class="small" style="margin:0">Книга собирается на телефоне по одному шаблону. Нажми «Создать PDF» — откроется окно печати: можно распечатать или «Поделиться» → «Сохранить в Файлы» как PDF.</p>
-    <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят рядом со своими записями: до 3 на воспоминание или день поездки. В конце — коллаж лучших кадров.</small></div>
+    <div class="field"><label>Фото</label><div class="seg"><span class="${opts.photos ? 'on' : ''}" data-act="ph" data-v="1">С фото</span><span class="${!opts.photos ? 'on' : ''}" data-act="ph" data-v="0">Без фото</span></div><small class="small">Фото стоят справа от своих записей: до 4 на воспоминание или день поездки. На обложке — одно фото года.</small></div>
     <div class="card plain"><div class="h3">Что включить</div><div class="rows">
       ${row('cover', 'Обложка и слово года')}${row('numbers', 'Год в цифрах', 'месяцы, главное, привычки за год')}${row('text', 'Текст «Мой ' + year + '»', S.state.ai && S.state.ai.key ? 'напишет помощник, можно поправить' : 'напиши сама ниже')}${row('goals', 'Цели и путь к ним')}${row('months', 'По месяцам: события и воспоминания')}
     </div></div>

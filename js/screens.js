@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=118';
+import * as S from './store.js?v=119';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=118';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=119';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -229,7 +229,7 @@ export function dayScreen(date) {
   const d = S.day(date);
   const note = future
     ? `<div class="notecard"><b>Заметки на день</b><textarea class="inp area" data-bind="note" rows="1" placeholder="Мысли, идеи…">${esc(d.note)}</textarea></div>`
-    : `<div class="notecard"><b>Что запомнилось ${date === t ? 'сегодня' : 'в этот день'}?</b><textarea class="inp area" data-bind="memory" rows="1" placeholder="Напиши здесь…">${esc(d.memory)}</textarea>${photoGrid(d.photos, 'dayphoto', { max: 1, light: true })}</div>`;
+    : `<div class="notecard"><b>Что запомнилось ${date === t ? 'сегодня' : 'в этот день'}?</b><textarea class="inp area" data-bind="memory" rows="1" placeholder="Напиши здесь…">${esc(d.memory)}</textarea>${photoGrid(d.photos, 'dayphoto', { max: 4, light: true })}</div>`;
 
   const html = `<section class="scr">
   <div class="top main"><div class="ttl">${weekHead(date, 'week')}</div>${S.state.ai && S.state.ai.key ? '<button class="ib aib" data-go="#/ai">✦ ИИ</button>' : ''}</div>
@@ -253,7 +253,7 @@ export function dayScreen(date) {
     html,
     mount(root) {
       autoGrow(root); fillPhotos(root);
-      bindPhotoInput(root, async (ids) => { const dd = S.day(date, true); dd.photos = [...dd.photos, ...ids].slice(0, 6); S.save(); window.dispatchEvent(new Event('rerender')); });
+      bindPhotoInput(root, async (ids) => { const dd = S.day(date, true); dd.photos = [...dd.photos, ...ids].slice(0, 4); S.save(); window.dispatchEvent(new Event('rerender')); });
       root.querySelectorAll('[data-bind]').forEach((ta) => ta.addEventListener('input', () => ta.dataset.bind === 'note' ? S.setNote(date, ta.value) : S.setMemory(date, ta.value)));
     },
     actions: {

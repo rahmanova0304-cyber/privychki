@@ -547,9 +547,9 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
 #print { display: none }
 @media print {
   @page { size: A4; margin: 15mm 16mm }
-  @page :first { margin: 0 }
   html, body { background: #fff !important; height: auto; overflow: visible !important }
   #app { display: none !important }
+  #print, #print * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
   #print { display: block; color: #1c1938; font: 10.5pt/1.45 var(--ui) }
   .pg { position: relative }
   .flow .pg + .pg, .flow .pgh { margin-top: 9mm }
@@ -568,7 +568,7 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   .pg .phs { float: right; width: 58mm; display: flex; flex-direction: column; gap: 2.5mm; margin: 1mm 0 2mm 5mm } .pg .phs img { width: 100%; height: auto; display: block; border-radius: 2.5mm; display: block }
   .pg.mon { display: flow-root }
   /* коллаж — колонками, каждое фото в своих пропорциях, без обрезки */ .pg .collage { column-count: 3; column-gap: 2.5mm } .pg .collage img { display: block; width: 100%; height: auto; margin-bottom: 2.5mm; border-radius: 2mm; break-inside: avoid; page-break-inside: avoid }
-  .pg.cover { width: 210mm; height: 297mm; overflow: hidden; background: #7556ee; break-after: page; page-break-after: always } .pg.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
+  .pg.cover { width: 100%; height: 255mm; overflow: hidden; border-radius: 4mm; background: #7556ee; break-inside: avoid; page-break-inside: avoid; break-after: page; page-break-after: always } .pg.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
   .pg.cover .cv { position: absolute; left: 18mm; bottom: 24mm; color: #fff; text-shadow: 0 1mm 4mm rgba(0,0,0,.35) }
   .pg.cover b { display: block; font-size: 72pt; font-weight: 200; line-height: 1 } .pg.cover span { display: block; font-size: 20pt } .pg.cover small { font-size: 11pt; opacity: .85 }
   .pg .mem { padding: 0 } .pg .mem li { list-style: none; margin: 1.2mm 0 } .pg p { margin: 0 0 3mm }
@@ -579,11 +579,16 @@ input[type="date"].inp, input[type="time"].inp { display: block; text-align: lef
   .pg .ben { margin: 0 0 2.5mm } .pg .ben:last-child { margin-bottom: 0 }
   .pg .ben small { display: block; color: #1d9fd6; font-size: 9pt; margin-bottom: .5mm }
   .pg .ben p { margin: 0 }
-  .pg .bphs { display: flex; gap: 2.5mm; margin-top: 3mm; break-inside: avoid; page-break-inside: avoid }
-  .pg .bphs img { height: 48mm; width: auto; max-width: 100%; min-width: 0; object-fit: contain; border-radius: 2mm; display: block; flex: 0 1 auto }
-  .pg .btrip { margin: 0 0 4mm } .pg .btrip > .bm:first-child { background: #eaf6fc; break-after: avoid; page-break-after: avoid }
-  .pg .btrip .bday { margin-left: 6mm }
-  .pg .binfo { margin-top: 1mm } .pg .brow { display: flex; justify-content: space-between; gap: 4mm; padding: 1.2mm 0; border-top: .2mm solid #d6ebf6 } .pg .brow:first-child { border-top: 0 }
+  .pg .bcols { display: flex; gap: 5mm; align-items: flex-start }
+  .pg .btxt { flex: 1; min-width: 0 }
+  .pg .bphs { flex: none; width: 78mm; display: grid; gap: 2.5mm; break-inside: avoid; page-break-inside: avoid }
+  .pg .bphs.n1 { justify-items: end }
+  .pg .bphs.n1 img { width: auto; height: auto; max-width: 100%; max-height: 95mm; border-radius: 2mm; display: block }
+  /* несколько фото — две колонки «столбиками», каждое в своих пропорциях, без дыр */
+  .pg .bphs.n2 { display: block; column-count: 2; column-gap: 2.5mm }
+  .pg .bphs.n2 img { width: 100%; height: auto; border-radius: 2mm; display: block; margin-bottom: 2.5mm; break-inside: avoid; page-break-inside: avoid }
+  .pg .btrip { margin: 0 0 4mm } .pg .btrip > .bm:first-child { background: #eaf6fc; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-after: avoid; page-break-after: avoid }
+  .pg .binfo { margin-top: 2mm; border-radius: 2mm; overflow: hidden; background: #fff } .pg .brow { display: flex; justify-content: space-between; gap: 4mm; padding: 1.8mm 3mm } .pg .brow:nth-child(even) { background: #d9eff9 }
   .pg .brow small { color: #7c7894; font-size: 9pt; margin-left: 2mm } .pg .brow b { font-weight: 500; white-space: nowrap } .pg .brow.btot b { font-weight: 700 } .pg .brow.btot span { color: #7c7894 }
 }
 .mm-cover.ph { background: var(--hatch) }

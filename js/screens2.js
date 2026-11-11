@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=118';
+import * as S from './store.js?v=119';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=118';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=118';
-import { aiBreakdownGoal } from './ai.js?v=118';
+  MONTHS_NOM, WD } from './util.js?v=119';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=119';
+import { aiBreakdownGoal } from './ai.js?v=119';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -405,14 +405,14 @@ export function entryScreen(eventId, entryId, params) {
   const now = new Date();
   const f = en ? JSON.parse(JSON.stringify(en)) : { date: params.get('date') || today(), time: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), text: '', place: null, photos: [], significant: false, title: '' };
   let editWhen = false, showPlace = !!(f.place && f.place.name);
-  const left = () => isMem ? 6 - f.photos.length : 6 - S.photosOnDay(eventId, f.date, en && en.id) - f.photos.length;
+  const left = () => isMem ? 4 - f.photos.length : 4 - S.photosOnDay(eventId, f.date, en && en.id) - f.photos.length;
   const form = () => `${editWhen || isMem ? `<div class="dt-row"><input class="inp" type="date" data-f="date" value="${f.date}"><input class="inp" type="time" data-f="time" value="${esc(f.time)}"></div>`
     : `<div class="ev-whenrow">${f.date === today() ? 'Сейчас · ' : ''}${fmtShort(f.date)}, ${esc(f.time)}<span class="link" style="color:var(--e)" data-act="when">Изменить</span></div>`}
     ${isMem ? field('Заголовок · необязательно', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Концерт в филармонии">`) : ''}
     ${field('Что было', `<textarea class="inp area" rows="2" data-f="text" placeholder="Что запомнилось…">${esc(f.text)}</textarea>`)}
     ${showPlace ? field('Место', `<div class="pl-card">${kindGrid((f.place || {}).kind, PLACE_KINDS)}<div class="pl-head"><span class="ev-pin sm">${PIN}</span><input class="inp" data-p="name" value="${esc((f.place || {}).name || '')}" placeholder="${(f.place || {}).kind === 'Такси' ? 'Откуда → куда' : 'Название'}"></div><input class="inp" data-p="address" value="${esc((f.place || {}).address || '')}" placeholder="Адрес или метро"><input class="inp" type="number" inputmode="numeric" data-p="price" value="${esc((f.place || {}).price || '')}" placeholder="Цена, ₽ · необязательно"></div>`)
       : '<div class="addrow" style="--c:var(--accent)" data-act="place"><i></i>Добавить место</div>'}
-    <div class="field"><label class="ev-lab">Фото<span>${isMem ? f.photos.length + ' из 6' : 'за день ещё можно ' + Math.max(0, left())}</span></label>${photoGrid(f.photos, 'delph', { max: f.photos.length + Math.max(0, left()) })}</div>
+    <div class="field"><label class="ev-lab">Фото<span>${isMem ? f.photos.length + ' из 4' : 'за день ещё можно ' + Math.max(0, left())}</span></label>${photoGrid(f.photos, 'delph', { max: f.photos.length + Math.max(0, left()) })}</div>
     ${isMem ? `<div class="card plain"><div class="row" style="padding:0"><div class="t"><b>Значимый момент</b><small>в «Главное» и в «Книгу года»</small></div><span class="toggle ${f.significant ? 'on' : ''}" data-act="sig"></span></div></div>` : ''}`;
   let rootEl;
   const sync = () => {
@@ -529,7 +529,7 @@ export function dreamScreen(id) {
     ${field('Почему хочу', `<textarea class="inp area" rows="1" data-why placeholder="Чтобы помнить, зачем">${esc(d.why || '')}</textarea>`)}
     ${pathHtml}
     <div class="card plain"><div class="row" style="padding:0" data-act="came"><span class="ck ${ct ? 'done' : ''}" style="--c:var(--d)"></span><div class="t"><b>Сбылось</b><small>${ct ? fmtDM(ct.date) + ' ' + ct.date.slice(0, 4) : 'отметь — добавишь дату, мысли и фото'}</small></div></div>
-      ${ct ? `<input class="inp" type="date" data-ct="date" value="${ct.date}"><textarea class="inp area" rows="1" data-ct="text" placeholder="Как это было">${esc(ct.text || '')}</textarea>${photoGrid(ct.photos || [], 'delph')}` : ''}</div>
+      ${ct ? `<input class="inp" type="date" data-ct="date" value="${ct.date}"><textarea class="inp area" rows="1" data-ct="text" placeholder="Как это было">${esc(ct.text || '')}</textarea>${photoGrid(ct.photos || [], 'delph', { max: 4 })}` : ''}</div>
   </div></section>`;
   return {
     html,
@@ -544,7 +544,7 @@ export function dreamScreen(id) {
       fit(); t.addEventListener('input', fit);
       t.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); t.blur(); } });
       root.querySelectorAll('[data-ct]').forEach((i) => i.addEventListener('change', () => { d.cameTrue[i.dataset.ct] = i.value; S.save(); }));
-      bindPhotoInput(root, (ids) => { d.cameTrue.photos = [...(d.cameTrue.photos || []), ...ids].slice(0, 6); S.save(); re(); });
+      bindPhotoInput(root, (ids) => { d.cameTrue.photos = [...(d.cameTrue.photos || []), ...ids].slice(0, 4); S.save(); re(); });
     },
     actions: {
       menu: menuAct,
