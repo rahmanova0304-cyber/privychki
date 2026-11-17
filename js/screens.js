@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=134';
+import * as S from './store.js?v=135';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=134';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=135';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -386,7 +386,7 @@ export function markScreen(date, key) {
   };
   const cancelPanel = () => `<div class="card"><div class="h3" style="margin:0">Не делать в этот день</div><p class="small" style="margin:0">${isH ? (it.type === 's' ? 'Шаг цели' : 'Привычка') + ' останется в дне с красным крестиком «не сделано» и посчитается в проценте.' : r.repeat ? 'Это повторение уйдёт из дня без следа. Следующее — по расписанию.' : it.type === 'e' ? 'Событие уйдёт из этого дня без следа.' : 'Задача уйдёт из дня без следа и вернётся в список года без даты.'}</p></div>`;
 
-  const build = () => `<div class="seg"><span class="${tab === 'done' ? 'on' : ''}" data-act="tab" data-t="done">Сделано</span>${canMove ? `<span class="${tab === 'move' ? 'on' : ''}" data-act="tab" data-t="move">Перенести</span>` : ''}<span class="${tab === 'cancel' ? 'on' : ''}" data-act="tab" data-t="cancel">Отменить</span></div>
+  const build = () => `<div class="seg"><span class="${tab === 'done' ? 'on' : ''}" data-act="tab" data-t="done">Сделано</span>${canMove ? `<span class="${tab === 'move' ? 'on' : ''}" data-act="tab" data-t="move">Перенести</span>` : ''}${isH ? '' : `<span class="${tab === 'cancel' ? 'on' : ''}" data-act="tab" data-t="cancel">Отменить</span>`}</div>
     <div data-panel>${tab === 'done' ? planPanel() + donePanel() + (future ? '' : wholePanel()) : tab === 'move' ? movePanel() : cancelPanel()}</div>
     ${field('Комментарий', `<textarea class="inp area" rows="1" data-comment placeholder="Как прошло…">${esc(comment)}</textarea>`)}`;
 
