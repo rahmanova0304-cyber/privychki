@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=132';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=133';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -688,7 +688,7 @@ export function deleteEvent(id) {
 export function eventTotal(e) {
   const sum = (a) => a.reduce((s, x) => s + (Number(x.price) || 0), 0);
   const entries = state.entries.filter((x) => x.eventId === e.id);
-  const parts = [...(e.places || []), ...(e.legs || []), ...entries.map((x) => x.place || {})].filter((x) => Number(x.price));
+  const parts = [...(e.places || []), ...(e.legs || []), ...entries.flatMap(entryPlaces)].filter((x) => Number(x.price));
   return { total: sum(e.places || []) + sum(e.legs || []) + entries.reduce((s, x) => s + (Number(x.place && x.place.price) || 0), 0), count: parts.length };
 }
 
@@ -700,7 +700,7 @@ export function setSignificant(id, v) { const e = eventById(id); e.significant =
 export function saveEntry(data) {
   let en = data.id && state.entries.find((x) => x.id === data.id);
   if (!en) { en = { id: uid(), createdAt: new Date().toISOString() }; state.entries.push(en); }
-  Object.assign(en, { eventId: data.eventId || null, date: data.date, time: data.time || '', text: data.text || '', place: data.place || null, photos: data.photos || [], significant: !!data.significant, title: data.title || '' });
+  Object.assign(en, { eventId: data.eventId || null, date: data.date, time: data.time || '', text: data.text || '', place: null, places: (data.places || []).filter((p) => p && p.name), photos: data.photos || [], significant: !!data.significant, title: data.title || '' });
   save();
   return en;
 }
@@ -714,6 +714,9 @@ export function deleteEntry(id) {
 }
 
 // Сколько фото уже есть за день у события (лимит 6).
+// Места записи: новый список places, старые записи — одно поле place.
+export const entryPlaces = (x) => (x.places || (x.place ? [x.place] : [])).filter((p) => p && p.name);
+
 export function photosOnDay(eventId, date, exceptEntryId) {
   return state.entries.filter((x) => x.eventId === eventId && x.date === date && x.id !== exceptEntryId).reduce((n, x) => n + (x.photos || []).length, 0);
 }

@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=132';
+import * as S from './store.js?v=133';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=132';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=133';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -191,7 +191,7 @@ const PIN_S = '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 
 function eventInDay(e, date) {
   if (date > today()) return '';
   const list = S.state.entries.filter((x) => x.eventId === e.id && x.date === date).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  const ens = list.map((x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="eid-en" data-go="#/entry/${e.id}/${x.id}">${p || x.time ? `<div class="ev-tag">${x.time ? `<span class="eid-t">${esc(x.time)}</span>` : ''}${p ? PIN_S + esc([p.kind, p.name].filter(Boolean).join(' · ')) : ''}${p && p.price ? `<span class="ev-price">${Number(p.price).toLocaleString('ru-RU')} ₽</span>` : ''}</div>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}${photoGrid(x.photos, null, { add: false })}</div>`; }).join('');
+  const ens = list.map((x) => { const pls = S.entryPlaces(x), tag = (p, t) => `<div class="ev-tag">${t ? `<span class="eid-t">${esc(t)}</span>` : ''}${p ? PIN_S + esc([p.kind, p.name].filter(Boolean).join(' · ')) : ''}${p && p.price ? `<span class="ev-price">${Number(p.price).toLocaleString('ru-RU')} ₽</span>` : ''}</div>`; return `<div class="eid-en" data-go="#/entry/${e.id}/${x.id}">${pls.length ? pls.map((p, i) => tag(p, i ? '' : x.time)).join('') : x.time ? tag(null, x.time) : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}${photoGrid(x.photos, null, { add: false })}</div>`; }).join('');
   return `<div class="ev-inday">${ens}<div class="eid-act"><span class="eid-add" data-go="#/entry/${e.id}/new?date=${date}"><i></i>${e.type === 'trip' ? 'Добавить запись' : 'Мысль или фото'}</span><span class="link" style="color:var(--e)" data-go="#/eventcard/${e.id}${e.type === 'trip' ? '?d=' + date : ''}">${e.type === 'trip' ? 'Вся поездка' : 'Открыть'}</span></div></div>`;
 }
 

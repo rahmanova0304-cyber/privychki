@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=132';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=132';
-import { top, field } from './screens.js?v=132';
-import { aiYearText } from './ai.js?v=132';
+import * as S from './store.js?v=133';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=133';
+import { top, field } from './screens.js?v=133';
+import { aiYearText } from './ai.js?v=133';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -47,10 +47,12 @@ async function phRow(ids, n = 4) {
 }
 // блок: шапка сверху, ниже текст слева и фото справа
 const wrapBm = (cls, head, body, ph) => `<div class="bm ${cls}${ph ? ' hasph' : ''}">${head}${ph ? `<div class="bcols"><div class="btxt">${body}</div>${ph}</div>` : body}</div>`;
-const enLine = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="ben">${x.time || p ? `<small>${[x.time, p ? [p.kind, p.name].filter(Boolean).join(' · ') : ''].filter(Boolean).join(' · ')}${p && p.price ? ' · ' + rub(p.price) : ''}</small>` : ''}${x.text ? `<p>${nl(x.text)}</p>` : ''}</div>`; };
+const enLine = (x) => { const pls = S.entryPlaces(x), pl = (p) => [p.kind, p.name].filter(Boolean).join(' · ') + (p.price ? ' · ' + rub(p.price) : ''); return `<div class="ben">${x.time || pls.length ? `<small>${esc([x.time, ...pls.map(pl)].filter(Boolean).join(' · '))}</small>` : ''}${x.text ? `<p>${nl(x.text)}</p>` : ''}</div>`; };
 async function memBlock(x) {
   const title = x.kind === 'event' ? x.event.title : x.title;
-  const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${nl(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.kind === 'memory' ? enLine({ ...x.entry, time: '' }) : x.text ? `<div class="ben"><p>${nl(x.text)}</p></div>` : '';
+  const pls = x.kind === 'event' && x.event.type !== 'trip' ? (x.event.places || []).filter((p) => p.name || p.address) : [];
+  const plHtml = pls.length ? `<div class="ben"><small>${pls.map((p) => esc([p.name, p.address].filter(Boolean).join(', ')) + (p.price ? ' · ' + rub(p.price) : '')).join('<br>')}</small></div>` : '';
+  const body = plHtml + (x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${nl(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.kind === 'memory' ? enLine({ ...x.entry, time: '' }) : x.text ? `<div class="ben"><p>${nl(x.text)}</p></div>` : '');
   return wrapBm('', `<div class="bh"><small>${fmtDM(x.date)}</small>${title ? `<b>${esc(title)}</b>` : ''}${x.significant ? '<span>★</span>' : ''}</div>`, body, await phRow(x.photos));
 }
 async function tripBlock(t) {

@@ -1,9 +1,9 @@
 // Экраны этапов 2–4: цели, карточка привычки, события и поездки, записи, воспоминания, мечты, итоги, книга года.
-import * as S from './store.js?v=132';
+import * as S from './store.js?v=133';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age, uid,
-  MONTHS_NOM, WD } from './util.js?v=132';
-import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=132';
-import { aiBreakdownGoal } from './ai.js?v=132';
+  MONTHS_NOM, WD } from './util.js?v=133';
+import { ICON, top, ring, field, autoGrow, photoGrid, fillPhotos, bindPhotoInput, scheduleText, repeatText, stepSmall, stepChip, goalLine } from './screens.js?v=133';
+import { aiBreakdownGoal } from './ai.js?v=133';
 
 const re = () => window.dispatchEvent(new Event('rerender'));
 const menu = (items) => `<button class="ib ibmore" data-act="menu" title="Ещё">${ICON.more}</button><div class="menu" hidden>${items.map(([a, t, s, del]) => `<span data-act="${a}"${del ? ' class="del"' : ''}>${t}<small>${s}</small></span>`).join('')}</div>`;
@@ -334,9 +334,8 @@ export function eventEditScreen(id, params) {
 // ---------- СОБЫТИЕ / ПОЕЗДКА: карточка ----------
 
 function entryCard(en, eventId) {
-  const pl = en.place && en.place.name;
   return `<div class="ev-entry" data-go="#/entry/${eventId || 'memory'}/${en.id}">${en.time ? `<div class="ev-time">${esc(en.time)}</div>` : ''}
-    ${pl ? `<div class="ev-tag">${PIN}${esc([en.place.kind, en.place.name, en.place.address].filter(Boolean).join(' · '))}${en.place.price ? `<span class="ev-price">${money(en.place.price)}</span>` : ''}</div>` : ''}
+    ${S.entryPlaces(en).map((p) => `<div class="ev-tag">${PIN}${esc([p.kind, p.name, p.address].filter(Boolean).join(' · '))}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>`).join('')}
     ${en.text ? `<p>${esc(en.text)}</p>` : ''}${photoGrid(en.photos, null, { add: false })}</div>`;
 }
 
@@ -404,20 +403,21 @@ export function entryScreen(eventId, entryId, params) {
   const en = entryId !== 'new' ? S.state.entries.find((x) => x.id === entryId) : null;
   const now = new Date();
   const f = en ? JSON.parse(JSON.stringify(en)) : { date: params.get('date') || today(), time: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), text: '', place: null, photos: [], significant: false, title: '' };
-  let editWhen = false, showPlace = !!(f.place && f.place.name);
+  f.places = S.entryPlaces(f).map((x) => ({ ...x })); delete f.place;
+  let editWhen = false;
   const left = () => isMem ? 4 - f.photos.length : 4 - S.photosOnDay(eventId, f.date, en && en.id) - f.photos.length;
   const form = () => `${editWhen || isMem ? `<div class="dt-row"><input class="inp" type="date" data-f="date" value="${f.date}"><input class="inp" type="time" data-f="time" value="${esc(f.time)}"></div>`
     : `<div class="ev-whenrow">${f.date === today() ? 'Сейчас · ' : ''}${fmtShort(f.date)}, ${esc(f.time)}<span class="link" style="color:var(--e)" data-act="when">Изменить</span></div>`}
     ${isMem ? field('Заголовок · необязательно', `<input class="inp" data-f="title" value="${esc(f.title)}" placeholder="Например, Концерт в филармонии">`) : ''}
     ${field('Что было', `<textarea class="inp area" rows="2" data-f="text" placeholder="Что запомнилось…">${esc(f.text)}</textarea>`)}
-    ${showPlace ? field('Место', `<div class="pl-card">${kindGrid((f.place || {}).kind, PLACE_KINDS)}<div class="pl-head"><span class="ev-pin sm">${PIN}</span><input class="inp" data-p="name" value="${esc((f.place || {}).name || '')}" placeholder="${(f.place || {}).kind === 'Такси' ? 'Откуда → куда' : 'Название'}"></div><input class="inp" data-p="address" value="${esc((f.place || {}).address || '')}" placeholder="Адрес или метро"><input class="inp" type="number" inputmode="numeric" data-p="price" value="${esc((f.place || {}).price || '')}" placeholder="Цена, ₽ · необязательно"></div>`)
-      : '<div class="addrow" style="--c:var(--accent)" data-act="place"><i></i>Добавить место</div>'}
+    ${f.places.length ? field(f.places.length > 1 ? 'Места' : 'Место', f.places.map((p, i) => `<div class="pl-card" data-pi="${i}">${kindGrid(p.kind, PLACE_KINDS)}<div class="pl-head"><span class="ev-pin sm">${PIN}</span><input class="inp" data-p="${i}:name" value="${esc(p.name || '')}" placeholder="${p.kind === 'Такси' ? 'Откуда → куда' : 'Название'}"><span class="dr-del" data-act="delpl" data-i="${i}">✕</span></div><input class="inp" data-p="${i}:address" value="${esc(p.address || '')}" placeholder="Адрес или метро"><input class="inp" type="number" inputmode="numeric" data-p="${i}:price" value="${esc(p.price || '')}" placeholder="Цена, ₽ · необязательно"></div>`).join('')) : ''}
+    <div class="addrow" style="--c:var(--accent)" data-act="place"><i></i>${f.places.length ? 'Ещё место' : 'Добавить место'}</div>
     <div class="field"><label class="ev-lab">Фото<span>${isMem ? f.photos.length + ' из 4' : 'за день ещё можно ' + Math.max(0, left())}</span></label>${photoGrid(f.photos, 'delph', { max: f.photos.length + Math.max(0, left()) })}</div>
     ${isMem ? `<div class="card plain"><div class="row" style="padding:0"><div class="t"><b>Значимый момент</b><small>в «Главное» и в «Книгу года»</small></div><span class="toggle ${f.significant ? 'on' : ''}" data-act="sig"></span></div></div>` : ''}`;
   let rootEl;
   const sync = () => {
     Object.assign(f, grab(rootEl));
-    if (showPlace) { f.place = f.place || {}; rootEl.querySelectorAll('[data-p]').forEach((i) => { f.place[i.dataset.p] = i.value; }); }
+    rootEl.querySelectorAll('[data-p]').forEach((i) => { const [k, fld] = i.dataset.p.split(':'); f.places[k][fld] = i.value; });
   };
   const rerender = () => { rootEl.querySelector('[data-form]').innerHTML = form(); bind(); };
   const bind = () => { autoGrow(rootEl); fillPhotos(rootEl); bindPhotoInput(rootEl, (ids) => { sync(); f.photos.push(...ids); rerender(); }); };
@@ -427,15 +427,16 @@ export function entryScreen(eventId, entryId, params) {
     mount(root) { rootEl = root; bind(); },
     actions: {
       when: () => { sync(); editWhen = true; rerender(); },
-      place: () => { sync(); showPlace = true; f.place = f.place || { kind: 'Ресторан' }; rerender(); },
-      kind: (el) => { sync(); f.place.kind = el.dataset.k; rerender(); },
+      place: () => { sync(); f.places.push({ kind: (f.places[f.places.length - 1] || {}).kind || 'Ресторан', name: '', address: '', price: '' }); rerender(); },
+      delpl: (el) => { sync(); f.places.splice(+el.dataset.i, 1); rerender(); },
+      kind: (el) => { sync(); f.places[+el.closest('[data-pi]').dataset.pi].kind = el.dataset.k; rerender(); },
       sig: (el) => { f.significant = !f.significant; el.classList.toggle('on', f.significant); },
       delph: (el) => { sync(); f.photos = f.photos.filter((x) => x !== el.dataset.id); S.deletePhoto(el.dataset.id); rerender(); },
       del: (el, go) => { if (confirm('Удалить запись вместе с фото?')) { S.deleteEntry(en.id); go('back'); } },
       save: (el, go) => {
         sync();
         if (!f.text.trim() && !f.photos.length) { alert('Напиши пару слов или добавь фото'); return; }
-        if (f.place && !f.place.name) f.place = null;
+        f.places = f.places.filter((p) => p.name && p.name.trim());
         S.saveEntry({ ...f, id: en && en.id, eventId: isMem ? null : eventId });
         go('back');
       },
@@ -467,7 +468,7 @@ export function memoriesScreen(params) {
     ${days.length > 1 ? `<div class="opts mm-row mm-days"><span class="${dsel === 'all' ? 'on' : ''}" data-act="mf" data-h="${q({ d: 'all' })}">Все дни</span>${days.map((d) => `<span class="${dsel === d ? 'on' : ''}" data-act="mf" data-h="${q({ d })}">${+d.slice(8)}<small>${WD[wd(d)].toLowerCase()}</small></span>`).join('')}</div>` : ''}`;
   let html = '', cur = '';
   const tripDay = (m) => { const e = m.event; return Math.round((parse(m.day) - parse(e.start)) / 864e5) + 1 + ' из ' + (Math.round((parse(e.end) - parse(e.start)) / 864e5) + 1); };
-  const enHtml = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="mm-en">${x.time ? `<span class="mm-et">${esc(x.time)}</span>` : ''}${p ? `<div class="ev-tag">${PIN}${esc([p.kind, p.name].filter(Boolean).join(' · '))}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>` : ''}${x.text ? `<p>${esc(x.text)}</p>` : ''}</div>`; };
+  const enHtml = (x) => { return `<div class="mm-en">${x.time ? `<span class="mm-et">${esc(x.time)}</span>` : ''}${S.entryPlaces(x).map((p) => `<div class="ev-tag">${PIN}${esc([p.kind, p.name].filter(Boolean).join(' · '))}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>`).join('')}${x.text ? `<p>${esc(x.text)}</p>` : ''}</div>`; };
   const cover = (m) => {
     const date = m.kind === 'event' && m.event.end && !m.day ? fmtDMshort(m.event.start) + '–' + fmtDMshort(m.event.end) : fmtDMshort(m.date);
     const badges = `<span class="mm-date">${date}</span>${m.significant ? `<span class="mm-star">${ICON.star}</span>` : ''}`;
@@ -490,7 +491,9 @@ export function memoriesScreen(params) {
     const road = m.kind === 'event' ? (m.legs || []).map((l) => `<div class="ev-tag mm-road"><span class="mm-ri">${trSvg(l.transport)}</span>${esc([l.transport, l.route, l.datetime ? l.datetime.slice(11, 16) : ''].filter(Boolean).join(' · '))}${l.price ? `<span class="ev-price">${money(l.price)}</span>` : ''}</div>`).join('')
       + (m.stay || []).map((p) => `<div class="ev-tag mm-road"><span class="mm-ri">${PIN}</span>Жильё · ${esc(p.name || p.address)}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>`).join('')
       + (m.total ? `<div class="mm-total">Вся поездка<b>${money(m.total)}</b></div>` : '') : '';
-    const text = road + (m.kind === 'event' ? (m.dayMemory ? `<div class="mm-en"><span class="mm-et">Что запомнилось</span><p class="mm-dm">${esc(m.dayMemory)}</p></div>` : '') + m.entries.map(enHtml).join('') : m.kind === 'memory' ? enHtml({ ...m.entry, time: '' }) : m.text ? `<p>${esc(m.text)}</p>` : '');
+    // места самого события (не поездки): прогулка, ресторан, театр — метками над записями
+    const evPlaces = m.kind === 'event' && m.event.type !== 'trip' ? (m.event.places || []).filter((p) => p.name || p.address).map((p) => `<div class="ev-tag mm-road"><span class="mm-ri">${PIN}</span>${esc([p.name, p.address].filter(Boolean).join(' · '))}${p.price ? `<span class="ev-price">${money(p.price)}</span>` : ''}</div>`).join('') : '';
+    const text = road + evPlaces + (m.kind === 'event' ? (m.dayMemory ? `<div class="mm-en"><span class="mm-et">Что запомнилось</span><p class="mm-dm">${esc(m.dayMemory)}</p></div>` : '') + m.entries.map(enHtml).join('') : m.kind === 'memory' ? enHtml({ ...m.entry, time: '' }) : m.text ? `<p>${esc(m.text)}</p>` : '');
     if (m.photos.length) {
       html += `<div class="mm-card" data-go="${go}">${cover(m)}<div class="mm-body">${m.kind !== 'day' ? `<div class="mm-src" style="color:var(--e)">${esc(src)}</div>` : ''}${title ? `<b>${esc(title)}</b>` : ''}${text}</div></div>`;
     } else if (m.kind === 'day') {
@@ -710,7 +713,7 @@ function searchAll(q) {
   for (const h of S.state.habits) if (has(h.title)) add('Привычки', h.title, h.status === 'archived' ? 'в архиве' : scheduleText(h), '#/habitcard/' + h.id);
   for (const t of S.state.tasks) if (t.status !== 'deleted' && has(t.title)) add('Задачи', t.title, t.status === 'done' ? 'выполнена' : t.date ? fmtShort(t.date) : 'без даты', '#/task/' + t.id, t.date);
   for (const e of S.state.events) if (has(e.title, e.note, ...(e.places || []).map((p) => p.name + ' ' + (p.addr || '')))) add('События', e.title, (e.type === 'trip' ? 'поездка · ' : '') + fmtShort(e.start), '#/eventcard/' + e.id, e.start);
-  for (const en of S.state.entries) if (has(en.title, en.text, en.place && en.place.name)) {
+  for (const en of S.state.entries) if (has(en.title, en.text, ...S.entryPlaces(en).map((p) => p.name))) {
     const ev = en.eventId && S.eventById(en.eventId);
     add('Записи и воспоминания', en.title || en.text.slice(0, 60), (ev ? ev.title + ' · ' : 'воспоминание · ') + fmtShort(en.date), '#/entry/' + (en.eventId || 'memory') + '/' + en.id, en.date);
   }
