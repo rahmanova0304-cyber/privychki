@@ -1,10 +1,10 @@
 // Запуск приложения: загрузка данных, переходы между экранами, нажатия.
-import * as S from './store.js?v=130';
-import * as V from './screens.js?v=130';
-import * as W from './screens2.js?v=130';
-import { aiScreen } from './ai.js?v=130';
-import { printScreen } from './print.js?v=130';
-import { today } from './util.js?v=130';
+import * as S from './store.js?v=131';
+import * as V from './screens.js?v=131';
+import * as W from './screens2.js?v=131';
+import { aiScreen } from './ai.js?v=131';
+import { printScreen } from './print.js?v=131';
+import { today } from './util.js?v=131';
 
 const app = document.getElementById('app');
 let current = null, currentRoute = '';
@@ -51,7 +51,8 @@ let prevDepth = 0;
 function render() {
   const same = location.hash === currentRoute;
   const prevBody = app.querySelector('.body');
-  const scroll = same && prevBody ? prevBody.scrollTop : 0;
+  // назад — на то же место списка, где была (позиция запомнена в истории при уходе с экрана)
+  const scroll = same ? (prevBody ? prevBody.scrollTop : 0) : (history.state && history.state.scroll) || 0;
   // кольца на том же экране дорастают от прежнего процента, на новом — от нуля
   const oldRings = same ? [...app.querySelectorAll('.ring')].map((r) => r.style.getPropertyValue('--rp')) : [];
   if (!same && currentRoute) dropDraft();
@@ -122,6 +123,8 @@ function go(target, replace, reset) {
     return;
   }
   const depth = reset ? 0 : ((history.state && history.state.depth) || 0) + (replace ? 0 : 1);
+  const body = app.querySelector('.body');
+  if (!replace && !reset && body) history.replaceState({ ...(history.state || {}), scroll: body.scrollTop }, '', location.hash);
   if (replace || reset) history.replaceState({ depth }, '', target);
   else history.pushState({ depth }, '', target);
   render();
