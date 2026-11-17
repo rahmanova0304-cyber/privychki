@@ -815,8 +815,10 @@ p, .tl > div, .mem li { white-space: pre-line }
 .mm-rt small { font-size: 13px; color: var(--muted); font-weight: 400 }
 
 /* v115: «поездка целиком» — строки как в карточке поездки; сумма 13px жирным; дни месяца в фильтре */
-.mm-trip .leg { padding: 8px 0 }
-.mm-trip .leg .t b { font-weight: 400 }
+.mm-trip .leg, .mm-pls .leg { padding: 8px 0 }
+.mm-trip .leg .t b, .mm-pls .leg .t b { font-weight: 400 }
+.mm-en .leg-i { background: var(--card) }
+.mm-en .leg + .leg { border-top-color: color-mix(in srgb, var(--e) 15%, transparent) }
 .mm-total { font-size: 13px !important }
 .mm-total b { font-size: 13px !important; font-weight: 600 !important }
 .opts.mm-days span small { font-size: 11px; color: var(--muted); margin-left: -2px }
