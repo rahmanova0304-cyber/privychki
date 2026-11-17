@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=129';
+import * as S from './store.js?v=130';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=129';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=130';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -532,7 +532,7 @@ const KINDS = [['check', 'Просто сделано', 'витамины'], ['d
 
 export function habitScreen(id, params) {
   const h = id !== 'new' ? S.habitById(id) : null;
-  const f = h ? { title: h.title, days: [...(h.days || [])], per: h.per || '', n: h.n || 3, kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '', until: h.until || '' }
+  const f = h ? { title: h.title, days: [...(h.days || [])], per: h.per || '', n: h.n || 3, kind: h.kind || 'check', target: h.target, unit: h.unit || '', goalId: h.goalId || '', until: h.until || '', pauses: (h.pauses || []).map((x) => ({ ...x })) }
     : { title: params.get('title') || '', days: [0, 1, 2, 3, 4], per: '', n: 3, kind: 'check', target: null, unit: '' };
   const targetField = () => {
     if (f.kind === 'duration') return field('План на день, минут', `<input class="inp" type="number" inputmode="numeric" data-f="target" value="${f.target || ''}" placeholder="например, 60"><div class="opts">${[10, 20, 30, 60, 120].map((m) => `<span data-act="preset" data-v="${m}">${fmtMin(m)}</span>`).join('')}</div>`);
@@ -548,6 +548,8 @@ export function habitScreen(id, params) {
     ${targetField()}
     ${field('До какого числа · необязательно', `<input class="inp" type="date" data-f="until" value="${esc(f.until || '')}"><small class="small">Например, таблетки на месяц. После этой даты привычка сама уйдёт в архив, история останется.</small>`)}
     ${S.state.goals.some((g) => g.status === 'active') ? field('Для какой цели · необязательно', `<select class="inp" data-f="goalId"><option value="">Не связана</option>${S.state.goals.filter((g) => g.status === 'active').map((g) => `<option value="${g.id}"${f.goalId === g.id ? ' selected' : ''}>${esc(g.title)}</option>`).join('')}</select>`) : ''}
+    ${h ? field('Паузы · необязательно', f.pauses.map((x, i) => `<div style="display:flex;gap:6px;align-items:center"><div class="dt-row eq" style="flex:1"><input class="inp" type="date" data-pz="${i}:from" value="${esc(x.from)}"><input class="inp" type="date" data-pz="${i}:to" value="${esc(x.to)}"></div><span class="dr-del" data-act="delpz" data-i="${i}">✕</span></div>`).join('')
+      + `<div class="addrow" style="--c:var(--accent)" data-act="addpz"><i></i>Была на паузе</div><small class="small">Дни паузы не считаются пропущенными. Можно указать прошедшую паузу задним числом.</small>`) : ''}
     ${h ? `<div class="card plain"><div class="rows">
       <div class="row" data-act="pause"><div class="t"><b>${h.pausedFrom ? 'Снять с паузы' : 'На паузу'}</b><small>${h.pausedFrom ? 'на паузе с ' + fmtDM(h.pausedFrom) : 'временно не ставится в дни'}</small></div></div>
       <div class="row" data-act="arch"><div class="t"><b>${h.status === 'archived' ? 'Вернуть из архива' : 'Убрать в архив'}</b><small>${h.status === 'archived' ? 'снова будет вставать в дни' : 'из дней уйдёт, история останется'}</small></div></div>
@@ -555,12 +557,17 @@ export function habitScreen(id, params) {
     </div></div>` : ''}`;
   const html = `<section class="scr">${top(h ? 'Привычка' : 'Новая привычка')}<div class="body" data-form>${form()}</div><div class="foot"><button class="btn pri" data-act="save">Сохранить</button></div></section>`;
   let rootEl;
-  const sync = () => rootEl.querySelectorAll('[data-f]').forEach((i) => { f[i.dataset.f] = i.value; });
+  const sync = () => {
+    rootEl.querySelectorAll('[data-f]').forEach((i) => { f[i.dataset.f] = i.value; });
+    rootEl.querySelectorAll('[data-pz]').forEach((i) => { const [k, fld] = i.dataset.pz.split(':'); f.pauses[k][fld] = i.value; });
+  };
   const rerender = () => { sync(); rootEl.querySelector('[data-form]').innerHTML = form(); };
   return {
     html,
     mount(root) { rootEl = root; },
     actions: {
+      addpz: () => { sync(); f.pauses.push({ from: addDays(today(), -7), to: addDays(today(), -1) }); rerender(); },
+      delpz: (el) => { sync(); f.pauses.splice(+el.dataset.i, 1); rerender(); },
       per: (el) => { sync(); f.per = el.dataset.v; rerender(); },
       pn: (el) => { sync(); f.n = Math.min(7, Math.max(1, f.n + Number(el.dataset.d))); rerender(); },
       day: (el) => { sync(); const i = +el.dataset.i; f.days = f.days.includes(i) ? f.days.filter((x) => x !== i) : [...f.days, i]; el.classList.toggle('on'); },
@@ -575,7 +582,7 @@ export function habitScreen(id, params) {
         let target = f.target;
         if (f.kind === 'duration' || f.kind === 'count') { target = Math.max(0, Number(target) || 0); if (!target) { alert('Укажи план на день'); return; } }
         if (f.kind === 'check') target = null;
-        const saved = S.saveHabit({ id: h && h.id, title: f.title.trim(), days: f.days.sort(), per: f.per || null, n: f.per ? f.n : null, kind: f.kind, target, unit: f.unit, goalId: f.goalId, until: f.until || null });
+        const saved = S.saveHabit({ id: h && h.id, title: f.title.trim(), days: f.days.sort(), per: f.per || null, n: f.per ? f.n : null, kind: f.kind, target, unit: f.unit, goalId: f.goalId, until: f.until || null, pauses: h ? f.pauses.filter((x) => x.from && x.to).map((x) => (x.from <= x.to ? x : { from: x.to, to: x.from })) : undefined });
         const dayP = params.get('day');
         if (dayP && !f.per && !f.days.includes(wd(dayP))) S.addHabitToDay(dayP, saved.id);
         go('back');

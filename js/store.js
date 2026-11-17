@@ -1,5 +1,5 @@
 // Данные приложения: хранение в IndexedDB и все правила (что стоит в дне, отметки, перенос, проценты, итоги).
-import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=129';
+import { uid, today, addDays, wd, parse, iso, daysInMonth, timeToMin, fmtDMshort } from './util.js?v=130';
 
 // Варианты длительности — одни для шагов целей, задач и времени шага на день.
 export const DURATIONS = [[15, '15 мин'], [30, '30 мин'], [45, '45 мин'], [60, '1 ч'], [90, '1,5 ч'], [120, '2 ч'], [180, '3 ч']];
@@ -160,6 +160,7 @@ function habitActive(h, date) {
   if (h.status === 'archived' && (!h.archivedAt || date >= h.archivedAt)) return false;
   if (h.createdAt && date < h.createdAt) return false;
   if (h.pausedFrom && date >= h.pausedFrom) return false;
+  if ((h.pauses || []).some((p) => date >= p.from && date <= p.to)) return false;
   if (h.until && date > h.until) return false;
   return true;
 }
@@ -424,15 +425,22 @@ export function saveHabit(data) {
   let h = data.id && habitById(data.id);
   if (!h) { h = { id: uid(), createdAt: today(), status: 'active' }; state.habits.push(h); }
   Object.assign(h, { title: data.title, days: data.days, per: data.per || null, n: data.n || null, kind: data.kind, target: data.target, unit: data.unit || '', goalId: data.goalId || null, until: data.until || null });
+  if (data.pauses) h.pauses = data.pauses;
   save();
   return h;
+}
+
+// Снятая пауза остаётся в истории (h.pauses, даты включительно) — дни паузы не становятся «не сделано».
+function endPause(h) {
+  if (h.pausedFrom && h.pausedFrom < today()) (h.pauses = h.pauses || []).push({ from: h.pausedFrom, to: addDays(today(), -1) });
+  h.pausedFrom = null;
 }
 
 export function setHabitStatus(id, status) {
   const h = habitById(id);
   checkpoint(status === 'paused' ? (h.pausedFrom ? 'Пауза снята' : 'Привычка на паузе') : status === 'archived' ? 'Убрано в архив' : 'Возвращено из архива');
-  if (status === 'paused') { h.pausedFrom = h.pausedFrom ? null : today(); }
-  else if (status === 'archived') { h.status = 'archived'; h.archivedAt = today(); h.pausedFrom = null; }
+  if (status === 'paused') { if (h.pausedFrom) endPause(h); else h.pausedFrom = today(); }
+  else if (status === 'archived') { h.status = 'archived'; h.archivedAt = today(); endPause(h); }
   else if (status === 'active') { h.status = 'active'; h.archivedAt = null; }
   save();
 }
@@ -722,13 +730,16 @@ export function memories(year, onlySignificant) {
     if (!groups.has(key)) groups.set(key, { kind: 'event', event: e, date: trip ? date : e.start, day: trip ? date : null, dayMemory: '', text: '', photos: [], significant: !!e.significant, entries: [] });
     return groups.get(key);
   };
+  const marks = []; // комментарии к событиям из отметки в дне — как запись события этого дня
   for (const [date, d] of Object.entries(state.days)) {
-    if (!date.startsWith(Y) || (!d.memory && !(d.photos || []).length)) continue;
+    if (!date.startsWith(Y)) continue;
+    for (const [k, m] of Object.entries(d.items || {})) if (k.startsWith('e:') && m && m.comment && m.comment.trim()) marks.push({ id: 'c:' + k + ':' + date, eventId: k.split(':')[1], date, time: '', text: m.comment.trim(), photos: [] });
+    if (!d.memory && !(d.photos || []).length) continue;
     const tr = tripOn(date);
     if (tr) { const g = group(tr, date); g.dayMemory = d.memory || ''; g.photos.unshift(...(d.photos || [])); continue; }
     out.push({ kind: 'day', date, text: d.memory, photos: d.photos || [], significant: !!d.significant });
   }
-  const ents = state.entries.slice().sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  const ents = [...marks, ...state.entries].sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
   for (const en of ents) {
     if (!en.date.startsWith(Y)) continue;
     if (en.eventId) {
