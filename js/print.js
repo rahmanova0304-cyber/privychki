@@ -1,8 +1,8 @@
 // Книга года: страницы A4 собираются на телефоне и печатаются (или сохраняются в PDF) системным окном печати.
-import * as S from './store.js?v=131';
-import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=131';
-import { top, field } from './screens.js?v=131';
-import { aiYearText } from './ai.js?v=131';
+import * as S from './store.js?v=132';
+import { esc, today, addDays, fmtDM, MONTHS_NOM, age } from './util.js?v=132';
+import { top, field } from './screens.js?v=132';
+import { aiYearText } from './ai.js?v=132';
 
 const opts = { photos: true, cover: true, numbers: true, text: true, goals: true, months: true };
 
@@ -50,7 +50,7 @@ const wrapBm = (cls, head, body, ph) => `<div class="bm ${cls}${ph ? ' hasph' : 
 const enLine = (x) => { const p = x.place && x.place.name ? x.place : null; return `<div class="ben">${x.time || p ? `<small>${[x.time, p ? [p.kind, p.name].filter(Boolean).join(' · ') : ''].filter(Boolean).join(' · ')}${p && p.price ? ' · ' + rub(p.price) : ''}</small>` : ''}${x.text ? `<p>${nl(x.text)}</p>` : ''}</div>`; };
 async function memBlock(x) {
   const title = x.kind === 'event' ? x.event.title : x.title;
-  const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${nl(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.text ? `<div class="ben"><p>${nl(x.text)}</p></div>` : '';
+  const body = x.kind === 'event' ? (x.dayMemory ? `<div class="ben"><p>${nl(x.dayMemory)}</p></div>` : '') + x.entries.map(enLine).join('') : x.kind === 'memory' ? enLine({ ...x.entry, time: '' }) : x.text ? `<div class="ben"><p>${nl(x.text)}</p></div>` : '';
   return wrapBm('', `<div class="bh"><small>${fmtDM(x.date)}</small>${title ? `<b>${esc(title)}</b>` : ''}${x.significant ? '<span>★</span>' : ''}</div>`, body, await phRow(x.photos));
 }
 async function tripBlock(t) {
