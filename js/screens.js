@@ -1,7 +1,7 @@
 // Экраны приложения. Каждый экран — функция, возвращающая { html, mount? }.
-import * as S from './store.js?v=135';
+import * as S from './store.js?v=136';
 import { esc, today, addDays, wd, weekStart, parse, fmtLong, fmtShort, fmtDM, fmtDMshort, fmtMin, plural, age,
-  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=135';
+  MONTHS_NOM, WD, WD_ACC, timeToMin } from './util.js?v=136';
 
 export const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
@@ -493,7 +493,7 @@ export function listScreen() {
   const evPast = S.state.events.filter((e) => !e.repeat && (e.end || e.start) < today()).sort((a, b) => b.start.localeCompare(a.start));
   const evSmall = (e) => (e.type === 'trip' ? 'Поездка · ' + fmtDMshort(e.start) + '–' + fmtDMshort(e.end) : (e.kind || 'Событие') + ' · ' + (e.repeat ? repeatText(e) : fmtShort(e.start))) + (e.time ? ' · ' + e.time : '');
   const erows = evs.map((e) => `<div class="row" data-go="#/eventcard/${e.id}"><div class="t"><b>${esc(e.title)}</b><small>${esc(evSmall(e))}</small></div><span class="chev">›</span></div>`).join('');
-  const hrows = habits.map((h) => `<div class="row" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h))}${h.pausedFrom ? ' · на паузе' : ''}</small></div><span class="chev">›</span></div>`).join('');
+  const hrows = habits.map((h) => `<div class="row" data-go="#/habitcard/${h.id}"><div class="t"><b>${esc(h.title)}</b><small>${esc(scheduleText(h))}</small></div>${h.pausedFrom ? '<span class="chip warn">на паузе</span>' : ''}<span class="chev">›</span></div>`).join('');
   const trows = open.map((t) => `<div class="row" data-go="#/task/${t.id}"><div class="t"><b>${esc(t.title)}</b><small${!t.repeat && t.date && t.date < today() ? ' style="color:var(--warn)"' : ''}>${esc(taskSmall(t))}</small></div>${t.repeat ? `<span class="chip ic">${ICON.repeat}</span>` : t.duration ? `<span class="chip">${fmtMin(t.duration)}</span>` : ''}</div>`).join('');
   const arch = (label, rows) => rows.length ? `<div class="arch" data-act="arch">${label} · ${rows.length}<span>›</span></div><div class="rows" hidden>${rows.join('')}</div>` : '';
   const html = `<section class="scr">
